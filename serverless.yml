@@ -20,21 +20,11 @@ provider:
     MONGO_DB: ${env:dbase}
     MONGO_PORT: ${env:dbport}
     MONGO_REPLICA_SET: ${env:dbreplicaset}
-  s3:
-    bucketOne:
-      name: images.uuss.net
   iamRoleStatements:
     - Effect: Allow
       Action:
-        - "s3:PutObject"
-        - "s3:ListBucket"
-        - "s3:DeleteObject"
-      Resource: [
-        "arn:aws:s3:::images.uuss.net",
-        "arn:aws:s3:::images.uuss.net/*",
-        "arn:aws:s3:::images.uuss.net/linkougolf/",
-        "arn:aws:s3:::images.uuss.net/linkougolf/*"
-      ]
+        - s3:*
+      Resource: "*"
     #       - "ec2:CreateNetworkInterface"
     #       - "ec2:DescribeNetworkInterfaces"
     #       - "ec2:DetachNetworkInterface"
@@ -65,13 +55,6 @@ functions:
   main:
     handler: src/lambda.handler
     events:
-      - s3: bucketOne
-          # bucket: images.uuss.net
-          # event: s3:ObjectCreated:*
-          # rules:
-          #   - prefix: uploads/
-          # existing: true
-          # forceDeploy: true
       - http:
           path: /{proxy+}
           method: ANY

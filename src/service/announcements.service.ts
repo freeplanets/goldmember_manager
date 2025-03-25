@@ -19,7 +19,7 @@ import { v1 as uuidv1 } from 'uuid';
 export class AnnouncementsService {
   AWS_S3_BUCKET = 'images.uuss.net/linkougolf/';
   s3 = new AWS.S3({
-    region: 'ap-southeast-1'
+    region: 'ap-southeast-1',
   });
   constructor(
     @InjectModel(Announcement.name) private readonly modelAnnouncement:Model<AnnouncementDocument>
