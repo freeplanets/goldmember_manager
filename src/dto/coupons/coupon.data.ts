@@ -7,6 +7,19 @@ import { CouponRequestDto } from './coupon-request.dto';
 
 export class CouponData extends CouponRequestDto implements ICoupon {
   @ApiProperty({
+    description: '編號',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  id?: string;
+
+  @ApiProperty({
+    description: '名稱',
+    required: false,
+  })
+  name: string;
+  @ApiProperty({
     description: '類型',
     required: false,
   })
@@ -15,20 +28,19 @@ export class CouponData extends CouponRequestDto implements ICoupon {
   type?: string;
 
   @ApiProperty({
+    description: '國興優惠代碼'
+  })
+  @IsOptional()
+  @IsString()
+  mode?: string;
+
+  @ApiProperty({
     description: '發行日期',
     required: false,
   })
   @IsOptional()
   @IsString()
   issueDate?: string;
-
-  @ApiProperty({
-    description: '到期日',
-    required: false,
-  })
-  @IsOptional()
-  @IsString()
-  expiryDate?: string;
 
   @ApiProperty({
     description: '使用日期',
@@ -61,6 +73,15 @@ export class CouponData extends CouponRequestDto implements ICoupon {
   @IsOptional()
   @IsString()
   toPaperNo: string;
+
+  @ApiProperty({
+    description: '修改人',
+    type: ModifiedByData,
+    required: false,
+  })
+  @IsOptional()
+  @IsObject()
+  updater: IModifiedBy;
 
   @ApiProperty({
     description: '櫃枱收券人',

@@ -3,6 +3,7 @@ export interface IKsMember {
     name:string;
     gender:number;
     birthday:string;
+    birthMonth: number;
     types:number;
     ownId:string;
     realUser:string;

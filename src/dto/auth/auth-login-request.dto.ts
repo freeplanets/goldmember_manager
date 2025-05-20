@@ -1,5 +1,6 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { LoginDevice } from '../devices/login-device';
 
 export class AuthLoginRequestDto {
   @ApiProperty({
@@ -28,4 +29,14 @@ export class AuthLoginRequestDto {
   @IsOptional()
   @IsString()
   totpCode?: string;
+
+  @ApiProperty({
+    description: '會員登入設備資訊(jwt token)',
+    required: true,
+    type: LoginDevice,
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkZWl2Y2VCcmFuZCI6IkFwcGxlIiwiZGV2aWNlTW9kZWwiOiJpUGhvbmUiLCJkZXZpY2VOYW1lIjoiQXBwbGUgaVBob25lIFNhZmFyaSIsImRldmljZUlkIjoiMWRjYTMxNTktNDY1YS00OGRlLWIyNDgtOTcwNmUxNzY2MDAxIiwic3lzdGVtTmFtZSI6IlNhZmFyaSIsInN5c3RlbVZlcnNpb24iOiIxNi42IiwiaWF0IjoxNzQ1ODA1MDEwfQ.x2JGeaVAGmqsYIDiTQVRcnF_FFqYrafjIG_AM8kFngY',
+  })
+  @IsNotEmpty()
+  @IsString()
+  fingerprint:string;
 }

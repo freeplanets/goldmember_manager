@@ -3,6 +3,8 @@ import { IUser } from "../interface/user.if";
 import { Document } from "mongoose";
 import { LEVEL } from "../../utils/enum";
 import * as bcrypt from "bcryptjs";
+import { ILoginDevice } from "../interface/devices.if";
+import { LoginDevice } from "../devices/login-device";
 
 export type UserDocument = Document & User;
 
@@ -11,7 +13,7 @@ export class User implements IUser {
     @Prop({required: true, index: true, unique: true})
     id: string;
 
-    @Prop({unique: true})
+    @Prop({unique: true, required: true})
     username: string;
 
     @Prop({unique: true})
@@ -37,11 +39,26 @@ export class User implements IUser {
     @Prop()
     isActive: boolean;
 
+    @Prop({
+        default: false,
+    })
+    isLocked: boolean;
+
+    @Prop({
+        default: 0,
+    })
+    passwordFailedCount: number;
+
     @Prop()
-    lastLogin: string;
+    lastLogin: number;
 
     @Prop()
     lastLoginIp: string;
+
+    @Prop({
+        type: LoginDevice,
+    })
+    lastLoginDevice: Partial<ILoginDevice>;
 
     @Prop()
     has2Fa: boolean;
@@ -53,8 +70,18 @@ export class User implements IUser {
 
     @Prop()
     SecretCode: string;
+
+    @Prop({
+        default: 0,
+    })
+    passwordLastTryTs: number;
+
+    @Prop({
+      type:Array<LoginDevice>  
+    })
+    devices: Partial<ILoginDevice>[];
 }
-const saltRounds = 10;
+const saltRounds = Number(process.env.SALT_ROUNDS);
 export const UserSchema = SchemaFactory.createForClass(User);
 UserSchema.pre("save", async function name(next:Function) {
     // console.log('do pre save!!');
@@ -64,19 +91,11 @@ UserSchema.pre("save", async function name(next:Function) {
         const salt = await bcrypt.genSalt(saltRounds);
         this.password = await bcrypt.hash(this.password, salt);
         return next();
-        // bcrypt.genSalt(saltRounds, function(err, salt) {
-        //     if (err) return next(err);
-        //     bcrypt.hash(user.password, salt, function(err, hash) {
-        //         if (err) return next(err);
-        //         console.log("password", hash);
-        //         user.password = hash;
-        //         next();
-        //     })
-        // });
-    } catch (err) {
-        return next(err);
+    } catch (e) {
+        return next(e);
     }
 });
+
 UserSchema.pre("findOneAndUpdate", async function name(next:Function) {
     const upd = this.getUpdate() as Partial<IUser>;
     // console.log("pre findOneAndUpdate", this.getUpdate());
@@ -87,6 +106,18 @@ UserSchema.pre("findOneAndUpdate", async function name(next:Function) {
     }
     // console.log("pre findOneAndUpdate", this.getUpdate());
     return next();
+})
+UserSchema.pre("updateOne", async function name(next:Function) {
+    //console.log("updateOne start");
+    const upd = this.getUpdate() as Partial<IUser>;
+    //console.log("pre UpdateOne", upd);
+    if (upd.password) {
+        const salt = await bcrypt.genSalt(saltRounds);
+        upd.password = await bcrypt.hash(upd.password, salt);
+        //this.setUpdate(upd);
+    }
+    //console.log("pre UpdateOne end");
+    return next();    
 })
 UserSchema.methods.comparePassword = async function(candidatePassword:string, salt:string) {
     // console.log('comparePassword', candidatePassword, salt);

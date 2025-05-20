@@ -6,13 +6,11 @@ export class Attachment implements IAttachmemt {
     @ApiProperty({
         description: '檔案名稱',
     })
-    @IsString()
     name?: string;
 
     @ApiProperty({
         description: '檔案連結'
     })
-    @IsString()
     url?: string;
 
     @ApiProperty({

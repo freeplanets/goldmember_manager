@@ -23,6 +23,7 @@ export enum DS_LEVEL {
 }
 
 export enum MEMBER_LEVEL {
+  ALL = 'all',
   GENERAL_MEMBER = 'general_member',
   DEPENDENTS = 'dependents',
   SHARE_HOLDER = 'share_holder', 
@@ -31,45 +32,79 @@ export enum MEMBER_LEVEL {
 export enum ANNOUNCEMENT_TYPE {
   ROUTINE = 'routine',
   GAME = 'game',
-  ANNIVERSARY = 'ANNIVERSARY',
+  ANNIVERSARY = 'anniversary',
 }
-
-export enum ANNOUNCEMENT_GROUP {
+export enum MEMBER_GROUP {
   ALL = 'all',
   SHARE_HOLDER = 'share_holder',
-  BIRTH_OF_MONTH = 'birthday_of_the_month',
   GENERAL_MEMBER = 'general_member',
   DEPENDENTS = 'dependents',
   DIRECTOR_SUPERVISOR = 'director_and_supervisor',
 }
-
-export enum SEARCH_GROUP_METHOD {
-  INTERSECTION = 'intersection',
-  JOINT = 'joint',
+export enum MEMBER_EXTEND_GROUP {
+  BIRTH_OF_MONTH = 'birth_of_month',
 }
 
-export enum COUPON_ISSUANCE_METHOD {
-  MANUAL = 0,
-  AUTOMATIC = 1,
+export enum BIRTH_OF_MONTH {
+  JANUARY = 1,
+  FEBRUARY = 2,
+  MARCH = 3,
+  APRIL = 4,
+  MAY = 5,
+  JUNE = 6,
+  JULY = 7,
+  AUGUST = 8,
+  SEPTEMBER = 9,
+  OCTOBER = 10,
+  NOVEMBER = 11,
+  DECEMBER = 12,
+}
+
+export enum ANNOUNCEMENT_READ_STATUS {
+  UNREAD = 'unread',
+  READ = 'read',
+}
+// export enum SEARCH_GROUP_METHOD {
+//   NONE = 'none',
+//   INTERSECTION = 'intersection',
+//   JOINT = 'joint',
+// }
+
+export enum COUPON_BATCH_ISSUANCE_METHOD {
+  MANUAL = 'manual',
+  AUTOMATIC = 'automatic',
+}
+
+export enum COUPON_BATCH_STATUS {
+  CANCELED = 'canceled',
+  ISSUED = 'issued',
+  NOT_ISSUED = 'not_issued',
+}
+
+export enum COUPON_BATCH_FREQUNCY {
+  MONTHLY = 'monthly',  // label: '月' },
+  QUARTERLY = 'quarterly',  //label: '季' },
+  SEMI_ANNUAL = 'semi_annual', // label: '半年' },
+  YEARLY = 'yearly', // label: '年' }
 }
 
 export enum COUPON_STATUS {
-  NOT_USED = 0,
-  USED = 1,
-  CANCELED = 2,
-  NOT_ISSUED = 3,
-}
-
-export enum COUPON_TYPES {
-  BIRTH = 'birth',
-  SHAREHOLDER = 'shareholder',
-  DIRECTOR = 'director',
-  RECOMMEND = 'recommend',
-  SPECIAL = 'special',
+  NOT_USED = 'not_used',
+  USED = 'used',
+  CANCELED = 'canceled',
+  NOT_ISSUED = 'not_issued',
+  //READY_TO_USE = 'ready_to_use',
+  EXPIRED = 'expired',
 }
 
 export enum GENDER {
   LEGAL_PERSON = 0,
   MALE = 1,
   FEMALE = 2,
+}
+
+export enum SmsCodeUsage {
+  REGISTER = 'regi',
+  RESET_PASS = 'reset',
+  PHONE_CHANGE = 'change',
 }

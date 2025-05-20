@@ -1,18 +1,27 @@
-import { Controller, Req, Res, HttpStatus, Get, Query, Param, Post, Body, Put } from '@nestjs/common';
+import { Controller, Req, Res, HttpStatus, Get, Param, Post, Body, Put, UseGuards } from '@nestjs/common';
 import { CouponsService } from '../service/coupons.service';
-import { Request, Response } from 'express';
-import { ApiResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { CouponResponseDto } from '../dto/coupons/coupon-response.dto';
 import { CouponBatchesResponseDto } from '../dto/coupons/coupon-batches-response.dto';
 import { CouponBatchesIdResponseDto } from '../dto/coupons/coupon-batches-id-response.dto';
-import { CouponBatchRequestDto } from '../dto/coupons/coupon-batch-request.dto';
 import { CouponBatchPostDto } from '../dto/coupons/coupon-batch-post.dto';
-import { CommonResponseDto } from '../dto/common-response.dto';
+import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { CouponRequestDto } from '../dto/coupons/coupon-request.dto';
 import { CouponListResponseDto } from '../dto/coupons/coupon-list-response.dto';
+import { ErrCode } from '../utils/enumError';
+import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
+import { TokenGuard } from '../utils/tokens/token-guard';
+import { CouponBatchListRequestDto } from '../dto/coupons/coupon-batch-list-request.dto';
+import { CouponAutoIssueLogReqDto } from '../dto/coupons/coupon-auto-issue-log-request.dto';
+import { CouponLogRes } from '../dto/coupons/coupon-log-response';
+import { CouponTransferLogReqDto } from '../dto/coupons/coupon-transfer-log-request.dto';
+import { CouponTransferLogRes } from '../dto/coupons/coupon-transfer-log-response';
 
 @Controller('couponbatches')
 @ApiTags('couponbatches')
+@UseGuards(TokenGuard)
+@ApiBearerAuth()
 export class CouponsController {
   constructor(private readonly couponsService: CouponsService) {}
 
@@ -27,12 +36,10 @@ export class CouponsController {
   @Post('coupon')
   async coupons(
     @Body() couponRequestDto: CouponRequestDto,
-    @Req() req: Request,
     @Res() res: Response,
   ) {
-    await this.couponsService.coupons(couponRequestDto, req);
-
-    return res.status(HttpStatus.OK).json(new CouponListResponseDto());
+    const clRes = await this.couponsService.coupons(couponRequestDto);
+    return res.status(HttpStatus.OK).json(clRes);
   }
 
   @ApiOperation({
@@ -45,13 +52,11 @@ export class CouponsController {
   })
   @Get('coupon/:id')
   async couponsCode(
-    @Param('id') code: string,
-    @Req() req: Request,
+    @Param('id') id: string,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponsCode(code, req);
-
-    return res.status(HttpStatus.OK).json(new CouponResponseDto());
+    const crRes = await this.couponsService.couponsCode(id);
+    return res.status(HttpStatus.OK).json(crRes);
   }
 
   @ApiOperation({
@@ -65,13 +70,11 @@ export class CouponsController {
   @Post('coupon/use/:id')
   async couponsCodeUse(
     @Param('id') id: string,
-
-    @Req() req: Request,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponsCodeUse(id, req);
-
-    return res.status(HttpStatus.OK).json(new CommonResponseDto());
+    const comRes = await this.couponsService.couponsCodeUse(id, req.user);
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({
@@ -84,16 +87,12 @@ export class CouponsController {
   })
   @Post('coupon/convert_to_paper/:id')
   async couponsCodeConvertToPaper(
-    @Param('id') code: string,
-
-    @Req() req: Request,
+    @Body() coupon2paper:Coupon2PaperDto,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponsCodeConvertToPaper(code, req);
-
-    return res
-      .status(HttpStatus.OK)
-      .json(new CommonResponseDto());
+    const comRes = await this.couponsService.couponsCodeConvertToPaper(coupon2paper, req.user);
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({
@@ -106,13 +105,11 @@ export class CouponsController {
   })
   @Post('list')
   async couponBatches(
-    @Body() couponBatchRequestDto: CouponBatchRequestDto,
-    @Req() req: Request,
+    @Body() couponBatchRequestDto: CouponBatchListRequestDto,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponBatches(couponBatchRequestDto, req);
-
-    return res.status(HttpStatus.OK).json(new CouponBatchesResponseDto());
+    const cbRes = await this.couponsService.couponBatches(couponBatchRequestDto);
+    return res.status(HttpStatus.OK).json(cbRes);
   }
 
   @ApiOperation({
@@ -126,15 +123,14 @@ export class CouponsController {
   @Post('')
   async couponBatchesPost(
     @Body() couponBatchPostDto: CouponBatchPostDto,
-    @Req() req: Request,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponBatchesPost(
-      couponBatchPostDto,
-      req,
-    );
-
-    return res.status(HttpStatus.OK).json(new CommonResponseDto());
+    const comRes = await this.couponsService.couponBatchesPost(
+        couponBatchPostDto,
+        req.user,
+      );
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({
@@ -148,13 +144,10 @@ export class CouponsController {
   @Get('/:id')
   async couponBatchedId(
     @Param('id') id: string,
-
-    @Req() req: Request,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponBatchedId(id, req);
-
-    return res.status(HttpStatus.OK).json(new CouponBatchesIdResponseDto());
+    const cbRes = await this.couponsService.couponBatchedId(id);
+    return res.status(HttpStatus.OK).json(cbRes);
   }
 
   @ApiOperation({
@@ -169,16 +162,22 @@ export class CouponsController {
   async couponBatchedIdPut(
     @Param('id') id: string,
     @Body() couponBatchPostDto: CouponBatchPostDto,
-    @Req() req: Request,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponBatchedIdPut(
-      id,
-      couponBatchPostDto,
-      req,
-    );
-
-    return res.status(HttpStatus.OK).json(new CommonResponseDto());
+    const comRes = new CommonResponseDto();
+    try {
+      const rlt = await this.couponsService.couponBatchedIdPut(
+        id,
+        couponBatchPostDto,
+        req.user,
+      );
+      console.log("update", rlt);
+    } catch (e) {
+      comRes.ErrorCode = ErrCode.ERROR_PARAMETER;
+      comRes.error.extra = e;
+    }
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({
@@ -192,15 +191,14 @@ export class CouponsController {
   @Post('authorize/:id')
   async couponBatchedIdAuthorize(
     @Param('id') id: string,
-
-    @Req() req: Request,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponBatchedIdAuthorize(id, req);
+    const comRes = await this.couponsService.couponBatchedIdAuthorize(id, req.user);
 
     return res
       .status(HttpStatus.OK)
-      .json(new CommonResponseDto());
+      .json(comRes);
   }
 
   @ApiOperation({
@@ -215,13 +213,47 @@ export class CouponsController {
   async couponBatchedIdCancel(
     @Param('id') id: string,
 
-    @Req() req: Request,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.couponsService.couponBatchedIdCancel(id, req);
-
+    const comRes = await this.couponsService.couponBatchedIdCancel(id, req.user);
     return res
       .status(HttpStatus.OK)
-      .json(new CommonResponseDto());
+      .json(comRes);
   }
+
+  @ApiOperation({
+    summary: '優惠券自動發行記錄',
+    description: '',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CouponLogRes,
+  })
+  @Post('autoissuelog')
+  async getAutoIssueLog(
+    @Body() coupReq:CouponAutoIssueLogReqDto,
+    @Res() res:Response,
+  ) {
+    const cplogRes = await this.couponsService.getCouponLog(coupReq);
+    res.status(HttpStatus.OK).json(cplogRes);
+  }
+
+  @ApiOperation({
+    summary: '優惠券轉移記錄',
+    description: '',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CouponTransferLogRes,
+  })
+  @Post('transferlog')
+  async getTransferLog(
+    @Body() coupReq:CouponTransferLogReqDto,
+    @Res() res:Response,
+  ) {
+    const cplogRes = await this.couponsService.getTransferLog(coupReq);
+    res.status(HttpStatus.OK).json(cplogRes);
+  }
+
 }

@@ -1,7 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { ICouponBatch } from "../interface/coupon.if";
-import { CouponBatchRequestDto } from "./coupon-batch-request.dto";
-import { IsNumber, IsOptional, IsString } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { ICouponBatch } from '../interface/coupon.if';
+import { CouponBatchRequestDto } from './coupon-batch-request.dto';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { COUPON_BATCH_FREQUNCY } from '../../utils/enum';
 
 export class CouponBatchPostDto extends CouponBatchRequestDto implements Partial<ICouponBatch> {
     @ApiProperty({
@@ -23,6 +24,8 @@ export class CouponBatchPostDto extends CouponBatchRequestDto implements Partial
     @ApiProperty({
         description: '發行頻率',
         required: false,
+        enum: COUPON_BATCH_FREQUNCY,
+        example: COUPON_BATCH_FREQUNCY.MONTHLY,
     })
     @IsOptional()
     @IsString()
@@ -38,17 +41,11 @@ export class CouponBatchPostDto extends CouponBatchRequestDto implements Partial
 
     @ApiProperty({
         description: '每人張數',
-        required: false,
+        required: true,
+        example: 3,
     })
     @IsOptional()
     @IsNumber()
-    couponsPerPerson?: number;
+    couponsPerPerson: number;
 
-    @ApiProperty({
-        description: '發行目標說明',
-        required: false,
-    })
-    @IsOptional()
-    @IsString()
-    targetDescription?: string;
 }

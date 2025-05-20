@@ -1,17 +1,15 @@
-import { Controller, Req, Res, HttpStatus, Get, Query, Post, Body, Param, Put, UseGuards } from '@nestjs/common';
+import { Controller, Req, Res, HttpStatus, Get, Query, Post, Body, Param, Put, UseGuards, Search } from '@nestjs/common';
 import { UsersService } from '../service/users.service';
 import { Request, Response } from 'express';
-import { ApiResponse, ApiOperation, ApiTags, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiResponse, ApiOperation, ApiTags, ApiParam, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { UsersResponseDto } from '../dto/users/users-response.dto';
-import { CommonError } from '../utils/common-exception';
-import { ERROR_TYPE } from '../utils/enum';
-import { ERROR_MESSAGE, STATUS_CODE } from '../utils/constant';
-import { CommonResponseDto } from '../dto/common-response.dto';
+import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { UserCreateDataDto } from '../dto/users/user-create-data.dto';
 import { UsersIdResponseDto } from '../dto/users/users-id-response.dto';
 import { UserStatusDto } from '../dto/users/user-status.dto';
-import { ErrCode, ErrMsg } from '../utils/enumError';
-import { TokenGuard } from '../utils/token-guard';
+import { TokenGuard } from '../utils/tokens/token-guard';
+import { UserPutDataDto } from '../dto/users/user-put-data.dto';
+import { UserModifyPassDto } from '../dto/users/user-modify-pass.dto';
 
 @Controller('users')
 @ApiTags('users')
@@ -28,30 +26,17 @@ export class UsersController {
     description: '成功或失敗',
     type: UsersResponseDto,
   })
-  @Get('')
+  @ApiQuery({name: 'search', description: '欄位 username & displayname 關鍵字查詢或手機號碼(至少輸入3個數字)', required:false})
+  @Get()
   async usersGet(
     @Query('search') search: string,
+    // @Param('search') search:string,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    this.usersService.usersGet(search).then((rtn) => {
-      const userRes = new UsersResponseDto();
-      if (rtn) {
-        userRes.data = rtn;
-      } else {
-        userRes.errorcode = ErrCode.ERROR_PARAMETER;
-        userRes.error = {
-          message: ErrMsg.ERROR_PARAMETER,
-        }
-      }
-      return res.status(HttpStatus.OK).json(userRes);
-    }).catch((e) => {
-      throw new CommonError(
-        e.type || ERROR_TYPE.SYSTEM,
-        e.status || STATUS_CODE.FAIL,
-        e.status ? e.clientErrorMessage : ERROR_MESSAGE.SERVER_ERROR,
-        e.message,
-      );
-    });
+    // console.log(req.query);
+    const userRes = await this.usersService.usersGet(search, req.user);
+    return res.status(HttpStatus.OK).json(userRes);
   }
 
   @ApiOperation({ summary: '新增使用者', description: '' })
@@ -59,22 +44,11 @@ export class UsersController {
   @Post('')
   async usersPost(
     @Body() usersPostRequestDto: UserCreateDataDto,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    const rlt = new CommonResponseDto();
-    this.usersService.usersPost(usersPostRequestDto).then((rtn) => {
-      return res.status(HttpStatus.OK).json(rlt);        
-    }).catch( (e) => {
-      rlt.error = e;
-      rlt.errorcode = ErrCode.ERROR_PARAMETER;
-      return res.status(HttpStatus.BAD_REQUEST).json(rlt);
-      // throw new CommonError(
-      //   e.type || ERROR_TYPE.SYSTEM,
-      //   e.status || STATUS_CODE.FAIL,
-      //   e.status ? e.clientErrorMessage : ERROR_MESSAGE.SERVER_ERROR,
-      //   e.message,
-      // );
-    })    
+    const comRes =  await this.usersService.usersPost(usersPostRequestDto, req.user);
+    return res.status(HttpStatus.BAD_REQUEST).json(comRes);
   }
 
   @ApiOperation({
@@ -90,17 +64,8 @@ export class UsersController {
     @Param('id') id: string,
     @Res() res: Response,
   ) {
-    const userRes = new UsersIdResponseDto()
     const rlt = await this.usersService.usersId(id);
-    if (rlt) {
-      userRes.data = rlt;
-    } else {
-      userRes.errorcode = ErrCode.ERROR_PARAMETER;
-      userRes.error = {
-        message: ErrMsg.ERROR_PARAMETER,
-      }
-    }
-    return res.status(HttpStatus.OK).json(userRes);
+    return res.status(HttpStatus.OK).json(rlt);
   }
 
   @ApiOperation({
@@ -114,19 +79,30 @@ export class UsersController {
   @Put('/:id')
   async usersPutId(
     @Param('id') id: string,
-    @Body() usersIdPutRequestDto: UserCreateDataDto,
-    @Req() req: Request,
+    @Body() usersIdPutRequestDto: UserPutDataDto,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    const commonRes = new CommonResponseDto();
-    const rlt = await this.usersService.usersPutId(id, usersIdPutRequestDto);
-    if (!rlt) {
-      commonRes.errorcode = ErrCode.ERROR_PARAMETER;
-      commonRes.error = {
-        message: ErrCode.ERROR_PARAMETER,
-      }
-    }
+    const commonRes  = await this.usersService.usersPutId(id, usersIdPutRequestDto, req.user);
     return res.status(HttpStatus.OK).json(commonRes);
+  }
+
+  @ApiOperation({
+    summary: '修改密碼',
+    description: '',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CommonResponseDto,
+  })
+  @Post('modifypassword')
+  async modifyPass(
+    @Body() mpass:UserModifyPassDto,
+    @Req() req:any,
+    @Res() res:Response,
+  ){
+    const commonRes = await this.usersService.modifyPassword(mpass, req.user);
+    return res.status(HttpStatus.OK).json(commonRes);    
   }
 
   @ApiOperation({
@@ -145,14 +121,7 @@ export class UsersController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const commonRes = new CommonResponseDto()
-    const ans = await this.usersService.usersIdStatus(id, userStatus.isActive);
-    if (!ans) {
-      commonRes.errorcode = ErrCode.ERROR_PARAMETER;
-      commonRes.error = {
-        message: ErrMsg.MISS_PARAMETER,
-      }
-    }
+    const commonRes = await this.usersService.usersIdStatus(id, userStatus.isActive);
     return res.status(HttpStatus.OK).json(commonRes);
   }
 
@@ -167,16 +136,10 @@ export class UsersController {
   @Post('/reset_2fa/:id')
   async usersIdReset2Fa(
     @Param('id') id: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
-    const commonRes = new CommonResponseDto();
-    const ans = await this.usersService.usersIdReset2Fa(id);
-    if (!ans) {
-      commonRes.errorcode = ErrCode.ERROR_PARAMETER;
-      commonRes.error = {
-        message: ErrMsg.ERROR_PARAMETER,
-      }
-    }
-    return res.status(HttpStatus.OK).json(new CommonResponseDto());
+    const commonRes = await this.usersService.usersIdReset2Fa(id, req);
+    return res.status(HttpStatus.OK).json(commonRes);
   }
 }

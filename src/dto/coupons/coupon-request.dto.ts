@@ -3,14 +3,14 @@ import { ICoupon } from "../interface/coupon.if";
 import { IsEnum, IsOptional, IsString } from "class-validator";
 import { COUPON_STATUS } from "../../utils/enum";
 
-export class CouponRequestDto implements Partial<ICoupon> {
+export class CouponRequestDto implements Partial<ICoupon> {    
     @ApiProperty({
-        description: '編號',
+        description: '批次編號',
         required: false,
     })
     @IsOptional()
     @IsString()
-    id?: string;
+    batchId?: string;
     
     @ApiProperty({
         description: '會員編號',
@@ -22,11 +22,12 @@ export class CouponRequestDto implements Partial<ICoupon> {
 
     @ApiProperty({
         description: '使用狀態',
+        required: false,
         enum: COUPON_STATUS,
         example: COUPON_STATUS.NOT_USED,
         default: COUPON_STATUS.NOT_ISSUED,
     })
     @IsOptional()
     @IsEnum(COUPON_STATUS)
-    status: COUPON_STATUS;
+    status?: COUPON_STATUS;
 }

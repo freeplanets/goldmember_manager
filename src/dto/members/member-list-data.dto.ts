@@ -1,9 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { MemberBaseDataDto } from "./member-base-data.dto";
-import { IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsOptional, IsString } from "class-validator";
 import { DS_LEVEL, MEMBER_LEVEL } from "../../utils/enum";
+import { IMember } from "../interface/member.if";
 
-export class MemberListDataDto extends MemberBaseDataDto{
+export class MemberListDataDto extends MemberBaseDataDto implements Partial<IMember>{
     @ApiProperty({
         description: '會員型式',
         required: false,
@@ -16,11 +17,15 @@ export class MemberListDataDto extends MemberBaseDataDto{
 
     @ApiProperty({
         description: '董監事註記',
-        enum: DS_LEVEL,
-        example: DS_LEVEL.NONE,
+        required: false,
     })
     @IsOptional()
-    @IsString()
-    isDirector?: DS_LEVEL;
+    @IsBoolean()
+    isDirector?: boolean;
 
+    @ApiProperty({
+        description: '是否非手機 app 會員',
+        required: false,
+    })   
+    isNotAppMember?: boolean;
 }

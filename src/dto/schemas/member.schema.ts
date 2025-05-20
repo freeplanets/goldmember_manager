@@ -3,6 +3,9 @@ import { IMember } from "../interface/member.if";
 import { ModifiedByData } from "../data/modified-by.data";
 import { Document } from "mongoose";
 import { DS_LEVEL, GENDER, MEMBER_LEVEL } from "../../utils/enum";
+import { IModifiedBy } from "../interface/modifyed-by.if";
+import { ILoginDevice } from "../interface/devices.if";
+import { LoginDevice } from "../devices/login-device";
 
 export type MemberDcoument = Document & Member;
 
@@ -24,12 +27,20 @@ export class Member implements IMember {
     password: string;
 
     @Prop({
+        default: 0,
+    })
+    passwordLastModifiedTs: number;
+
+    @Prop({
         enum: GENDER,
     })
     gender?: GENDER;
 
     @Prop()
     birthDate: string;
+
+    @Prop()
+    birthMonth: number;
 
     @Prop()
     email: string;
@@ -52,8 +63,10 @@ export class Member implements IMember {
     })
     membershipType: MEMBER_LEVEL;
 
-    @Prop()
-    membershipLastModified: ModifiedByData;
+    @Prop({
+        type: ModifiedByData,
+    })
+    membershipLastModified: IModifiedBy;
 
     @Prop()
     mobileType: string;
@@ -71,19 +84,49 @@ export class Member implements IMember {
     notes: string;
 
     @Prop()
-    lastVisit: string;
+    lastLogin: number;
+    
+    @Prop()
+    lastLoginIp: string;
 
-    @Prop({
-        enum: DS_LEVEL,
-        default: DS_LEVEL.NONE,
-    })
-    isDirector: DS_LEVEL;
+    @Prop({ default: false })
+    isDirector: boolean;
     
     @Prop()
     refSystemId: string;
 
+    @Prop({
+        type: ModifiedByData, 
+    })
+    directorStatusLastModified?: IModifiedBy;
+
+    @Prop({
+        default: false,
+    })
+    isLocked: boolean;
+
+    @Prop({
+        default: 0,
+    })
+    passwordFailedCount: number;
+
+    @Prop({
+        default: 0,
+    })
+    passwordLastTryTs: number;
+    
+    @Prop({
+        default: 0,
+    })
+    announcementReadTs?: number;
+    
+    @Prop({
+        type:Array<Partial<LoginDevice>>
+    })
+    devices: Partial<ILoginDevice>[];
+
     @Prop()
-    directorStatusLastModified?: ModifiedByData;
+    isCouponTriggered: boolean;
 }
 
 export const MemberSchema = SchemaFactory.createForClass(Member);

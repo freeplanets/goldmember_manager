@@ -9,9 +9,11 @@ import { CouponsModule} from './module/coupons.module';
 import { ReportsStatsModule} from './module/reports_stats.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import mongoConfig from './config/mongo.config';
-import jwtConfig from './config/jwt.config';
-import { JwtModule } from '@nestjs/jwt';
+import { DevicesModule } from './module/devices.module';
+// import { InsertMembersIfNotExists } from './utils/synthetic-data/create-members';
 // import { GoogleRecaptchaModule } from '@nestlab/google-recaptcha';
+
+// InsertMembersIfNotExists();
 
 let dbase = process.env.MONGO_DB;
 if (process.env.IS_OFFLINE) dbase = process.env.LMONGO_DB;
@@ -33,7 +35,7 @@ if (process.env.IS_OFFLINE) dbase = process.env.LMONGO_DB;
       })
     }),
     // MongodbModule,
-     AuthModule,  UsersModule,  MembersModule,  AnnouncementsModule,  CouponsModule,  ReportsStatsModule, ],
+     AuthModule,  UsersModule, DevicesModule,  MembersModule,  AnnouncementsModule,  CouponsModule,  ReportsStatsModule, ],
   controllers: [],
   providers: [],
 })

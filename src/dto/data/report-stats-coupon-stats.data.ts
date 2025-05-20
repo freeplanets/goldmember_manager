@@ -1,18 +1,15 @@
 import { IsOptional, IsString, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ICouponStats } from '../interface/report.if';
-import { COUPON_TYPES } from '../../utils/enum';
 
 export class ReportStatsCouponStatsData implements ICouponStats {
   @ApiProperty({
     description: '優惠券種類',
     required: false,
-    enum: COUPON_TYPES,
-    example: COUPON_TYPES.BIRTH,
   })
   @IsOptional()
   @IsString()
-  type?: COUPON_TYPES;
+  type?: string;
 
   @ApiProperty({
     description: '電子票券',

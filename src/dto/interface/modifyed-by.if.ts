@@ -1,5 +1,6 @@
 export interface IModifiedBy {
   modifiedBy?: string;
-  modifiedAt?: string;
-  lastValue: string | number| boolean;
+  modifiedByWho: string;
+  modifiedAt?: number;
+  lastValue?: string | number| boolean;
 }

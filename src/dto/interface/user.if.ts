@@ -1,4 +1,5 @@
 import { LEVEL } from "../../utils/enum";
+import { ILoginDevice } from "./devices.if";
 
 export interface IUser {
     id: string;
@@ -10,11 +11,16 @@ export interface IUser {
     email: string;
     phone: string;
     isActive: boolean;
-    lastLogin: string;
+    isLocked?: boolean;
+    passwordFailedCount?: number
+    passwordLastTryTs?: number; 
+    lastLogin: number;
     lastLoginIp: string;
+    lastLoginDevice: Partial<ILoginDevice>;
     need2changePass:boolean;
     has2Fa: boolean;
     SecretCode:string;
+    devices:Partial<ILoginDevice>[];
     _id?:string;
     __v?:number;
 }

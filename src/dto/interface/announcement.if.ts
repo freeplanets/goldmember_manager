@@ -1,22 +1,23 @@
-import { ANNOUNCEMENT_GROUP, ANNOUNCEMENT_TYPE, SEARCH_GROUP_METHOD } from "../../utils/enum";
-import { IModifiedBy } from "./modifyed-by.if";
+import { ANNOUNCEMENT_READ_STATUS } from '../../utils/enum';
+import { IHasFilterItem } from './common.if';
+import { IModifiedBy } from './modifyed-by.if';
 
-export interface IAnnouncement {
+export interface IAnnouncement extends IHasFilterItem {
     id?: string;
     title?: string;
     content?: string;
-    type?: ANNOUNCEMENT_TYPE;
     publishDate?: string;
     expiryDate?: string;
     isPublished?: boolean;
     isTop?: boolean;
-    iconType: string;
+    iconType?: string;
     attachments?: IAttachmemt[];
-    targetGroups: [ANNOUNCEMENT_GROUP];
-    method?:SEARCH_GROUP_METHOD;
+    birthMonth: number,
     creator: IModifiedBy;
     updater: IModifiedBy;
+    isApprev: boolean;
     apprevor:IModifiedBy;
+    publishedTs:number;
 }
 
 export interface IAttachmemt {
@@ -25,19 +26,16 @@ export interface IAttachmemt {
     size?: number;
 }
 
-export interface IAnnouncementReadStatus {
-    id: string;
+export interface IAnnouncement2Member {
+    id:string;
     memberId: string;
-    readStatus: number; // 0 未讀, 1 已讀
+    announcementId:string;
+    publishDate?: string;
+    expiryDate?: string;
+    readStatus: ANNOUNCEMENT_READ_STATUS; // 0 未讀, 1 已讀
+    isDeleted: boolean;
+    isPublished: boolean
 }
 
-export interface IAnnouncementSearch {
-    type?: string;
-    groups?: IGroupsSearch; 
-}
-export interface IGroupsSearch {
-    group: ANNOUNCEMENT_GROUP[],
-    method: SEARCH_GROUP_METHOD;
-}
 // 未下架和三個月內 
 // 預設

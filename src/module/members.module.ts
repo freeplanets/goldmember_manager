@@ -5,6 +5,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Member, MemberSchema } from '../dto/schemas/member.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { KsMember, KsMemberSchema } from '../dto/schemas/ksmember.schema';
+import { LoginToken, LoginTokenSchema } from '../dto/schemas/login-token.schema';
+import { MemberGrowth, MemberGrowthSchema } from '../dto/schemas/member-growth.schema';
+import { MemberTransferLog, MemberTransferLogSchema } from '../dto/schemas/member-transfer-log.schema';
 
 @Module({
   imports: [
@@ -12,6 +15,9 @@ import { KsMember, KsMemberSchema } from '../dto/schemas/ksmember.schema';
     MongooseModule.forFeature([
       {name:Member.name, schema:MemberSchema},
       {name:KsMember.name, schema:KsMemberSchema},
+      {name:LoginToken.name, schema:LoginTokenSchema},
+      {name:MemberGrowth.name, schema:MemberGrowthSchema},
+      {name:MemberTransferLog.name, schema:MemberTransferLogSchema},
     ])
   ],
   controllers: [MembersController],

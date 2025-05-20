@@ -18,23 +18,6 @@ export class RequestLoggingMiddleware implements NestMiddleware {
         body,
       )}, query: ${JSON.stringify(query)}`,
     );
-    // if (path.indexOf('auth/login') !== -1) {
-    //   console.log('Path:', path, 'checked');
-    // } else {
-    //   const token = req.header('WWW-AUTH');
-    //   console.log("token", token);
-    //   const userInfo = this.jwtValidate(token);
-    //   if (userInfo) {
-    //     res.locals.user = userInfo;
-    //   } else {
-    //     const commonRes = new CommonResponseDto();
-    //     commonRes.errorcode = ErrCode.TOKEN_ERROR;
-    //     commonRes.error = {
-    //       message: ErrMsg.TOKEN_ERROR,
-    //     }
-    //     res.send(HttpStatus.OK).json(commonRes);
-    //   }
-    // }
     next();
   }
   jwtValidate = (token:string) => {

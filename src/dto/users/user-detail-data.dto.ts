@@ -4,6 +4,15 @@ import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class UserDetailDataDto extends UserBaseDataDto {
     @ApiProperty({
+        description: '使用者名稱',
+        required: false,
+        example: 'james',
+    })
+    @IsOptional()
+    @IsString()
+    username?: string;
+    
+    @ApiProperty({
         description: '使用者編號',
         required: false,
         example: '',
@@ -42,11 +51,10 @@ export class UserDetailDataDto extends UserBaseDataDto {
     @ApiProperty({
         description: '最後登入時間',
         required: false,
-        example: '',
     })
     @IsOptional()
     @IsString()
-    lastLogin?: string;
+    lastLogin?: number;
 
     @ApiProperty({
         description: '最後登入ip',

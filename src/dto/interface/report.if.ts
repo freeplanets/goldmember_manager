@@ -1,21 +1,22 @@
-import { COUPON_TYPES } from "../../utils/enum";
-
 export interface IMemberYearly {
+    year?:number;
     totalMembers?: number;
     newMembers?: number;
     totalCoupons?: number;
     usedCoupons?: number;
-    usageRate?: number;
+    usageRate?: number;     // 直接運算
 }
 
 export interface IMemberMonthly {
+    year?:number;
     month?: number;
     newMembers?: number;
     usedCoupons?: number;
-    yearToDateUsageRate?: number;
+    yearToDateUsageRate?: number;   // 直接運算
 }
 
 export interface IMemberGrowth {
+    year?:number;
     month?: number;
     regularGrowth?: number;
     shareholderGrowth?: number;
@@ -26,7 +27,9 @@ export interface IMemberGrowth {
 }
 
 export interface ICouponStats {
-    type?: COUPON_TYPES;
+    year?:number;
+    month?: number;
+    type?: string;
     electronicCount?: number;
     electronicUsed?: number;
     electronicInvalid?: number;

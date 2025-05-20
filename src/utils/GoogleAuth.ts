@@ -51,21 +51,11 @@ export default class GoogleAuth {
       axios.get(url, this.axConfig).then((res) => {
         // console.log("getIMG check2", res);
         resolve(res.data);
-      }).catch((err) => {
-          console.log("Error is raised by SendMsg:", err);
+      }).catch((e) => {
+          console.log("Error is raised by SendMsg:", e);
           resolve(undefined);        
       })
-      // https.get(url, this.Optons, (res) => {
-      //   console.log("getIMG in get");
-      //   res.setEncoding("binary");
-      //   // const data: any[] = [];
-      //   res.on("data", (d) => {
-      //     resolve(d);
-      //   }).on("error", (err) => {
-      //     console.log("Error is raised by SendMsg:", err);
-      //     resolve(undefined);
-      //   });
-      // });
+
     });
   }
   public async Validate(gav: IGAValidate) {
@@ -76,22 +66,11 @@ export default class GoogleAuth {
     return new Promise((resolve) => {
       axios.get(url, this.axConfig).then((res) => {
         resolve(res.data);
-      }).catch((err) => {
-        console.log("Error is raised by SendMsg:", err);
+      }).catch((e) => {
+        console.log("Error is raised by SendMsg:", e);
         resolve(undefined);        
       })
-      // https.get(url, this.Optons, (res) => {
-      //   res.setEncoding("binary");
-      //   // const data: any[] = [];
-      //   res.on("data", (d) => {
-      //     // console.log("Receive from SendMsg:", d);
-      //     // data.push(Buffer.from(d, "binary"));
-      //     resolve(d);
-      //   }).on("error", (err) => {
-      //     console.log("Error is raised by SendMsg:", err);
-      //     resolve(undefined);
-      //   });
-      // });
+
     });
   }
   public myRandom(min: number, max: number) {

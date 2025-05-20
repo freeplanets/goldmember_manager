@@ -1,4 +1,5 @@
 import { DS_LEVEL, GENDER, MEMBER_LEVEL } from "../../utils/enum";
+import { ILoginDevice } from "./devices.if";
 import { IModifiedBy } from "./modifyed-by.if";
 
 export interface IMember {
@@ -7,8 +8,11 @@ export interface IMember {
   name?: string;
   displayName?: string;
   password?: string;
+  passwordLastModifiedTs: number;
+  passwordUpdateReminderDays?: number; // 密碼更新提醒天數
   gender?: GENDER;
   birthDate?: string;
+  birthMonth?: number;
   email?: string;
   phone?: string;
   address?: string;
@@ -21,12 +25,36 @@ export interface IMember {
   joinDate?: string;
   expiryDate?: string;
   notes?: string;
-  lastVisit?: string;
-  isDirector?: DS_LEVEL;       // 球場董監事
+  lastLogin: number;
+  lastLoginIp: string;
+  isDirector?: boolean;       // 球場董監事
   refSystemId?: string;  //非股東會員董監代表之股東代號
   directorStatusLastModified?: IModifiedBy;
+  isLocked?: boolean; // 是否鎖定
+  passwordFailedCount?: number
+  passwordLastTryTs?: number;
+  announcementReadTs?: number; // 公告已讀時間戳
+  devices: Partial<ILoginDevice>[]; //會員登入設備
+  isCouponTriggered: boolean; // 因轉送優惠券而產生的會員
+  isNotAppMember?: boolean; // 是否非app會員 only use for search Ks Member
 }
 
+export interface IMemberActivity {
+  year:number;
+  month:number;
+  memberId:string;
+  membershipType:MEMBER_LEVEL;
+  lastLogin:number;
+}
+
+export interface IMemberTransferLog extends IModifiedBy {
+  id:string;
+  memberId:string;
+  memberName:string;
+  oldMembershipType?: MEMBER_LEVEL;
+  newMembershipType?: MEMBER_LEVEL;
+  isDirector?: boolean;
+}
 // 非app股東，查詢優惠券
 
 // 查詢 股號，手機，名字(含國興資料)

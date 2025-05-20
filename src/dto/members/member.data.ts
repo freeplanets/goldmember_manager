@@ -1,9 +1,10 @@
 import { IsOptional, IsString, IsBoolean, IsObject, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ModifiedByData } from '../data/modified-by.data';
-import { MemberListDataDto } from './member-list-data.dto';
+import { MEMBER_LEVEL } from '../../utils/enum';
+import { MemberBaseDataDto } from './member-base-data.dto';
 
-export class MemberData extends MemberListDataDto  {
+export class MemberData extends MemberBaseDataDto  {
 
   @ApiProperty({
     description: '系統編號（如：國興編號）',
@@ -83,7 +84,15 @@ export class MemberData extends MemberListDataDto  {
   })
   @IsOptional()
   @IsString()
-  lastVisit?: string;
+  lastLogin?: number;
+
+  @ApiProperty({
+    description: '上次登入IP',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  lastLoginIp?: string;
 
   @ApiProperty({
     description: '非股東會員董監代表之股東代號',
@@ -102,4 +111,23 @@ export class MemberData extends MemberListDataDto  {
   @IsOptional()
   @IsObject()
   directorStatusLastModified?: ModifiedByData = new ModifiedByData();
+
+      @ApiProperty({
+        description: '會員型式',
+        required: false,
+        enum: MEMBER_LEVEL,
+        example: MEMBER_LEVEL.GENERAL_MEMBER,
+    })
+    @IsOptional()
+    @IsString()
+    membershipType?: MEMBER_LEVEL;
+
+    @ApiProperty({
+        description: '董監事註記',
+        required: false,
+    })
+    @IsOptional()
+    @IsBoolean()
+    isDirector?: boolean;
+
 }

@@ -17,6 +17,9 @@ export class KsMember implements IKsMember {
 
     @Prop()
     birthday:string;
+
+    @Prop()
+    birthMonth: number;
     
     @Prop()
     types:number;

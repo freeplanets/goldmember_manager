@@ -26,3 +26,27 @@ const getCircularReplacer = () => {
     return value;
   };
 };
+
+// return YYYY/MM/DD
+export function DateWithLeadingZeros(date:string=new Date().toLocaleDateString('zh-TW')): string {
+  const dd = date.split('/');
+  const year = dd[0];
+  const month = dd[1].padStart(2, '0');
+  const day = dd[2].padStart(2, '0');
+  return `${year}/${month}/${day}`;
+}
+
+export function AddMonth(months:number, date:string|Date|undefined = undefined){
+  if (date) {
+    date = new Date(date);
+  } else {
+    date = new Date();
+  }
+  return new Date(date.setMonth(date.getMonth() + months)).toLocaleDateString('zh-TW');
+}
+
+export function AddMonthLessOneDay(months:number, date:string|Date|undefined = undefined){
+  const d = new Date(AddMonth(months, date));
+  console.log(d);
+  return new Date(d.setDate(d.getDate()-1)).toLocaleDateString('zh-TW');
+}

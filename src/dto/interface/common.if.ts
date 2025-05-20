@@ -1,12 +1,31 @@
-import { ErrCode, ErrMsg } from "../../utils/enumError";
+import { MEMBER_EXTEND_GROUP, MEMBER_GROUP } from '../../utils/enum';
+import { ErrCode } from '../../utils/enumError';
 
 export interface ICommonResponse<T> {
-    errorcode: ErrCode;
+    errorcode?: ErrCode;
     error?: ICommonError;
     data?: T;
 }
 
 export interface ICommonError {
-    message: string;
-    extra?: object;
+    message?: string;
+    extra?: any;
+}
+
+export interface ISmsVerify {
+    secret: string;
+    code: string;
+}
+
+export interface ITempData {
+    code?:string;
+    value?:string;
+    codeUsage?:string;
+    ts:number;
+}
+
+export interface IHasFilterItem {
+    type?: string;
+    targetGroups: MEMBER_GROUP[];
+    extendFilter?: MEMBER_EXTEND_GROUP[];    
 }

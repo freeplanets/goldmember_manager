@@ -1,6 +1,6 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, PropOptions, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ICouponBatch } from "../interface/coupon.if";
-import { ANNOUNCEMENT_GROUP, COUPON_ISSUANCE_METHOD } from "../../utils/enum";
+import { MEMBER_GROUP, BIRTH_OF_MONTH, COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, MEMBER_EXTEND_GROUP } from "../../utils/enum";
 import { ModifiedByData } from "../data/modified-by.data";
 import { IModifiedBy } from "../interface/modifyed-by.if";
 import { Document } from "mongoose";
@@ -21,6 +21,11 @@ export class CouponBatch implements ICouponBatch {
     @Prop()
     type?: string;
 
+    @Prop({
+        enum: BIRTH_OF_MONTH,
+    })
+    birthMonth?: BIRTH_OF_MONTH;
+
     @Prop()
     mode?: string;
 
@@ -34,15 +39,22 @@ export class CouponBatch implements ICouponBatch {
     couponsPerPerson?: number;
 
     @Prop({
-        enum: COUPON_ISSUANCE_METHOD,
-        default: COUPON_ISSUANCE_METHOD.MANUAL,
+        enum: COUPON_BATCH_ISSUANCE_METHOD,
+        default: COUPON_BATCH_ISSUANCE_METHOD.MANUAL,
     })
-    issueMode: COUPON_ISSUANCE_METHOD; // 0 手動, 1 自動
+    issueMode: COUPON_BATCH_ISSUANCE_METHOD; // 手動, 自動
 
     @Prop({
-        enum: ANNOUNCEMENT_GROUP,
+        enum: MEMBER_GROUP,
+        type: Array<MEMBER_GROUP>,
     })
-    issueTarger: ANNOUNCEMENT_GROUP;    // 發行對項
+    targetGroups: MEMBER_GROUP[];
+
+    @Prop({
+        enum: MEMBER_EXTEND_GROUP,
+        type: Array<MEMBER_EXTEND_GROUP>,
+    })
+    extendFilter?: MEMBER_EXTEND_GROUP[];
 
     @Prop()
     issueDate?: string;
@@ -50,21 +62,35 @@ export class CouponBatch implements ICouponBatch {
     @Prop()
     expiryDate?: string;
 
-    @Prop()
-    status?: string;
+    @Prop({
+        enum: COUPON_BATCH_STATUS,
+        default: COUPON_BATCH_STATUS.NOT_ISSUED,
+
+    })
+    status?: COUPON_BATCH_STATUS;
 
     @Prop()
-    targetDescription?: string;
+    originId?: string;
+
+    @Prop({
+        default: false,
+    })
+    couponCreated?: boolean;
 
     @Prop({
         type: ModifiedByData,
     })
     authorizer: IModifiedBy;
-    
+
+    @Prop({
+        type: ModifiedByData,
+    })
+    updater: IModifiedBy;
+
     @Prop({
         type: ModifiedByData
     })
-    canceler:IModifiedBy;    
+    canceler:IModifiedBy;
 }
 
 export const CouponBatchSchema = SchemaFactory.createForClass(CouponBatch);

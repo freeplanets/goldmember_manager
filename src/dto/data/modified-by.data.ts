@@ -1,4 +1,3 @@
-import { IsOptional, IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { IModifiedBy } from '../interface/modifyed-by.if';
 
@@ -7,17 +6,19 @@ export class ModifiedByData implements IModifiedBy {
     description: '修改人員編號',
     required: false,
   })
-  @IsOptional()
-  @IsString()
   modifiedBy?: string;
 
   @ApiProperty({
-    description: '修改時間',
+    description: '修改人員名稱',
     required: false,
   })
-  @IsOptional()
-  @IsString()
-  modifiedAt?: string;
+  modifiedByWho: string;
+
+  @ApiProperty({
+    description: '修改時間(timestamp)',
+    required: false,
+  })
+  modifiedAt?: number;
 
   @ApiProperty({
     description: '修改前數值',

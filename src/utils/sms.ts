@@ -18,8 +18,8 @@ const invokeLambda = (funcname:string, data:ISmsData) => {
             InvocationType: 'RequestResponse',
             Payload: data ? JSON.stringify(data) : null,
         }
-        lambda.invoke(param, (err:AWSError, data:Lambda.InvocationResponse) => {
-            if (err) return reject(err);
+        lambda.invoke(param, (e:AWSError, data:Lambda.InvocationResponse) => {
+            if (e) return reject(e);
             console.log('invokeLambda before json parse:', data.Payload);
             let payload = JSON.parse(data.Payload as string);
             console.log('invokeLambda', payload);
@@ -38,21 +38,25 @@ export const verifyPhoneCode = (phone:string) => {
     }
     return phone;
 }
-export const sendSMSCode = (target:ISmsTarget, msg:string) => {
+export const sendSMSCode = (phone:string, msg:string) => {
+    const target:ISmsTarget = {
+        type: 'sms',
+        data: phone,
+    }
     return new Promise((resolve, reject) => {
         invokeLambda('union-lambda-prod-sendMsg', {
             target: target.type,
             targetId: target.data,
             content: msg,
         }).then((res:any) => {
-            console.log('sendSMSCode:', res);
+            // console.log('sendSMSCode:', res);
             if(res.errcode !== '0') {
                 return reject(res);
             }
             return resolve(res.data);
-        }).catch((err) => {
-            console.log("sendSMSCode Error:", err);
-            return reject(err);
+        }).catch((e) => {
+            console.log("sendSMSCode Error:", e);
+            return reject(e);
         })
     })
 }

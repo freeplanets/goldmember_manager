@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { IAnnouncement, IAttachmemt } from "../interface/announcement.if";
-import { ANNOUNCEMENT_GROUP, ANNOUNCEMENT_TYPE, SEARCH_GROUP_METHOD } from "../../utils/enum";
+import { MEMBER_EXTEND_GROUP, MEMBER_GROUP } from "../../utils/enum";
 import { IModifiedBy } from "../interface/modifyed-by.if";
 import { ModifiedByData } from "../data/modified-by.data";
 import { Attachment } from "../announcements/attachment";
@@ -22,7 +22,7 @@ export class Announcement implements IAnnouncement {
     @Prop({
         type: String,
     })
-    type?: ANNOUNCEMENT_TYPE;
+    type?: string;
 
     @Prop()
     publishDate?: string;
@@ -37,25 +37,28 @@ export class Announcement implements IAnnouncement {
     isTop?: boolean;
 
     @Prop()
-    iconType: string;
+    iconType?: string;
 
     @Prop({
-        type: [Attachment],
+        type: Array<Attachment>,
     })
-    attachments?: [IAttachmemt];
+    attachments?: IAttachmemt[];
 
     @Prop({
         type: Array<String>,
-        enum: ANNOUNCEMENT_GROUP
+        enum: MEMBER_GROUP
     })
-    targetGroups: [ANNOUNCEMENT_GROUP];
+    targetGroups: MEMBER_GROUP[];
 
     @Prop({
-        type: String,
-        enum: SEARCH_GROUP_METHOD,
+      enum: MEMBER_EXTEND_GROUP,
+      type: Array<MEMBER_EXTEND_GROUP>,  
     })
-    method?: SEARCH_GROUP_METHOD;
-
+    extendFilter?: MEMBER_EXTEND_GROUP[];
+    
+    @Prop()
+    birthMonth: number;
+    
     @Prop({
         type: ModifiedByData
     })
@@ -67,9 +70,19 @@ export class Announcement implements IAnnouncement {
     updater: IModifiedBy;
 
     @Prop({
+        default: true,
+    })
+    isApprev: boolean;
+    
+    @Prop({
         type: ModifiedByData
     })
     apprevor:IModifiedBy;
+
+    @Prop({
+
+    })
+    publishedTs: number;
 }
 
 export const AnnouncementSchema = SchemaFactory.createForClass(Announcement);

@@ -8,21 +8,25 @@ import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from "@nestjs/sw
 import { eventContext } from "aws-serverless-express/middleware";
 import { createServer, proxy, Response } from "aws-serverless-express";
 import { Context, Handler } from "aws-lambda";
-import { GoogleRecaptchaFilter } from "./utils/google-recaptcha-filter";
+// import { GoogleRecaptchaFilter } from "./utils/google-recaptcha-filter";
 import { SecuritySchemeObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
+import { ValidationPipe, ValidationPipeOptions } from "@nestjs/common";
+import { ValidationException } from "./utils/validate/validation-exception";
 
 const authOption:SecuritySchemeObject = {
     description: 'JWT token authorization',
-    type: 'apiKey',
-    in: 'header',
+    //type: 'apiKey',
+    type: 'http',
+    // in: 'header',
     scheme: 'bearer',
     bearerFormat: 'JWT',
-    name: 'WWW-AUTH',
+    'x-tokenName': 'WWW-AUTH',
 }
 
 let cachedServer:Server;
 //即使刷新網頁，Token 值仍保持不變
 const swaggerCustomOptions: SwaggerCustomOptions = {
+    yamlDocumentUrl: 'docs-yaml',
     swaggerOptions: {
         persistAuthorization: true,
     },
@@ -60,6 +64,16 @@ async function bootstrapServer():Promise<Server> {
     const document = SwaggerModule.createDocument(app, options)
     SwaggerModule.setup('api', app, document, swaggerCustomOptions);
     app.use(eventContext());
+    // const sessionOpts:session.SessionOptions = {
+    //     secret: process.env.SESSION_SECRET,
+    //     resave: false,
+    //     saveUninitialized: false,
+    // }
+    // app.use(session(sessionOpts));
+    const vopt:ValidationPipeOptions = {
+        exceptionFactory: ValidationException,
+    }
+    app.useGlobalPipes(new ValidationPipe(vopt));
     // app.useGlobalFilters(new GoogleRecaptchaFilter());
     await app.init();
     return createServer(expressApp);
@@ -69,7 +83,7 @@ export const handler: Handler = async (event: any, context: Context): Promise<Re
     if (!cachedServer) {
         cachedServer = await bootstrapServer();
     }
-    // console.log(event);
+    //console.log(event);
     console.log('path:',event.requestContext.path,',','resourcePath:', event.requestContext.resourcePath, 'pathParameters:', event.pathParameters);
     const path = event.requestContext.path.replace('/linkougolf/backend', '');
     event.path = path;

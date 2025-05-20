@@ -1,16 +1,17 @@
-import { Controller, Req, Res, HttpStatus, Get, Query, Post, Body, Param, Put, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Controller, Req, Res, HttpStatus, Get, Post, Body, Param, Put, UseGuards, UseInterceptors, UploadedFiles } from '@nestjs/common';
 import { AnnouncementsService } from '../service/announcements.service';
 import { Request, Response } from 'express';
-import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiConsumes, ApiBody, ApiHeader } from '@nestjs/swagger';
 import { AnnouncementsResponseDto } from '../dto/announcements/announcements-response.dto';
 import { AnnouncementsIdResponseDto } from '../dto/announcements/announcements-id-response.dto';
 import { AnnouncementSearch } from '../dto/announcements/announcements-search.dto';
 import { AnnouncementCreateDto } from '../dto/announcements/announcement-create.dto';
-import { CommonResponseDto } from '../dto/common-response.dto';
-import { TokenGuard } from '../utils/token-guard';
-import { ErrCode, ErrMsg } from '../utils/enumError';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { FilesUploadDto } from '../dto/common/files-upload.dto';
+import { CommonResponseDto } from '../dto/common/common-response.dto';
+import { TokenGuard } from '../utils/tokens/token-guard';
+import { AnyFilesInterceptor } from '@nestjs/platform-express';
+import { AnnouncementFilterDto } from '../dto/announcements/announcement-filter.dto';
+import { AnnouncementsFilterResponseDto } from '../dto/announcements/announcements-filter-response.dto';
+import { AnnouncementModifyDto } from '../dto/announcements/announcement-modify.dto';
 
 @Controller('announcements')
 @ApiTags('announcements')
@@ -18,6 +19,22 @@ import { FilesUploadDto } from '../dto/common/files-upload.dto';
 @ApiBearerAuth()
 export class AnnouncementsController {
   constructor(private readonly announcementsService: AnnouncementsService) {}
+
+  @ApiOperation({
+    description: '輸入過瀘條件後的會員數',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: AnnouncementsFilterResponseDto,
+  })
+  @Post('membercount')
+  async getMembersCount(
+    @Body() filters:AnnouncementFilterDto,
+    @Res() res:Response,
+  ) {
+    const afRes = await this.announcementsService.getMemberCountByFilter(filters);
+    return res.status(HttpStatus.OK).json(afRes);
+  }
 
   @ApiOperation({
     summary: '取得公告列表',
@@ -33,16 +50,7 @@ export class AnnouncementsController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const annRes = new AnnouncementsResponseDto();
-    const rlt = await this.announcementsService.announcementsGet(announceSearch);
-    if (rlt) {
-      annRes.data = rlt;
-    } else {
-      annRes.errorcode = ErrCode.ERROR_PARAMETER;
-      annRes.error = {
-        message: ErrMsg.ERROR_PARAMETER,
-      }
-    }
+    const annRes = await this.announcementsService.announcementsGet(announceSearch);
     return res.status(HttpStatus.OK).json(annRes);
   }
 
@@ -59,27 +67,21 @@ export class AnnouncementsController {
     description: '公告內容及上傳檔案',
     type: AnnouncementCreateDto,
   })
-  @UseInterceptors(FileInterceptor('files'))
+  @UseInterceptors(AnyFilesInterceptor())
   @Post('')
   async announcementsPost(
     @Body() announcementCreateDto: AnnouncementCreateDto,
-    @UploadedFile() files: Express.Multer.File,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    console.log('announcementCreateDto:', announcementCreateDto);
-    console.log("files:", files);
-    const commRes = new CommonResponseDto()
-    const rlt = await this.announcementsService.announcementsPost(
+    console.log(req.headers);
+    const comRes = await this.announcementsService.announcementsPost(
+      req.user,
       announcementCreateDto,
-      files
+      files,
     );
-    if (!rlt) {
-      commRes.errorcode = ErrCode.ERROR_PARAMETER;
-      commRes.error = {
-        message: ErrMsg.ERROR_PARAMETER,
-      }
-    }
-    return res.status(HttpStatus.OK).json(commRes);
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({
@@ -93,11 +95,10 @@ export class AnnouncementsController {
   @Get('/:id')
   async announcementsIdGet(
     @Param('id') id: string,
-    @Req() req: Request,
     @Res() res: Response,
   ) {
-    await this.announcementsService.announcementsIdGet(id, req);
-    return res.status(HttpStatus.OK).json(new AnnouncementsIdResponseDto());
+    const annRes = await this.announcementsService.announcementsIdGet(id);
+    return res.status(HttpStatus.OK).json(annRes);
   }
 
   @ApiOperation({
@@ -108,20 +109,24 @@ export class AnnouncementsController {
     description: '成功或失敗',
     type: CommonResponseDto,
   })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(AnyFilesInterceptor())
   @Put('/:id')
   async announcementsIdPut(
     @Param('id') id: string,
-    @Body() announcementUpdateDto: AnnouncementCreateDto,
-    @Req() req: Request,
+    @Body() announceUpdateDto: AnnouncementModifyDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.announcementsService.announcementsIdPut(
-      id,
-      announcementUpdateDto,
-      req,
-    );
-
-    return res.status(HttpStatus.OK).json(new CommonResponseDto());
+    console.log(req.headers);
+    const comRes = await this.announcementsService.announcementsIdPut(
+        req.user,
+        id,
+        announceUpdateDto,
+        files,
+      );
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({
@@ -135,15 +140,11 @@ export class AnnouncementsController {
   @Post('publish/:id')
   async announcementsIdPublish(
     @Param('id') id: string,
-
-    @Req() req: Request,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.announcementsService.announcementsIdPublish(id, req);
-
-    return res
-      .status(HttpStatus.OK)
-      .json(new CommonResponseDto());
+    const comRes = await this.announcementsService.announcementsIdPublish(id, req.user);
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({
@@ -157,14 +158,10 @@ export class AnnouncementsController {
   @Post('unpublish/:id')
   async announcementsIdUnpublish(
     @Param('id') id: string,
-
-    @Req() req: Request,
+    @Req() req: any,
     @Res() res: Response,
   ) {
-    await this.announcementsService.announcementsIdUnpublish(id, req);
-
-    return res
-      .status(HttpStatus.OK)
-      .json(new CommonResponseDto());
+    const comRes  = await this.announcementsService.announcementsIdUnpublish(id, req.user);
+    return res.status(HttpStatus.OK).json(comRes);
   }
 }

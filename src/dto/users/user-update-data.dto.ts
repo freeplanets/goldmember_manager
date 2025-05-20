@@ -5,15 +5,6 @@ import { LEVEL } from "../../utils/enum";
 
 export class UserUpdateData implements Partial<IUser> {
     @ApiProperty({
-        description: '使用者名稱',
-        required: false,
-        example: 'james',
-    })
-    @IsOptional()
-    @IsString()
-    username?: string;
-
-    @ApiProperty({
         description: '使用者顯示名稱',
         required: false,
         example: 'jj',

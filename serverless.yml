@@ -20,10 +20,14 @@ provider:
     MONGO_DB: ${env:dbase}
     MONGO_PORT: ${env:dbport}
     MONGO_REPLICA_SET: ${env:dbreplicaset}
+    SESSION_SECRET: ${env:SESSION_SECRET}
+    SALT_ROUNDS: ${env:SALT_ROUNDS}
+    DEVICE_KEY: ${env:DEVICE_KEY}
   iamRoleStatements:
     - Effect: Allow
       Action:
         - s3:*
+        - lambda:InvokeFunction
       Resource: "*"
     #       - "ec2:CreateNetworkInterface"
     #       - "ec2:DescribeNetworkInterfaces"
@@ -36,6 +40,13 @@ provider:
       - subnet-08419e89d2e5af3d9
       - subnet-02012683035c7cd9c
       - subnet-01de66359170766c4
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
+
+package:
+  individually: true
+
 plugins:
   - serverless-plugin-typescript
   - serverless-offline
@@ -67,15 +78,26 @@ functions:
               - X-Amz-Security-Token
               - X-Amz-User-Agent
               - WWW-AUTH
+              - Accept
+              - Content-Disposition
+              - Content-Encoding
       - http:
           path: /
           method: ANY
           cors:
             headers:
               - Content-Type
-              - X-Amz-Date
-              - Authorization
-              - X-Api-Key
-              - X-Amz-Security-Token
-              - X-Amz-User-Agent
-              - WWW-AUTH
+                - X-Amz-Date
+                - Authorization
+                - X-Api-Key
+                - X-Amz-Security-Token
+                - X-Amz-User-Agent
+                - WWW-AUTH
+                - Accept
+                - Content-Disposition
+                - Content-Encoding
+  CouponAutoIssue:
+    handler: src/utils/coupons/coupons-auto-issue.couponsAutoIssue
+    timeout: 60
+    events:
+      - schedule: "rate(3 hours)"
