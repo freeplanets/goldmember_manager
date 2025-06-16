@@ -20,7 +20,7 @@ import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { AnnouncementsIdResponseDto } from '../dto/announcements/announcements-id-response.dto';
 import { AnnounceFieldsCheck } from '../dto/announcements/announce-fields-check';
 import { MainFilters } from '../classes/filters/main-filters';
-import { ne } from '@faker-js/faker/.';
+import { AddMonthLessOneDay, DateWithLeadingZeros } from '../utils/common';
 
 @Injectable()
 export class AnnouncementsService {
@@ -60,6 +60,8 @@ export class AnnouncementsService {
         announcementSearch.extendFilter,
       );
       if (filters) {
+        const threeMonthsAgo = DateWithLeadingZeros(AddMonthLessOneDay(-3));
+        filters.publishDate = { $gte: threeMonthsAgo };
         console.log('filters:', filters);
         const rlt = await this.modelAnnouncement.find(filters);
         if (rlt) {
@@ -222,6 +224,7 @@ export class AnnouncementsService {
     }
     return comRes;
   }
+
   async announcementsIdPublish(id: string, user:Partial<IUser>): Promise<CommonResponseDto> {
     const comRes = new CommonResponseDto();
     try {
@@ -233,20 +236,26 @@ export class AnnouncementsService {
           // const isSended = await this.sendMemberAnnouncement(ann);
           //const isPublished = await this.publishMemberAnnouncement(id);
           
-            const updateData:IModifiedBy = {
+            const authorizer:IModifiedBy = {
               modifiedBy: user.id,
               modifiedByWho: user.username,
               modifiedAt: Date.now(),
               lastValue: ann.isPublished,
             }
+            const pDate = new Date(ann.publishDate);
+            const updateData:Partial<IAnnouncement> = {
+              isPublished: true,
+              authorizer,
+              publishedTs:pDate.getTime() > Date.now() ? pDate.getTime() :  Date.now()
+            };
             const isModified = await this.modelAnnouncement.updateOne(
               {id}, 
-              {isPublished: true, publishedTs: Date.now(), updater: updateData},
+              updateData,
             );
             console.log("announcementsIdPublish isModified:", isModified);
-            if (!isModified) {
+            if (!isModified.modifiedCount) {
               console.log("announcementsIdPublish isModified show false");
-              //comRes.ErrorCode = ErrCode.DATABASE_ACCESS_ERROR;
+              comRes.ErrorCode = ErrCode.ANNOUNCE_PUBLISH_ERROR;
             }
         }
       } else {
@@ -265,18 +274,23 @@ export class AnnouncementsService {
       const ann = await this.modelAnnouncement.findOne({id}, 'isPublished');
       if (ann) {
         if (ann.isPublished) {
-          const updateData:IModifiedBy = {
+          const authorizer:IModifiedBy = {
             modifiedBy: user.id,
             modifiedByWho: user.username,
             modifiedAt: Date.now(),
             lastValue: ann.isPublished,
           }
+          const updateData:Partial<IAnnouncement> = {
+            isPublished: false,
+            authorizer,
+            publishedTs: 0,
+          };
           const upd = await this.modelAnnouncement.updateOne(
             {id}, 
-            {isPublished: false, updater: updateData},
+            updateData,
           );
           console.log("announcementsIdUnpublish upd:", upd);
-          if (!upd.acknowledged) {
+          if (!upd.modifiedCount) {
             comRes.ErrorCode = ErrCode.ANNOUNCE_PUBLISH_ERROR;
           }
         }

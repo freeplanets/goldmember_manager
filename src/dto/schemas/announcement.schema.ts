@@ -70,14 +70,9 @@ export class Announcement implements IAnnouncement {
     updater: IModifiedBy;
 
     @Prop({
-        default: true,
-    })
-    isApprev: boolean;
-    
-    @Prop({
         type: ModifiedByData
     })
-    apprevor:IModifiedBy;
+    authorizer: IModifiedBy;
 
     @Prop({
 

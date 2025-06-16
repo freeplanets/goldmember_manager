@@ -80,17 +80,17 @@ export class CouponBatch implements ICouponBatch {
     @Prop({
         type: ModifiedByData,
     })
+    creator: IModifiedBy;
+
+    @Prop({
+        type: ModifiedByData,
+    })
     authorizer: IModifiedBy;
 
     @Prop({
         type: ModifiedByData,
     })
     updater: IModifiedBy;
-
-    @Prop({
-        type: ModifiedByData
-    })
-    canceler:IModifiedBy;
 }
 
 export const CouponBatchSchema = SchemaFactory.createForClass(CouponBatch);

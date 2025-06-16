@@ -193,7 +193,7 @@ export class CouponsService {
   ): Promise<CommonResponseDto> {
     const comRes = new CommonResponseDto();
     try {
-      couponBatchPostDto.authorizer = {
+      couponBatchPostDto.creator = {
         modifiedBy: user.id,
         modifiedByWho: user.username,
         modifiedAt: Date.now(),
@@ -332,7 +332,7 @@ export class CouponsService {
               {batchId: id, notAppMember: false}, 
               {status: COUPON_STATUS.NOT_USED}
             )
-            if (updCP.matchedCount) {
+            if (updCP.modifiedCount) {
               await this.modifyCouponStatsCB(cb, session);
               const commit = await session.commitTransaction();
               console.log('commit:', commit);
@@ -372,14 +372,15 @@ export class CouponsService {
             comRes.ErrorCode = ErrCode.COUPONBATCH_CANCEL_ISSUED;
             return comRes;
           case COUPON_BATCH_STATUS.NOT_ISSUED:
-            const canceler:IModifiedBy = {
+            const authorizer:IModifiedBy = {
               modifiedBy: user.id,
               modifiedByWho: user.username,
               modifiedAt: Date.now(),
+              lastValue: cb.status
             }
             const upd = await this.modelCouponBatch.updateOne(
               {id, status: COUPON_BATCH_STATUS.NOT_ISSUED}, 
-              {canceler: canceler, status: COUPON_BATCH_STATUS.CANCELED},
+              {authorizer, status: COUPON_BATCH_STATUS.CANCELED},
             );
             console.log('couponBatchedIdCancel upd:', upd);
         }

@@ -101,3 +101,8 @@ functions:
     timeout: 60
     events:
       - schedule: "rate(3 hours)"
+  GetGovHolidays:
+    handler: src/utils/holidays/get-gov-holidays-info.getGovHolidaysInfo
+    timeout: 60
+    events:
+      - schedule: "rate(30 days)"

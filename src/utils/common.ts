@@ -50,3 +50,13 @@ export function AddMonthLessOneDay(months:number, date:string|Date|undefined = u
   console.log(d);
   return new Date(d.setDate(d.getDate()-1)).toLocaleDateString('zh-TW');
 }
+
+export function formatDateAddSlashes(date: string): string {
+    if (date.length !== 8) {
+        throw new Error('Date string must be in the format YYYYMMDD');
+    }
+    const year = date.substring(0, 4);
+    const month = date.substring(4, 6);
+    const day = date.substring(6, 8);
+    return `${year}/${month}/${day}`;
+}

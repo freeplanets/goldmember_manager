@@ -12,6 +12,7 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { AnnouncementFilterDto } from '../dto/announcements/announcement-filter.dto';
 import { AnnouncementsFilterResponseDto } from '../dto/announcements/announcements-filter-response.dto';
 import { AnnouncementModifyDto } from '../dto/announcements/announcement-modify.dto';
+import { AnnouncePublishRequest } from '../dto/announcements/announce-publish-request';
 
 @Controller('announcements')
 @ApiTags('announcements')
@@ -146,7 +147,7 @@ export class AnnouncementsController {
     const comRes = await this.announcementsService.announcementsIdPublish(id, req.user);
     return res.status(HttpStatus.OK).json(comRes);
   }
-
+  
   @ApiOperation({
     summary: '取消發布公告',
     description: '',

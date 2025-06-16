@@ -17,9 +17,9 @@ export interface ICouponBatch extends IHasFilterItem {
     status?: COUPON_BATCH_STATUS;
     originId?: string;
     couponCreated?: boolean;
+    creator: IModifiedBy;
     authorizer: IModifiedBy;
     updater: IModifiedBy;
-    canceler:IModifiedBy;
 }
 
 export interface ICoupon {

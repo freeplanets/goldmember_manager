@@ -26,5 +26,5 @@ export class AnnouncementData extends AnnouncementBaseDto implements Partial<IAn
     description: '核准人',
     required: false,
   })
-  apprevor: IModifiedBy;
+  authorizer?: IModifiedBy;
 }

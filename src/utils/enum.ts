@@ -108,3 +108,21 @@ export enum SmsCodeUsage {
   RESET_PASS = 'reset',
   PHONE_CHANGE = 'change',
 }
+
+export enum TeamMemberPosition {
+  LEADER = 'leader', 
+  MANAGER = 'manager', 
+  MEMBER = 'member',
+}
+
+export enum TeamActivityStatus {
+  UPCOMING = 'upcoming', 
+  ONGOING = 'ongoing', 
+  COMPLETED = 'completed', 
+  CANCELLED = 'cancelled',
+}
+
+export enum TeamStatus {
+  ACTIVE = 'active', 
+  INACTIVE = 'inactive',
+}

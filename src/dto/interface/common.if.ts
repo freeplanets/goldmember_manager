@@ -29,3 +29,12 @@ export interface IHasFilterItem {
     targetGroups: MEMBER_GROUP[];
     extendFilter?: MEMBER_EXTEND_GROUP[];    
 }
+
+export interface IHoliday {
+    year: number;
+    date: string;
+    name: string;
+    isHoliday: boolean;
+    holidayCategory: string;
+    description: string;
+}

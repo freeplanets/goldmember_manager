@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Request } from 'express';
-import { CommonError } from '../utils/common-exception';
 import { ERROR_TYPE, MEMBER_LEVEL } from '../utils/enum';
 import { ERROR_MESSAGE, KS_MEMBER_STYLE_FOR_SEARCH, PHONE_STYLE_FOR_SEARCH, STATUS_CODE } from '../utils/constant';
 import { MembersDirectorStatusRequestDto } from '../dto/members/members-director-status-request.dto';
@@ -76,6 +74,10 @@ export class MembersService {
         console.log('ksMbrs:', ksMbrs.length);
         if (ksMbrs.length) {
           ksMbrs.forEach((item) => {
+            const f = mbrs.find((m) => m.systemId === item.no);
+            if (f) {
+              return;
+            }
             const tmp:Partial<IMember> = {
               id: item.no,
               systemId: item.no,
@@ -163,7 +165,7 @@ export class MembersService {
             directorStatusLastModified: modifier,
           }
         );
-        if (rlt.acknowledged) {
+        if (rlt.modifiedCount) {
           const transferLog:Partial<MemberTransferLog> = {
             id: uuidv1(),
             memberId: id,

@@ -58,3 +58,8 @@ export interface IMemberTransferLog extends IModifiedBy {
 // 非app股東，查詢優惠券
 
 // 查詢 股號，手機，名字(含國興資料)
+
+// 股東會員邀請碼
+
+// 特別會員無券使用優惠券-產生即用券
+// QRCode 新增會員，QRCode包倉內容 (股東會員邀請碼...)

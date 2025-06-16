@@ -29,7 +29,15 @@ export class CouponBatchData extends CouponBatchRequestDto implements Partial<IC
   })
   @IsOptional()
   @IsString()
-  targetDescription?: string;  
+  targetDescription?: string;
+  
+  @ApiProperty({
+    description: '製單人',
+    type: ModifiedByData,
+    required: false,
+  })
+  creator: IModifiedBy;
+
 
   @ApiProperty({
     description: '核准人',
@@ -42,12 +50,6 @@ export class CouponBatchData extends CouponBatchRequestDto implements Partial<IC
     description: '修改人',
   })
   updater: IModifiedBy;
-
-  @ApiProperty({
-    description: '取消者',
-    required: false,
-  })
-  canceler: ModifiedByData;
 
   @ApiProperty({
     description: '狀態',

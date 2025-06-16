@@ -1,9 +1,11 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IAnnouncement } from "../interface/announcement.if";
-import { IsOptional, IsString } from "class-validator";
+import { IsOptional, IsString, Matches } from "class-validator";
 import { MEMBER_EXTEND_GROUP, MEMBER_GROUP } from "../../utils/enum";
 import { FilesUploadDto } from "../common/files-upload.dto";
 import { DateWithLeadingZeros } from "../../utils/common";
+import { DATE_STYLE } from "../../utils/constant";
+import { DtoErrMsg } from "../../utils/enumError";
 
 export class AnnouncementCreateDto extends FilesUploadDto implements Partial<IAnnouncement> {
     @ApiProperty({
@@ -31,10 +33,9 @@ export class AnnouncementCreateDto extends FilesUploadDto implements Partial<IAn
 
     @ApiProperty({
         description: '公告日期',
-        required: false,
+        required: true,
         example: DateWithLeadingZeros(),
     })
-    @IsOptional()
     @IsString()
     publishDate?: string;
 

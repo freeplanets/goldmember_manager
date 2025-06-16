@@ -15,8 +15,8 @@ export interface IAnnouncement extends IHasFilterItem {
     birthMonth: number,
     creator: IModifiedBy;
     updater: IModifiedBy;
-    isApprev: boolean;
-    apprevor:IModifiedBy;
+    // isApproved: boolean;
+    authorizer:IModifiedBy;
     publishedTs:number;
 }
 
