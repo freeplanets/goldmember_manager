@@ -19,38 +19,53 @@
 // 1. 團體可以進行預約，預約時需要提供團體信息、預約時間等,由成員報名參加,預約時提供名單。
 // 2. 目前由總幹事電話預約.
 
-import { TeamActivityStatus, TeamMemberPosition, TeamStatus } from '../../utils/enum';
+import { MEMBER_LEVEL, TeamActivityRegistrationStatus, TeamActivityStatus, TeamMemberPosition, TeamStatus } from '../../utils/enum';
+import { IModifiedBy } from './modifyed-by.if';
 
 export interface ITeamPositionInfo {
-    id:string;  //總幹事 ID
-    name: string; // 總幹事姓名
-    phone: string; // 總幹事電話
+    id?:string;  //會員 ID
+    name: string; // 姓名
+    phone: string; // 電話
+}
+
+export interface IMemberActivityInfo {
+    activityId: string;
+    registrationDate: string;
+    status: TeamActivityRegistrationStatus;
 }
 
 export interface ITeamMember {
-    teamObjId?: string;    //球隊ID
-    id:	string; // 會員 ID
+    teamId?: string;    //球隊ID
+    memberId:	string; // 會員 ID
     name: string; // 會員姓名
     role: TeamMemberPosition; // 角色
     joinDate: string; //加入日期
     isActive: boolean; //是否活躍
     // data from member table 
     phone?: string; // 電話
-    membershipType?:	string; //會員類型
+    membershipType?: MEMBER_LEVEL; //會員類型
     systemId?: string;   // 國興ID
+    activities?: IMemberActivityInfo[];
+}
+
+export interface IActMemberInfo extends ITeamMember {
+    id: string;
+    registrationDate: string;
+    status: TeamActivityRegistrationStatus;
 }
 
 export interface ICreditRecord {
-    teamObjId?:string; //球隊ID
+    //teamObjId?:string; //球隊ID
     id: string; //記錄 ID
+    refId: string; // 參考 ID, 如球隊 ID, 會員 ID 等
     date: string;   //日期
     score: number; //評分
     reason: string; //原因
-    recordedBy:	string; //記錄人員
+    recordedBy:	IModifiedBy; //記錄人員
 }
 
 export interface ITeamAnnouncement {
-    teamObjId?: string; //球隊ID
+    //teamObjId?: string; //球隊ID
     id: string; // 公告 ID
     title: string; //標題
     content: string; // 內容
@@ -60,17 +75,18 @@ export interface ITeamAnnouncement {
 }
 
 export interface ITeamActivity {
-    teamObjId?: string; //球隊ID
     id: string; //活動 ID
+    teamId?: string; //球隊ID
     title: string; //標題
     description: string; //描述
     date:string;    //日期
     location: string;   //地點
     registrationStart: string;  // 報名開始日期
     registrationEnd: string;    //報名結束日期
-    participants: number;   // 參與人數
+    participants: ITeamMember[];  //number;   // 參與人數
     maxParticipants: number; //最大參與人數
     status:	TeamActivityStatus; //狀態
+    creator: IModifiedBy; //發起人 
 }
 
 export interface ITeam {
@@ -87,4 +103,12 @@ export interface ITeam {
     creditHistory?: ICreditRecord[]; //評分記錄
     announcements?: ITeamAnnouncement[]; // 公告
     activities?: ITeamActivity[];    // 活動
+}
+
+export interface IBehavioralScore {
+    refId: string; // 參考 ID, 如球隊 ID, 會員 ID 等
+    scoreChange: number; // 分數變化
+    newScore: number; // 新分數
+    reason: string; // 變化原因
+    date: string; // 變化日期
 }

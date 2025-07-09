@@ -48,7 +48,7 @@ export class UsersController {
     @Res() res: Response,
   ) {
     const comRes =  await this.usersService.usersPost(usersPostRequestDto, req.user);
-    return res.status(HttpStatus.BAD_REQUEST).json(comRes);
+    return res.status(HttpStatus.OK).json(comRes);
   }
 
   @ApiOperation({

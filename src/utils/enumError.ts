@@ -35,13 +35,18 @@ export enum ErrCode {
 	COUPONBATCH_NOT_FOUND = 'COUPONBATCH_NOT_FOUND',
 	MEMBER_NOT_FOUND = 'MEMBER_NOT_FOUND',
 	ANNOUNCE_PUBLISH_ERROR = 'ANNOUNCE_PUBLISH_ERROR',
+	TEAM_NOT_FOUND = 'TEAM_NOT_FOUND',
+	TEAM_ERROR_CONTACT_PERSON = 'TEAM_ERROR_CONTACT_PERSON',
+	TEAM_MEMBER_ALREADY_EXISTS = 'TEAM_MEMBER_ALREADY_EXISTS',
+	TEAM_ACTIVITY_NOT_FOUND = 'TEAM_ACTIVITY_NOT_FOUND',
+	SELECTED_TIME_SECTION_ASSIGNED = 'SELECTED_TIME_SECTION_ASSIGNED',
 }
 export enum ErrMsg {
 	MISS_PARAMETER = '參數不足',
 	DATABASE_ACCESS_ERROR = '資料庫連線錯誤',
 	TOKEN_ERROR = '權杖(token)錯誤',
 	ERROR_PARAMETER = '參數錯誤',
-	ITEM_NOT_FOUND = '查無資料',
+	ITEM_NOT_FOUND = '查無資料(ID可能錯誤)',
 	INSUFFICENT_PERMISSIONS = '權限不足',
 	USER_IS_NOT_ACTIVATED = '帳號未啟用',
 	VERIFY_CODE_ERROR = '驗證碼錯誤',
@@ -71,6 +76,11 @@ export enum ErrMsg {
 	COUPONBATCH_NOT_FOUND = '查無此優惠券批次',
 	MEMBER_NOT_FOUND = '查無此會員',
 	ANNOUNCE_PUBLISH_ERROR = '公告發佈錯誤',
+	TEAM_ERROR_CONTACT_PERSON = '至少需要指定隊長或經理',
+	TEAM_MEMBER_ALREADY_EXISTS = '己經是球隊成員了',
+	TEAM_NOT_FOUND = '查無此球隊資料',
+	TEAM_ACTIVITY_NOT_FOUND = '查物此球隊活動資料',
+	SELECTED_TIME_SECTION_ASSIGNED = '選定的時間段已被分配了，請選擇其他時段。',
 }
 export const getErrorMessage = (code: ErrCode): string => {
 	const errKey = Object.keys(ErrCode).find((key) => ErrCode[key as keyof typeof ErrCode] === code);
@@ -81,6 +91,7 @@ export enum DtoErrMsg {
 	PHONE_STYLE_ERROR = '電話號碼格式錯誤',
 	PASSWORD_STYLE_ERROR = '密碼格式錯誤,應包含大小寫字母、數字,長度6-15碼',
 	DATE_STYLE_ERROR = '日期格式(YYYY/MM/DD)錯誤',
+	TIME_STYLE_ERROR = '時間格式(00:00 - 23:59)錯誤',
 	EMAIL_STYLE_ERROR = '電子郵件格式錯誤',
 	ARRAY_STYLE_ERROR = '資料必須是陣列格式',
 	MISS_BIRTH_MONTH = '生日月份未填',

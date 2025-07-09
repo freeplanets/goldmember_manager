@@ -126,3 +126,40 @@ export enum TeamStatus {
   ACTIVE = 'active', 
   INACTIVE = 'inactive',
 }
+
+export enum TeamActivityRegistrationStatus {
+  REQUESTED = 'requested',
+  REJECTED = 'rejected',
+  ACCEPTED = 'accepted',
+  COMFIRMED = 'comfirmed',
+}
+
+export enum CourseName {
+    WEST = 'west', 
+    EAST = 'east', 
+    SOUTH = 'south',
+}
+
+export enum TimeSectionType {
+  TIMESLOT = 'timeslot', 
+  RANGE = 'range',
+}
+
+export enum ReserveType {
+  TEAM = 'team', 
+  INDIVIDUAL = 'individual',
+  ALL = 'all',
+}
+
+export enum ReserveStatus {
+  PENDING = 'pending',
+  BOOKED = 'booked', 
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',
+  ALL = 'all',
+}
+
+export enum ReserveFrom {
+  APP = 'app',
+  BACKEND = 'backend',
+}

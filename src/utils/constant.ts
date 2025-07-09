@@ -22,6 +22,7 @@ export const PASSWORD_STYLE = new RegExp(/^((?=.{6,15}$)(?=.*\d)(?=.*[a-z])(?=.*
 export const PHONE_STYLE = new RegExp(/^09\d{8}(#\d+)?$/);
 //export const DATE_STYLE = new RegExp(/^\d{4}\/(0?[1-9]|1[0-2])\/(0?[1-9]|[12]\d|3[01])$/);   // YYYY/MM/DD
 export const DATE_STYLE = new RegExp(/^((19|20)?[0-9]{2}[/](0?[1-9]|1[012])[/](0?[1-9]|[12][0-9]|3[01]))$/); // YYYY/MM/DD
+export const TIME_STYLE = new RegExp(/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/); // 00:00 - 23:59
 export const EMAIL_STYLE = new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 export const KS_MEMBER_STYLE_FOR_SEARCH = new RegExp(/^[1256]\d{2,3}$/); //3個數字即可查詢
 export const PHONE_STYLE_FOR_SEARCH = new RegExp(/^09\d{1,8}(#\d+)?$/); //3個數字即可查詢

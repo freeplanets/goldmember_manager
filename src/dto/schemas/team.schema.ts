@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ITeam, ITeamPositionInfo } from '../interface/team-group.if';
-import { TeamStatus } from 'src/utils/enum';
-import { TeamPositonInfo } from '../team/team-position-info';
-import { Document } from 'mongoose';
+import { ICreditRecord, ITeam, ITeamActivity, ITeamMember, ITeamPositionInfo } from '../interface/team-group.if';
+import { TeamStatus } from '../../utils/enum';
+import TeamPositonInfo from '../teams/team-position-info';
+import mongoose, { Document } from 'mongoose';
 
 export type TeamDocument = Document & Team;
 
@@ -38,6 +38,25 @@ export class Team implements ITeam {
 
     @Prop()
     lastActivity: string; //最近活動日期
+
+    @Prop({
+        //type: Array<mongoose.Schema.Types.ObjectId>, ref: 'TeamMember',
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TeamMember' }],
+        default: [],
+    })
+    members?: ITeamMember[];
+
+    @Prop({
+        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'CreditRecord' }],
+        default: [],
+    })
+    creditHistory?: ICreditRecord[];
+
+    @Prop({
+        type: [{type: mongoose.Schema.Types.ObjectId, ref: 'TeamActivity'}],
+        default: [],
+    })
+    activities?: ITeamActivity[];
 }
 
 export const TeamSchema = SchemaFactory.createForClass(Team);

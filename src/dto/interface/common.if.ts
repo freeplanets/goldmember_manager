@@ -3,6 +3,7 @@ import { ErrCode } from '../../utils/enumError';
 
 export interface ICommonResponse<T> {
     errorcode?: ErrCode;
+    ErrorCode?: ErrCode;
     error?: ICommonError;
     data?: T;
 }

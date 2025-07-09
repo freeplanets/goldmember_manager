@@ -1,3 +1,6 @@
+import { isArray, isObject } from "class-validator";
+import { IParameter } from "./settings/settings.if";
+
 /**
  * @author 
  * @description 僅區分現有資料和已接收資料的功能。
@@ -36,6 +39,12 @@ export function DateWithLeadingZeros(date:string=new Date().toLocaleDateString('
   return `${year}/${month}/${day}`;
 }
 
+export function LocalDateTimeString() {
+  const time = new Date().toLocaleTimeString('zh-tw', {hourCycle: 'h23'});
+  const date = DateWithLeadingZeros();
+  return `${date} ${time}`;
+}
+
 export function AddMonth(months:number, date:string|Date|undefined = undefined){
   if (date) {
     date = new Date(date);
@@ -59,4 +68,19 @@ export function formatDateAddSlashes(date: string): string {
     const month = date.substring(4, 6);
     const day = date.substring(6, 8);
     return `${year}/${month}/${day}`;
+}
+/**
+ * param Object checker , update shall have same porperty and value type
+ * array will not check inside (if array must update whole array)
+ * Param: Old value
+ * Updater: new value
+ */
+export function SystemParamCheck(oldP:any, newP:any) {
+  if (!isObject(newP)) return false;
+  return Object.keys(oldP).every((key) => {
+    if (!newP[key]) return false;
+    if (typeof(oldP[key]) !== typeof(newP[key])) return false;
+    // if (isObject(updater[key])) return SystemParamCheck(param[key], updater[key]);
+    return true;
+  });
 }

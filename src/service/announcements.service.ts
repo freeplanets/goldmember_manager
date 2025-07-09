@@ -21,13 +21,15 @@ import { AnnouncementsIdResponseDto } from '../dto/announcements/announcements-i
 import { AnnounceFieldsCheck } from '../dto/announcements/announce-fields-check';
 import { MainFilters } from '../classes/filters/main-filters';
 import { AddMonthLessOneDay, DateWithLeadingZeros } from '../utils/common';
+import { Upload2S3 } from '../utils/upload-2-s3';
 
 @Injectable()
 export class AnnouncementsService {
-  private AWS_S3_BUCKET = 'images.uuss.net/linkougolf';
-  private s3 = new AWS.S3({
-    region: 'ap-southeast-1',
-  });
+  // private AWS_S3_BUCKET = 'images.uuss.net/linkougolf';
+  // private s3 = new AWS.S3({
+  //   region: 'ap-southeast-1',
+  // });
+  private Upload2S3 = new Upload2S3();
   private myFilter = new MainFilters();
   constructor(
     @InjectModel(Announcement.name) private readonly modelAnnouncement:Model<AnnouncementDocument>,
@@ -106,17 +108,22 @@ export class AnnouncementsService {
       }
       announcementCreateDto = dtoChk.Data;
       if (files.length > 0 ) {
-        const promises = files.map((file) => this.uploadFile(file))
+        //const promises = files.map((file) => this.uploadFile(file))
+        const promises = files.map((file) => this.upload(file))
         // const upload = this.uploadFile(file);
         const upload = await Promise.all(promises)
         console.log('upload:', upload);
-        const attachments = files.map((file) => {
+        //const attachments = files.map((file) => {
+        const attachments = [];
+        upload.forEach((res) => {
+          if (!res) return;
           const attachment:Attachment = {
-            name: file.originalname,
-            url: `https://${this.AWS_S3_BUCKET}/${file.filename}`,
-            size: file.size, 
+            name: res.OriginalFilename,
+            //url: `https://${this.AWS_S3_BUCKET}/${file.filename}`,
+            url: res.fileUrl,
+            size: res.filesize, 
           }
-          return attachment;
+          attachments.push(attachment);
         });
         announcementCreateDto.attachments = attachments;
       }
@@ -187,18 +194,19 @@ export class AnnouncementsService {
       console.log('after fields check:', dtoChk.Data);
       announceUpdateDto = dtoChk.Data;
       if (files.length > 0 ) {
-        const promises = files.map((file) =>  this.uploadFile(file));
+        const promises = files.map((file) =>  this.upload(file));
         console.log("files", files);
         // const upload = this.uploadFile(file);
         const upload = await Promise.all(promises)
         console.log('upload:', upload);
         if (!announceUpdateDto.attachments) announceUpdateDto.attachments = [];
-        files.forEach((file) => {
-          console.log("file name:", file.filename);
+        upload.forEach((file) => {
+          if (!file) return;
+          console.log("file name:", file.OriginalFilename);
           const attachment:Attachment = {
-            name: file.originalname,
-            url: `https://${this.AWS_S3_BUCKET}/${file.originalname}`,
-            size: file.size, 
+            name: file.OriginalFilename,
+            url: file.fileUrl, //`https://${this.AWS_S3_BUCKET}/${file.originalname}`,
+            size: file.filesize, 
           }
           const f = announceUpdateDto.attachments.find((itm) => itm.name === attachment.name);
           if (!f) announceUpdateDto.attachments.push(attachment);
@@ -304,46 +312,55 @@ export class AnnouncementsService {
     }
     return comRes;
   }
-
-  async uploadFile(file:Express.Multer.File) {
-    console.log('file:', file);
-    const { originalname } = file;
-    const ary = originalname.split('.');
-    const newname = `${uuidv1()}.${ary[ary.length-1]}`;
-    //file.originalname = newname;
-    file.filename = newname;
-    return await this.s3_upload(
-      file.buffer,
-      this.AWS_S3_BUCKET,
-      file.filename,
-      file.mimetype,
-      // file.encoding,
-     )
+  async upload(file:Express.Multer.File) {
+    const upload = await this.Upload2S3.uploadFile(file);
+    console.log('upload:', upload);
+    if (upload) {
+      //return  `${this.Upload2S3.S3_BUCKET_URL}/${file.originalname}`;
+      return this.Upload2S3.Response;
+    }
+    return false;
   }
 
-  async s3_upload(fileBuffer:Buffer|Uint8Array|Blob|string|Readable, bucket:string, name:string, mimetype:string, encoding:string | undefined = undefined) {
-    const params: AWS.S3.PutObjectRequest = {
-      Bucket: bucket,
-      Key: String(name),
-      Body: fileBuffer,
-      // ACL: 'public-read',
-      ContentType: mimetype,
-      ContentDisposition: 'inline',
-    };
-    if (encoding) {
-      params.ContentEncoding = encoding;
-    }
-    try {
-      const s3Response = await this.s3.upload(params).promise();
-      // console.log('s3 res:', s3Response);
-      const downloadedFile = await this.s3.getObject({ Bucket: bucket, Key: name }).promise();
-      console.log("download file:", downloadedFile.Body);
-      return s3Response;
-    } catch(e) {
-      console.log("S3 Upload Error:", e);
-      return false;
-    }
-  }
+  // async uploadFile(file:Express.Multer.File) {
+  //   console.log('file:', file);
+  //   const { originalname } = file;
+  //   const ary = originalname.split('.');
+  //   const newname = `${uuidv1()}.${ary[ary.length-1]}`;
+  //   //file.originalname = newname;
+  //   file.filename = newname;
+  //   return await this.s3_upload(
+  //     file.buffer,
+  //     this.AWS_S3_BUCKET,
+  //     file.filename,
+  //     file.mimetype,
+  //     // file.encoding,
+  //    )
+  // }
+
+  // async s3_upload(fileBuffer:Buffer|Uint8Array|Blob|string|Readable, bucket:string, name:string, mimetype:string, encoding:string | undefined = undefined) {
+  //   const params: AWS.S3.PutObjectRequest = {
+  //     Bucket: bucket,
+  //     Key: String(name),
+  //     Body: fileBuffer,
+  //     // ACL: 'public-read',
+  //     ContentType: mimetype,
+  //     ContentDisposition: 'inline',
+  //   };
+  //   if (encoding) {
+  //     params.ContentEncoding = encoding;
+  //   }
+  //   try {
+  //     const s3Response = await this.s3.upload(params).promise();
+  //     // console.log('s3 res:', s3Response);
+  //     const downloadedFile = await this.s3.getObject({ Bucket: bucket, Key: name }).promise();
+  //     console.log("download file:", downloadedFile.Body);
+  //     return s3Response;
+  //   } catch(e) {
+  //     console.log("S3 Upload Error:", e);
+  //     return false;
+  //   }
+  // }
   // async publishMemberAnnouncement(announcementId:string):Promise<boolean> {
   //   const upd = await this.modelAnn2Member.updateMany({announcementId}, {isPublished: true});
   //   if (upd) return true;
