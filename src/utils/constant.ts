@@ -25,6 +25,8 @@ export const DATE_STYLE = new RegExp(/^((19|20)?[0-9]{2}[/](0?[1-9]|1[012])[/](0
 export const TIME_STYLE = new RegExp(/^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$/); // 00:00 - 23:59
 export const EMAIL_STYLE = new RegExp(/^[^\s@]+@[^\s@]+\.[^\s@]+$/);
 export const KS_MEMBER_STYLE_FOR_SEARCH = new RegExp(/^[1256]\d{2,3}$/); //3個數字即可查詢
+export const KS_SHAREHOLDER_STYLE_FOR_SEARCH = new RegExp(/^[15]\d{2,3}$/); //3個數字即可查詢
+export const KS_DEPENDENTS_STYLE_FOR_SEARCH = new RegExp(/^[26]\d{2,3}$/); //3個數字即可查詢
 export const PHONE_STYLE_FOR_SEARCH = new RegExp(/^09\d{1,8}(#\d+)?$/); //3個數字即可查詢
 
 export const PASSWORD_RETRY_COUNT = 5;

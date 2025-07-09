@@ -26,7 +26,7 @@ export class CouponFunc {
         // const mbrs = await modelMbr.find(filter, 'id name');
         console.log('do insertCoupon');
         const mbrs = await this.getMember(couponBatchPostDto, modelMbr, modelKS);
-        // console.log('mbrs:', mbrs);
+        //console.log('mbrs:', mbrs);
         const ci = new CouponsIssue();
         const cpns = ci.create(mbrs, couponBatchPostDto, coupon_status);
         if (cpns) {
@@ -34,7 +34,7 @@ export class CouponFunc {
             // await this.modifyCouponStats(couponBatchPostDto.type, couponBatchPostDto.issueDate, cpns.length, modelCS);
         }
         const ins = await modelCP.insertMany(cpns, {rawResult: true, session});
-        console.log('insertCoupon:', ins);
+        console.log('insertCoupon:', ins.insertedCount);
         return ins;
     }    
     async getMember(
@@ -58,12 +58,13 @@ export class CouponFunc {
         // console.log('mbrs:', mbrs, f);
         if (ksMbrs) {
             ksMbrs.forEach( (ksM) => {
+                console.log('ksmbr:', ksM.id, ksM.name, ksM.systemId);
                 const fIdx = allMbrs.findIndex((mbr) => mbr.systemId === ksM.systemId);
                 if (fIdx === -1) allMbrs.push(ksM);
-                if (ksM.systemId === '1079') {
-                    const f = allMbrs.find((itm) => itm.systemId === '1079');
-                    console.log(ksM, f);
-                }
+                // if (ksM.systemId === '1079') {
+                //     const f = allMbrs.find((itm) => itm.systemId === '1079');
+                //     console.log(ksM, f);
+                // }
             });
         }
         return allMbrs;
@@ -96,10 +97,11 @@ export class CouponFunc {
         const ans = await modelKs.find(filter, 'no appUser name');
         return ans.map((ks) => {
             const tmp:Partial<IMember> = {
-                id: ks.appUser,
+                id: ks.appUser ? ks.appUser : ks.no,
                 systemId: ks.no,
                 name: ks.name,
             }
+            console.log('getKsMember:', tmp.id, tmp.name);
             return tmp;
         });
     }

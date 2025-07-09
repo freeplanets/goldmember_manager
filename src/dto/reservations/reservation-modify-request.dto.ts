@@ -1,8 +1,8 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IReservations, IReserveSection } from "../interface/reservations.if";
-import { ReserveSectionDto } from "./reserve-section.dto";
-import { ReserveStatus } from "src/utils/enum";
-import { IsArray, IsNumber, IsOptional, IsString } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IReservations, IReserveSection } from '../interface/reservations.if';
+import { ReserveSectionDto } from './reserve-section.dto';
+import { ReserveStatus } from '../../utils/enum';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class ReservationModifyRequestDto implements Partial<IReservations> {
     @ApiProperty({

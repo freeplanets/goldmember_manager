@@ -52,10 +52,22 @@ export class CouponsService {
       const filter:FilterQuery<CouponDocument> = {}
       Object.keys(couponRequestDto).forEach((key) => {
         isFilterSet = true;
-        filter[key] = couponRequestDto[key];
+        // filter[key] = couponRequestDto[key];
+        if (key==='status') {
+          filter.$and = [
+            {status: couponRequestDto.status },
+            {status: { $ne: COUPON_STATUS.NOT_ISSUED }},
+          ]
+        } else {
+          filter[key] = couponRequestDto[key];
+        }
       })
       if (isFilterSet) {
-        const rlt = await this.modelCoupon.find(couponRequestDto);
+        if (!filter.status && !filter.$and) {
+          filter.status = { $ne: COUPON_STATUS.NOT_ISSUED };
+        }
+        console.log('filter:', filter);
+        const rlt = await this.modelCoupon.find(filter);
         if (rlt) clRes.data = rlt;  
       } else {
         clRes.ErrorCode = ErrCode.ERROR_PARAMETER;
@@ -169,14 +181,18 @@ export class CouponsService {
     const cbRes = new CouponBatchesResponseDto();
     try {
       let filter = this.myFilter.baseDocFilter<CouponBatchDocument, ICouponBatch>(cblrd.targetGroups, cblrd.type, cblrd.extendFilter);
+      if (!filter) filter = {}
       if (cblrd.status) {
-        if (!filter) filter = {}
+        //if (!filter) filter = {}
         filter.status = cblrd.status;
       }
+      //if (!filter) filter = {}
       if (cblrd.issueMode) {
-        if (!filter) filter = {}
         filter.issueMode = cblrd.issueMode;
+      } else {
+        filter.issueMode = { $ne: COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC };
       }
+      console.log('filter:', filter);
       const list = await this.modelCouponBatch.find(filter, COUPON_BATCH_DETAIL_FIELDS);
       if (list) cbRes.data = list as Partial<ICouponBatch>;
     } catch (e) {
@@ -242,8 +258,9 @@ export class CouponsService {
           if (ins) {
             const commit = await session.commitTransaction();
             console.log('commit:', commit);
+            comRes.data = rlt;
           } else {
-            comRes.ErrorCode = ErrCode.COUPONBATCH_AUTHORIZE_ERROR;
+            comRes.ErrorCode = ErrCode.COUPONBATCH_ISSUED_ERROR;
             const abt = await session.abortTransaction();
             console.log('abort:', abt);
           }
@@ -329,7 +346,8 @@ export class CouponsService {
             const upd = await this.modelCouponBatch.updateOne({id}, {status: COUPON_BATCH_STATUS.ISSUED, authorizer}, {session});
             console.log('couponbatch update:', upd);
             const updCP = await this.modelCoupon.updateMany(
-              {batchId: id, notAppMember: false}, 
+              // {batchId: id, notAppMember: false}, // 只變更 app user
+              {batchId: id}, // 改為全部變更所有人
               {status: COUPON_STATUS.NOT_USED}
             )
             if (updCP.modifiedCount) {
@@ -378,11 +396,32 @@ export class CouponsService {
               modifiedAt: Date.now(),
               lastValue: cb.status
             }
+            const session = await this.connection.startSession();
+            session.startTransaction();
+            let isProcPass = false;
             const upd = await this.modelCouponBatch.updateOne(
               {id, status: COUPON_BATCH_STATUS.NOT_ISSUED}, 
               {authorizer, status: COUPON_BATCH_STATUS.CANCELED},
+              {session}
             );
-            console.log('couponBatchedIdCancel upd:', upd);
+            if (upd.acknowledged) {
+              const updD = await this.modelCoupon.updateMany(
+                { batchId: id },
+                { status: COUPON_STATUS.CANCELED },
+                { session }
+              );
+              if (updD.acknowledged) {
+                isProcPass = true;
+              }
+            }
+            //console.log('couponBatchedIdCancel upd:', upd);
+            if (isProcPass) {
+              await session.commitTransaction();
+            } else {
+              await session.abortTransaction();
+              comRes.ErrorCode = ErrCode.DATABASE_ACCESS_ERROR;
+            }
+            await session.endSession();
         }
       } else {
         comRes.ErrorCode = ErrCode.COUPONBATCH_NOT_FOUND;

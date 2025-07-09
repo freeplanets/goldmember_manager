@@ -1,7 +1,7 @@
 import { Controller, Req, Res, HttpStatus, Get, Query, Param, Put, Body, Post, UseGuards } from '@nestjs/common';
 import { MembersService } from '../service/members.service';
-import { Request, Response } from 'express';
-import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { Response } from 'express';
+import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { MembersResponseDto } from '../dto/members/members-response.dto';
 import { MembersIdResponseDto } from '../dto/members/members-id-response.dto';
 import { MembersConvertToShareholderRequestDto } from '../dto/members/members-convert-to-shareholder-request.dto';
@@ -9,7 +9,6 @@ import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { MembersDirectorStatusRequestDto } from '../dto/members/members-director-status-request.dto';
 import { TokenGuard } from '../utils/tokens/token-guard';
 import { MEMBER_LEVEL } from '../utils/enum';
-import { Uuidv1ValidationPipe } from '../utils/pipes/uuid-validation';
 import { MemberTransferLogDto } from '../dto/members/member-transfer-log.dto';
 import { MemberTransferLogRes } from '../dto/members/member-transfer-log-response';
 

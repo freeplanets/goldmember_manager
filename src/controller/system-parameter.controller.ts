@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpStatus, Param, Put, Res } from '@nestjs/common';
-import { ApiBody, ApiExcludeEndpoint, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpStatus, Param, Put, Res, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SystemParameterService } from '../service/system-parameter.service';
 import { Response } from 'express';
 import { SettingsResponse } from '../dto/settings/settings.response';
@@ -7,9 +7,12 @@ import { ParamTypes } from '../utils/settings/settings.enum';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { TimeslotsResponse } from '../dto/settings/timeslots-response';
 import { TimeslotsDto } from '../dto/settings/timeslots.dto';
+import { TokenGuard } from '../utils/tokens/token-guard';
 
 @Controller('settings')
 @ApiTags('settings')
+@UseGuards(TokenGuard)
+@ApiBearerAuth()
 export class SystemParameterController {
     constructor(private readonly spService:SystemParameterService){}
 

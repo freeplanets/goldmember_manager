@@ -36,18 +36,30 @@ export class Team implements ITeam {
     })
     manager: ITeamPositionInfo; // 經理
 
+    @Prop({
+        type: TeamPositonInfo,
+    })    
+    contacter: ITeamPositionInfo;   //連絡人
+
     @Prop()
     lastActivity: string; //最近活動日期
 
     @Prop({
         //type: Array<mongoose.Schema.Types.ObjectId>, ref: 'TeamMember',
-        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'TeamMember' }],
+        type: [{ 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'TeamMember',
+            select: 'id name role joinDate phone membershipType isActive systemId',
+        }],
         default: [],
     })
-    members?: ITeamMember[];
+    members: ITeamMember[];
 
     @Prop({
-        type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'CreditRecord' }],
+        type: [{ 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'CreditRecord' 
+        }],
         default: [],
     })
     creditHistory?: ICreditRecord[];

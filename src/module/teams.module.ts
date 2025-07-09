@@ -9,6 +9,7 @@ import { CreditRecord, CreditRecordSchema } from '../dto/schemas/credit-record.s
 import { JwtModule } from '@nestjs/jwt';
 import { LoginToken, LoginTokenSchema } from '../dto/schemas/login-token.schema';
 import { TeamActivity, TeamActivitySchema } from '../dto/schemas/team-activity.schema';
+import { KsMember, KsMemberSchema } from '../dto/schemas/ksmember.schema';
 
 @Module({
     imports: [
@@ -20,6 +21,7 @@ import { TeamActivity, TeamActivitySchema } from '../dto/schemas/team-activity.s
             { name: CreditRecord.name, schema: CreditRecordSchema},
             { name: LoginToken.name, schema: LoginTokenSchema},
             { name: TeamActivity.name, schema: TeamActivitySchema},
+            { name: KsMember.name, schema: KsMemberSchema},
         ]),
     ],
     controllers: [TeamsController],

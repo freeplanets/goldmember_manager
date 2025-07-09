@@ -13,8 +13,11 @@ import { ReserveSection, ReserveSectionDocument } from '../dto/schemas/reserve-s
 import { IUser } from '../dto/interface/user.if';
 import { LocalDateTimeString } from '../utils/common';
 import { ReservationResponse } from '../dto/reservations/reservation-response';
-import { ReservationModifyRequestDto } from 'src/dto/reservations/reservation-modify-request.dto';
-import { ITimeslots, ITimeslotSection } from 'src/utils/settings/settings.if';
+import { ReservationModifyRequestDto } from '../dto/reservations/reservation-modify-request.dto';
+import { ReservationStatusRequestDto } from '../dto/reservations/reservation-status.request.dto';
+import { ParticipantsResponse } from '../dto/reservations/participants-response';
+import { IMember } from '../dto/interface/member.if';
+import { ParticipantData } from '../dto/reservations/participant.data';
 
 @Injectable()
 export class ReservationsService {
@@ -93,7 +96,24 @@ export class ReservationsService {
     async modifyReservation(id:string, mfyResv:ReservationModifyRequestDto, user:IUser):Promise<CommonResponseDto> {
         const comRes = new CommonResponseDto();
         try {
-
+            const data:Partial<IReservations> = {};
+            let isDataChanged = false;
+            Object.keys(mfyResv).forEach((key) => {
+                if (mfyResv[key]) {
+                    data[key] = mfyResv[key];
+                    isDataChanged = true;
+                }
+            });
+            if (isDataChanged) {
+                const upd = await this.modelReserve.updateOne({id}, data);
+                console.log('modifyReservation upd:', upd);
+                if (upd.modifiedCount === 0) {
+                    comRes.ErrorCode = ErrCode.MISS_PARAMETER;
+                    comRes.error.extra = 'No data changed , check your params, please!';
+                }
+            } else {
+                comRes.ErrorCode = ErrCode.MISS_PARAMETER;
+            }
         } catch (error) {
             console.log('modifyReservation error:', error);
             comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
@@ -188,5 +208,69 @@ export class ReservationsService {
             }
         }
         return isExisted;
+    }
+
+    async modifyReservationStatus(id:string, stsObj:ReservationStatusRequestDto, user:Partial<IUser>) {
+        const comRes = new CommonResponseDto();
+        try {
+            const dt = LocalDateTimeString().split(' ');
+            const mfyHis:IReserveHistory = {
+                date: dt[0],
+                time: dt[1],
+                id: user.id,
+                name: user.username,
+                action: stsObj.status,
+                reason: stsObj.status,
+            }
+            const upd = await this.modelReserve.updateOne(
+                {id}, 
+                {status : stsObj.status, $push: { history: mfyHis}}
+            );
+            if (upd.modifiedCount === 0) {
+                comRes.ErrorCode = ErrCode.RESERVATION_NOT_FOUND;
+            } 
+        } catch (error) {
+            console.log('modifyReservationStatus error:', error);
+            comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+            comRes.error.extra = error.message;
+        }
+        return comRes;
+    }
+
+    async getParticipants(id:string):Promise<ParticipantsResponse> {
+        const comRes = new ParticipantsResponse()
+        try {
+            const rsv = await this.modelReserve
+                .findOne({id}, 'participants')
+                .populate({
+                    path: 'participants',
+                    select: 'registrationDate status',
+                    populate: {
+                        path: 'member',
+                        select: 'id name phone membershipType',
+                    }
+                }).exec();
+            if (rsv) {
+                comRes.data = rsv.participants.map((par) => {
+                    const member = par.member as Partial<IMember>;
+                    const tmp:ParticipantData = {
+                        id: member.id,
+                        name: member.name,
+                        phone: member.phone,
+                        membershipType: member.membershipType,
+                        registrationDate: par.registrationDate,
+                        status: par.status,
+                    };
+                    return tmp;
+                })
+            } else {
+                comRes.ErrorCode = ErrCode.RESERVATION_NOT_FOUND;
+            }
+        } catch (error) {
+            console.log('getParticipants error:', error);
+            comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+            comRes.error.extra = error.message;
+        }
+        return comRes;
     }
 }

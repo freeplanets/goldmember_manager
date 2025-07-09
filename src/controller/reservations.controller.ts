@@ -8,7 +8,9 @@ import { ReservationCreateRequestDto } from '../dto/reservations/reservation-cre
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { TokenGuard } from '../utils/tokens/token-guard';
 import { ReservationResponse } from '../dto/reservations/reservation-response';
-import { ReservationModifyRequestDto } from 'src/dto/reservations/reservation-modify-request.dto';
+import { ReservationModifyRequestDto } from '../dto/reservations/reservation-modify-request.dto';
+import { ReservationStatusRequestDto } from '../dto/reservations/reservation-status.request.dto';
+import { ParticipantsResponse } from '../dto/reservations/participants-response';
 
 @Controller('reservations')
 @ApiTags('reservations')
@@ -88,6 +90,45 @@ export class ReservationsController {
         @Res() res:Response,
     ) {
         const result =  await this.rsvService.modifyReservation(id, mfyResv, req.user);
+        return res.status(HttpStatus.OK).json(result);
+    }
+
+    @ApiOperation({
+        summary: '更新預約狀態',
+        description: '更新特定預約的狀態',
+    })
+    @ApiResponse({
+        description: '成功或失敗',
+        type: CommonResponseDto,        
+    })
+    @ApiParam({ name: 'id', description: '預約 ID', required: true})
+    @Put('status/:id')
+    async modifyReservationStatus(
+        @Param('id') id:string,
+        @Body() stsObj: ReservationStatusRequestDto,
+        @Req() req:any,
+        @Res() res:Response,
+    ) {
+        const result = await this.rsvService.modifyReservationStatus(id, stsObj, req.user);
+        return res.status(HttpStatus.OK).json(result);
+    }
+
+
+    @ApiOperation({
+        summary: '取得活動參與者列表',
+        description: '取得特定活動的參與者列表',
+    })
+    @ApiResponse({
+        description: '成功或失敗',
+        type: ParticipantsResponse,          
+    })
+    @ApiParam({name: 'id', description: '活動 ID', required: true})
+    @Get('participants/:id')
+    async getParticipants(
+        @Param('id') id: string,
+        @Res() res:Response,
+    ) {
+        const result = await this.rsvService.getParticipants(id);
         return res.status(HttpStatus.OK).json(result);
     }
 }

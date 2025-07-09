@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IReservations, IReserveHistory, IReserveSection } from '../interface/reservations.if';
+import { IReservationParticipant, IReservations, IReserveHistory, IReserveSection } from '../interface/reservations.if';
 import { MEMBER_LEVEL, ReserveFrom, ReserveStatus, ReserveType } from '../../utils/enum';
 import { ReserveHistory } from '../reservations/reserve-history';
 import mongoose, { Document, Mongoose } from 'mongoose';
@@ -46,8 +46,12 @@ export class Reservations implements IReservations {
     @Prop()
     playerCount:number; //參與人數 (個人預約時使用)
 
-    @Prop()
-    participants:string;    //參與人員名單 (個人預約時使用)
+    @Prop({
+        type: [
+            {type: mongoose.Schema.Types.ObjectId, ref: 'Participant'}
+        ]
+    })
+    participants: IReservationParticipant[];   //參與人員名單 (個人預約時使用)
 
     @Prop()
     groups:number;  //組數

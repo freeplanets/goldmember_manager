@@ -1,5 +1,5 @@
 import { ReserveType } from '../../utils/enum';
-import { IReservations, IReserveSection } from '../interface/reservations.if';
+import { IReservationParticipant, IReservations, IReserveSection } from '../interface/reservations.if';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsNumber, IsOptional, IsPassportNumber, IsString, IsUUID } from 'class-validator';
 import { ReserveSectionDto } from './reserve-section.dto';
@@ -54,8 +54,7 @@ export class ReservationCreateRequestDto implements Partial<IReservations> {
         description: '參與人員名單 (個人預約時使用)',
     })
     @IsOptional()
-    @IsString()
-    participants?: string;
+    participants?: string | IReservationParticipant[];
 
     @ApiProperty({
         description: '組數',

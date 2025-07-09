@@ -14,6 +14,13 @@ export class TeamMemberUpdateRequestDto implements Partial<ITeamMember> {
     @IsString()
     role?: TeamMemberPosition;
 
+
+    @ApiProperty({
+        description: '聯絡電話',
+    })
+    phone?: string;
+
+
     @ApiProperty({
         description: '是否活躍',
         example: true,

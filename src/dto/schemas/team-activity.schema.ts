@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { ITeamActivity, ITeamMember } from '../interface/team-group.if';
+import { IActivityParticipants, ITeamActivity, ITeamMember } from '../interface/team-group.if';
 import { TeamActivityStatus } from '../../utils/enum';
 import { IModifiedBy } from '../interface/modifyed-by.if';
 import { ModifiedByData } from '../data/modified-by.data';
@@ -37,7 +37,7 @@ export class TeamActivity implements ITeamActivity {
         type: [{type: mongoose.Schema.Types.ObjectId, ref: 'TeamMember'}],
         default: [],
     })
-    participants: ITeamMember[];   // 參與人數
+    participants: IActivityParticipants[];   // 參與人數
 
     @Prop()
     maxParticipants: number; //最大參與人數

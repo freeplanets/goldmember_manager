@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ERROR_TYPE, MEMBER_LEVEL } from '../utils/enum';
-import { ERROR_MESSAGE, KS_MEMBER_STYLE_FOR_SEARCH, PHONE_STYLE_FOR_SEARCH, STATUS_CODE } from '../utils/constant';
+import { ERROR_MESSAGE, KS_DEPENDENTS_STYLE_FOR_SEARCH, KS_MEMBER_STYLE_FOR_SEARCH, KS_SHAREHOLDER_STYLE_FOR_SEARCH, PHONE_STYLE_FOR_SEARCH, STATUS_CODE } from '../utils/constant';
 import { MembersDirectorStatusRequestDto } from '../dto/members/members-director-status-request.dto';
 import { MembersConvertToShareholderRequestDto } from '../dto/members/members-convert-to-shareholder-request.dto';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
@@ -60,6 +60,8 @@ export class MembersService {
       }
       if (type && type !== MEMBER_LEVEL.ALL && type.indexOf('*') === -1) {
         filter.membershipType = type;
+      } else {
+        type = '';
       }
       console.log(filter);
       const ans = await this.memberModel.find(filter, `${MEMBER_DEFAULT_FIELDS} phone systemId`);
@@ -68,7 +70,19 @@ export class MembersService {
       if (isSearchKsMemberToo && type !== MEMBER_LEVEL.GENERAL_MEMBER && type.indexOf('*') === -1) {
         console.log('search ks member');
         const ksFilter:FilterQuery<KsMemberDocument> = {};
-        ksFilter.no = { $regex: `${search}.*` };
+        let ksType = '';
+        let testpass =false;
+        if (KS_SHAREHOLDER_STYLE_FOR_SEARCH.test(search)) {
+          ksType = MEMBER_LEVEL.SHARE_HOLDER;
+        }
+        if (KS_DEPENDENTS_STYLE_FOR_SEARCH.test(search)) {
+          ksType = MEMBER_LEVEL.DEPENDENTS;
+        }
+        if (!type || (type && type === ksType)) {
+          ksFilter.no = { $regex: `${search}.*` };
+        } else {
+          ksFilter.no = '99999';
+        }
         console.log('ksFilter:', ksFilter);
         const ksMbrs = await this.ksMemberModel.find(ksFilter);
         console.log('ksMbrs:', ksMbrs.length);
@@ -86,6 +100,7 @@ export class MembersService {
               gender: item.gender,
               birthDate: item.birthday,
               isNotAppMember: true,
+              membershipType: ksType as MEMBER_LEVEL,
             };
             mbrs.push(tmp);
           });

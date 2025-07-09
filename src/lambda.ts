@@ -10,7 +10,7 @@ import { createServer, proxy, Response } from "aws-serverless-express";
 import { Context, Handler } from "aws-lambda";
 // import { GoogleRecaptchaFilter } from "./utils/google-recaptcha-filter";
 import { SecuritySchemeObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
-import { ValidationPipe, ValidationPipeOptions } from "@nestjs/common";
+import { INestApplication, ValidationPipe, ValidationPipeOptions } from "@nestjs/common";
 import { ValidationException } from "./utils/validate/validation-exception";
 
 const authOption:SecuritySchemeObject = {
@@ -31,7 +31,11 @@ const swaggerCustomOptions: SwaggerCustomOptions = {
         persistAuthorization: true,
     },
 };
-async function bootstrapServer():Promise<Server> {
+// export interface AppServer {
+//     cachedServer: Server;
+//     app: INestApplication<any>,
+// }
+export async function bootstrapServer():Promise<Server> {
     const expressApp = require('express')();
     const adapter = new ExpressAdapter(expressApp);
     //console.log("check0");
@@ -76,11 +80,15 @@ async function bootstrapServer():Promise<Server> {
     app.useGlobalPipes(new ValidationPipe(vopt));
     // app.useGlobalFilters(new GoogleRecaptchaFilter());
     await app.init();
-    return createServer(expressApp);
+    const cachedServer = createServer(expressApp);
+    // return { cachedServer, app };
+    return cachedServer;
 }
 
 export const handler: Handler = async (event: any, context: Context): Promise<Response> => {
     if (!cachedServer) {
+        // const appServer = await bootstrapServer();
+        // cachedServer = appServer.cachedServer;
         cachedServer = await bootstrapServer();
     }
     //console.log(event);

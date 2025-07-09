@@ -46,7 +46,7 @@ export class AuthService {
     try {
       const device = this.jwt.decode(authLoginRequestDto.fingerprint);
       console.log('fingerprint:', authLoginRequestDto.fingerprint);
-      // console.log('device', device);
+      console.log('device', device);
       // fingerprint check
       if (!device.deviceId) {
         alRes.ErrorCode = ErrCode.ERROR_PARAMETER;
@@ -57,6 +57,7 @@ export class AuthService {
         {username: authLoginRequestDto.username},
         `${USER_DEFAULT_FIELDS} password has2Fa SecretCode isLocked passwordFailedCount passwordLastTryTs devices`,
       );
+      console.log('user:', user, authLoginRequestDto);
       if (user) {
         if (!user.isActive) {
           alRes.ErrorCode = ErrCode.ACCOUNT_IS_NOT_ACTIVATED;

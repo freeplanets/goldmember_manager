@@ -19,7 +19,7 @@
 // 預約修改-> 球隊info（預先取得全球隊資訊） -> 不在球隊新增 -> 新增球隊連絡人(來電者) -> 不明人數時改為保留時段
 // dashboard -> 筆數,
 // 會員，球隊評分欄位
-import { CourseName, MEMBER_LEVEL, ReserveFrom, ReserveStatus, ReserveType, TimeSectionType } from '../../utils/enum';
+import { CourseName, MEMBER_LEVEL, ParticipantStatus, ReserveFrom, ReserveStatus, ReserveType, TimeSectionType } from '../../utils/enum';
 
 //預約時段資料
 export interface IReserveSection {
@@ -39,8 +39,20 @@ export interface IReserveHistory {
     id:string;  //操作人員ID
     name:string;    //操作人員
     action:string;  //操作內容
+    reason?:string;  //變更理由
 }
 
+export interface IReservationParticipant {
+    member:string;
+    // from Member
+    id:	string; //參與者 ID
+    name: string;   //參與者姓名
+    phone: string;  //參與者電話
+    membershipType:	string; //會員類型
+    // from Member ---end
+    registrationDate: string;   //($date)報名日期
+    status:	ParticipantStatus; //報名狀態 Enum: [ confirmed, pending, cancelled ]  
+}
 
 export interface IReservations {
     id:string;  //預約 ID
@@ -54,7 +66,7 @@ export interface IReservations {
     memberPhone:string; //會員電話 (個人預約時使用)
     membershipType:MEMBER_LEVEL;  //會員類型 (個人預約時使用)Enum:[ general_member, dependents, share_holder ]
     playerCount:number; //參與人數 (個人預約時使用)
-    participants:string;    //參與人員名單 (個人預約時使用)
+    participants:string | IReservationParticipant[];    //參與人員名單 (個人預約時使用)
     groups:number;  //組數
     data:IReserveSection[];   //預約時段資料
     notes:string;   //備註

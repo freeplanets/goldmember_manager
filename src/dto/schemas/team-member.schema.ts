@@ -1,21 +1,46 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IMemberActivityInfo, ITeamMember } from '../interface/team-group.if';
-import { TeamMemberPosition } from '../../utils/enum';
-import { Document } from 'mongoose';
-import { MemberActivityInfo } from '../teams/member-activity-info';
+import { ITeamMember } from '../interface/team-group.if';
+import { MEMBER_LEVEL, TeamMemberPosition } from '../../utils/enum';
+import mongoose, { Document } from 'mongoose';
 
 export type TeamMemberDocument =  Document & TeamMember;
 
 @Schema()
-export class TeamMember implements ITeamMember {
+export class TeamMember implements Partial<ITeamMember> {
     @Prop({index: true})
     teamId: string; // 球隊 ID
 
-    @Prop({index: true})
-    memberId:	string; // 會員 ID
+    // @Prop({
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     required: true,
+    //     refPath: 'memberFrom',
+    //     //ref: 'Member',
+    // })
+    // member: string;  //Partial<IMember>
+
+    // @Prop({
+    //     type: String,
+    //     required: true,
+    //     enum: ['Member', 'KsMember'],
+    // })
+    // memberFrom:string;
+    @Prop()
+    id?: string;
 
     @Prop()
-    name: string; // 會員姓名
+    name?: string;
+
+    @Prop()
+    phone?: string;
+
+    @Prop()
+    membershipType?: MEMBER_LEVEL;
+
+    @Prop()
+    systemId?: string;
+
+    @Prop()
+    handicap?: number;
 
     @Prop({
         enum: TeamMemberPosition,
@@ -27,19 +52,11 @@ export class TeamMember implements ITeamMember {
 
     @Prop()
     isActive: boolean; //是否活躍
-
-    @Prop()
-    phone?: string;
-
-    @Prop({
-        type: Array<MemberActivityInfo>,
-    })
-    activities?: IMemberActivityInfo[];
 }
 
 export const TeamMemberSchema = SchemaFactory.createForClass(TeamMember);
 
 TeamMemberSchema.index(
-    { teamId: 1, memberId: 1 },
+    { teamId: 1, id: 1 },
     { unique: true },
 );

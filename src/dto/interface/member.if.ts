@@ -37,6 +37,7 @@ export interface IMember {
   devices: Partial<ILoginDevice>[]; //會員登入設備
   isCouponTriggered: boolean; // 因轉送優惠券而產生的會員
   isNotAppMember?: boolean; // 是否非app會員 only use for search Ks Member
+  _doc?:any;
 }
 
 export interface IMemberActivity {

@@ -1,13 +1,13 @@
-import { IsOptional, IsBoolean } from 'class-validator';
+import { IsOptional, IsBoolean, IsNotEmpty } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class MembersDirectorStatusRequestDto {
   @ApiProperty({
     description: '是否為董監',
-    required: false,
+    required: true,
     example: false
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsBoolean()
   isDirector?: boolean;
 }

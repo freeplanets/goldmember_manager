@@ -151,6 +151,12 @@ export enum ReserveType {
   ALL = 'all',
 }
 
+export enum ParticipantStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  CANCELLED = 'cancelled',  
+}
+
 export enum ReserveStatus {
   PENDING = 'pending',
   BOOKED = 'booked', 
@@ -162,4 +168,15 @@ export enum ReserveStatus {
 export enum ReserveFrom {
   APP = 'app',
   BACKEND = 'backend',
+}
+
+export enum PendingItemType {
+  RESERVATION = 'reservation', 
+  ANNOUNCEMENT = 'announcement', 
+  COUPON = 'coupon',
+}
+
+export enum MEMBER_FROM {
+  APP = 'Member',
+  KS = 'KsMember',
 }

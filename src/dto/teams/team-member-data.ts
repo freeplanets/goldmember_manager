@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ITeamMember } from '../interface/team-group.if';
 import { MEMBER_LEVEL, TeamMemberPosition } from '../../utils/enum';
 
-export class TeamMemberData implements ITeamMember {
+export class TeamMemberData implements Partial<ITeamMember> {
     @ApiProperty({
         description: '球隊 ID',
     })
@@ -11,7 +11,7 @@ export class TeamMemberData implements ITeamMember {
     @ApiProperty({
         description: '會員 ID',
     })
-    memberId: string; // 會員 ID
+    id: string; // 會員 ID
 
     @ApiProperty({
         description: '會員姓名',

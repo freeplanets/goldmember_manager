@@ -3,8 +3,6 @@ import { AnnouncementSearch } from '../dto/announcements/announcements-search.dt
 import mongoose, { Model } from 'mongoose';
 import { Announcement, AnnouncementDocument } from '../dto/schemas/announcement.schema';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import * as AWS from "aws-sdk";
-import { Readable } from 'stream';
 import { Attachment } from '../dto/announcements/attachment';
 import { IAnnouncement } from '../dto/interface/announcement.if';
 import { v1 as uuidv1 } from 'uuid';

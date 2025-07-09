@@ -20,6 +20,7 @@
 // 2. 目前由總幹事電話預約.
 
 import { MEMBER_LEVEL, TeamActivityRegistrationStatus, TeamActivityStatus, TeamMemberPosition, TeamStatus } from '../../utils/enum';
+import { IMember } from './member.if';
 import { IModifiedBy } from './modifyed-by.if';
 
 export interface ITeamPositionInfo {
@@ -28,28 +29,38 @@ export interface ITeamPositionInfo {
     phone: string; // 電話
 }
 
-export interface IMemberActivityInfo {
-    activityId: string;
+export interface IActivityParticipants {
+    actId: string;  // 活動代號
+    member: string; // ITeamMember object id;
     registrationDate: string;
-    status: TeamActivityRegistrationStatus;
+    status: TeamActivityRegistrationStatus,
 }
 
 export interface ITeamMember {
     teamId?: string;    //球隊ID
-    memberId:	string; // 會員 ID
-    name: string; // 會員姓名
-    role: TeamMemberPosition; // 角色
-    joinDate: string; //加入日期
-    isActive: boolean; //是否活躍
-    // data from member table 
+    //member?: string | Partial<IMember>; //會員 object Id
+    // from member table
+    id?:	string; // 會員 ID
+    name?: string; // 會員姓名
     phone?: string; // 電話
     membershipType?: MEMBER_LEVEL; //會員類型
     systemId?: string;   // 國興ID
-    activities?: IMemberActivityInfo[];
+    handicap?: number;  // for first time
+    // from member table -- end
+    role?: TeamMemberPosition; // 角色
+    joinDate?: string; //加入日期
+    isActive?: boolean; //是否活躍
+    // data from member table
+    _id?:string; 
 }
 
-export interface IActMemberInfo extends ITeamMember {
-    id: string;
+export interface IActMemberInfo  {
+    // id: string;
+    id:	string; // 會員 ID
+    name: string; // 會員姓名
+    phone?: string; // 電話
+    membershipType?: MEMBER_LEVEL; //會員類型
+    systemId?: string;   // 國興ID
     registrationDate: string;
     status: TeamActivityRegistrationStatus;
 }
@@ -83,7 +94,7 @@ export interface ITeamActivity {
     location: string;   //地點
     registrationStart: string;  // 報名開始日期
     registrationEnd: string;    //報名結束日期
-    participants: ITeamMember[];  //number;   // 參與人數
+    participants: IActivityParticipants[];  //number;   // 參與人數
     maxParticipants: number; //最大參與人數
     status:	TeamActivityStatus; //狀態
     creator: IModifiedBy; //發起人 
@@ -98,6 +109,7 @@ export interface ITeam {
     description: string;    //球隊描述
     leader:	ITeamPositionInfo;  // 隊長
     manager: ITeamPositionInfo; // 經理
+    contacter: ITeamPositionInfo;   //連絡人
     lastActivity: string; //最近活動日期
     members?: ITeamMember[]; // 隊員清單
     creditHistory?: ICreditRecord[]; //評分記錄

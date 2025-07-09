@@ -6,17 +6,22 @@ import { TeamMemberDocument, TeamMember } from '../dto/schemas/team-member.schem
 import { v1 as uuidv1 } from 'uuid';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { ErrCode } from '../utils/enumError';
-import { IActMemberInfo, ICreditRecord, ITeam, ITeamActivity, ITeamMember } from '../dto/interface/team-group.if';
+import { IActivityParticipants, IActMemberInfo, ICreditRecord, ITeam, ITeamActivity, ITeamMember, ITeamPositionInfo } from '../dto/interface/team-group.if';
 import { DateWithLeadingZeros } from '../utils/common';
 import { GetTeamsResponse } from '../dto/teams/get-teams-response';
 import { TeamDetailResponse } from '../dto/teams/team-detail-response';
 import { Upload2S3 } from '../utils/upload-2-s3';
-import { TeamMemberPosition } from '../utils/enum';
+import { MEMBER_FROM, MEMBER_LEVEL, TeamMemberPosition } from '../utils/enum';
 import { Member, MemberDcoument } from '../dto/schemas/member.schema';
 import { IUser } from '../dto/interface/user.if';
 import { CreditRecord, CreditRecordDocument } from '../dto/schemas/credit-record.schema';
 import { TeamActivity, TeamActivityDocument } from '../dto/schemas/team-activity.schema';
 import { ActivityParticipantsResponse } from '../dto/teams/activity-participants-response';
+import { TeamMemberAddRequestDto } from '../dto/teams/team-member-add-request.dto';
+import { IMember } from '../dto/interface/member.if';
+import { KsMember, KsMemberDocument } from '../dto/schemas/ksmember.schema';
+import { KS_MEMBER_STYLE_FOR_SEARCH, KS_SHAREHOLDER_STYLE_FOR_SEARCH } from '../utils/constant';
+import { refs } from '@nestjs/swagger';
 
 @Injectable()
 export class TeamsService {
@@ -24,6 +29,7 @@ export class TeamsService {
         @InjectModel(Team.name) private readonly modelTeam:Model<TeamDocument>,
         @InjectModel(TeamMember.name) private readonly modelTeamMember:Model<TeamMemberDocument>,
         @InjectModel(Member.name) private readonly modelMember:Model<MemberDcoument>,
+        @InjectModel(KsMember.name) private readonly modelKs:Model<KsMemberDocument>,
         @InjectModel(CreditRecord.name) private readonly modelCreditRecord:Model<CreditRecordDocument>,
         @InjectModel(TeamActivity.name) private readonly modelTeamActivity:Model<TeamActivityDocument>,
         @InjectConnection() private readonly connection: Connection, // 
@@ -35,7 +41,26 @@ export class TeamsService {
             filter.name = { $regex: `${search}.*`}
         }
         try {
-            teamRes.data = await this.modelTeam.find(filter).populate('members','name joinDate').exec();
+            teamRes.data = await this.modelTeam
+                .find(filter)
+                // .populate({
+                //     path: 'members',
+                //     select: 'name role joinDate',
+                //     populate: {
+                //         path: 'member',
+                //         select: 'id name phone membershipType systemId',
+                //     },
+                // })
+                // .populate({
+                //     path: 'creditHistory',
+                //     select: 'date score reason',
+                // })
+                // .populate({
+                //     path: 'activities',
+                //     // match: { date: { $gte: '2025/07/16'} },
+                //     select: 'id title date',
+                // })
+                .exec();
         } catch (error) {
             console.error('Error fetching teams:', error);
             teamRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
@@ -46,10 +71,54 @@ export class TeamsService {
     async getTeamDetail(teamId: string): Promise<TeamDetailResponse> {
         const teamDetailRes = new TeamDetailResponse();
         try {
-            const team = await this.modelTeam.findOne({ id: teamId }).populate('members', 'name joinDate').exec();
+            const team = await this.modelTeam
+                .findOne({ id: teamId })
+                .populate({
+                    path:'members', 
+                    // select: 'name joinDate role memberFrom',
+                    // populate: {
+                    //     path: 'member',
+                    //     select: 'id no name phone membershipType systemId',
+                    //     localField: 'name',
+                    //     foreignField: 'member',
+                    // }
+                })
+                .populate({
+                    path: 'creditHistory',
+                    select: 'date score reason',
+                })
+                .populate({
+                    path: 'activities',
+                    // match: { date: { $gte: '2025/07/16'} },
+                    select: 'id title date',
+                })
+                .exec();
             if (!team) {
                 teamDetailRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
             } else {
+                // const members = team.members.map((mbr) => {
+                //     const myM = mbr.member as Partial<IMember>;
+                //     mbr._doc = {
+                //         ...myM._doc,
+                //     }
+
+                    // const newM: ITeamMember = {
+                    //     ...(mbr.member as Partial<IMember>),
+                    //     // id: myM.id,
+                    //     // name: myM.name,
+                    //     // phone: myM.phone,
+                    //     // membershipType: myM.membershipType,
+                    //     // systemId: myM.systemId,
+                    //     // joinDate: mbr.joinDate,
+                    //     // role: mbr.role,
+                    // }
+                      
+                    // console.log('newM:', newM);
+                    //return newM;
+
+                    // return mbr;
+                //});
+                // console.log('team.members:', team.members);
                 teamDetailRes.data = team;
             }
         } catch (error) { 
@@ -117,43 +186,102 @@ export class TeamsService {
     }
 
     
-    async addTeamMember(teamId: string, memberInfo: Partial<ITeamMember>): Promise<CommonResponseDto> {
+    async addTeamMember(teamId: string, memberInfo: TeamMemberAddRequestDto): Promise<CommonResponseDto> {
         const comRes = new CommonResponseDto();
         const session = await this.connection.startSession();
         try {
             // Check if the team exists
-            const team = await this.modelTeam.findOne({ id: teamId });
+            const team = await this.modelTeam.findOne({ id: teamId },'members');
             if (!team) {
                 comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
                 return comRes;
             }
             console.log('team:', team);
+            let mbr:any;
+            let data:Partial<ITeamMember> = {};
+            if (KS_MEMBER_STYLE_FOR_SEARCH.test(memberInfo.memberId)){
+                mbr = await this.modelKs.findOne({no: memberInfo.memberId}, 'no name');
+                // memberFrom = MEMBER_FROM.KS;
+                data.id = mbr.no;
+                data.name = mbr.name;
+                data.phone = memberInfo.phone;
+                // if (KS_SHAREHOLDER_STYLE_FOR_SEARCH.test(mbr.no)) {
+                //     data.membershipType = MEMBER_LEVEL.SHARE_HOLDER;
+                // } else {
+                //     data.membershipType = MEMBER_LEVEL.DEPENDENTS;
+                // }
+                data.systemId = mbr.no;
+            } else {
+                mbr = await this.modelMember.findOne({id: memberInfo.memberId}, 'id name phone membershipType systemId');
+                data.id = mbr.id;
+                data.name = mbr.name;
+                data.phone = mbr.phone;
+                data.membershipType = mbr.membershipType;
+                data.systemId = mbr.systemId;
+                // memberFrom = MEMBER_FROM.APP;
+            }
+            if (!mbr) {
+                comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
+                return comRes;
+            }
+            console.log('mbr:', mbr);
             // Check if the member already exists in the team
-            const existingMember = await this.modelTeamMember.findOne({ teamId, memberId: memberInfo.memberId });
+            const existingMember = await this.modelTeamMember.findOne({ teamId, id: memberInfo.memberId });
             if (existingMember) {
                 comRes.ErrorCode = ErrCode.TEAM_MEMBER_ALREADY_EXISTS;
                 return comRes;
             }
             session.startTransaction();
             // Create a new team member
-            if (!memberInfo.phone) {
-                const member = await this.modelMember.findOne({ id: memberInfo.memberId }, 'phone');
-                if (member) {
-                    memberInfo.phone = member.phone;
-                } 
-            }
-            const newMember = new this.modelTeamMember({
-                teamId,
-                memberId: memberInfo.memberId,
-                name: memberInfo.name,
-                phone: memberInfo.phone,
-                joinDate: DateWithLeadingZeros(),
-            });
+            data.teamId = teamId;
+            data.role = memberInfo.role;
+            data.joinDate = DateWithLeadingZeros();
+            const newMember = new this.modelTeamMember(data);
             const ans = await newMember.save({ session });
             if (ans) {
                 //team.members.push(ans._id); // Add the new member's ID to the team's members array
                 // await team.save({session}); // Save the updated team
-                await this.modelTeam.updateOne({ id: teamId }, { $push: { members: ans._id } }, { session });
+                const updData:FilterQuery<TeamDocument> = {
+                    $push: { members: ans._id }
+                };
+                const pos:ITeamPositionInfo = {
+                    id: data.id,
+                    name: data.name,
+                    phone: data.phone,
+                }
+                let isRoleChange = false;
+                if (memberInfo.role === TeamMemberPosition.MANAGER) {
+                    updData.manager = pos;
+                    isRoleChange = true;
+                } else if (memberInfo.role === TeamMemberPosition.LEADER) {
+                    updData.leader = pos;
+                    isRoleChange = true;
+                }
+                if (isRoleChange) {
+                    isRoleChange = false;
+                    await team.populate('members');
+                    console.log('' ,team.members);
+                    let needChange_id = '';
+                    team.members.forEach((mb) => {
+                        if (mb.role === memberInfo.role && mb.id !== memberInfo.memberId) {
+                            // mb.role = TeamMemberPosition.MEMBER;
+                            needChange_id = mb._id;                           
+                        }
+                    })
+                    if (needChange_id) {
+                        const updT = await this.modelTeamMember
+                        .updateOne({_id: needChange_id}, {role: TeamMemberPosition.MEMBER}, {session});
+                        console.log('updT:', updT);
+                        if (!updT.acknowledged) {
+                            comRes.ErrorCode = ErrCode.DATABASE_ACCESS_ERROR;
+                            comRes.error.extra = `Update TeamMember (ObjectId:${needChange_id}) role error`;
+                            session.abortTransaction();
+                            session.endSession();
+                            return comRes;
+                        }
+                    }
+                }
+                await this.modelTeam.updateOne({ id: teamId }, updData, { session });
                 await session.commitTransaction();
                 console.log('New team member added successfully:', team, ans);
             } else {
@@ -178,13 +306,24 @@ export class TeamsService {
         const comRes = new CommonResponseDto();
         try {
             // Check if the team exists
-            const team = await this.modelTeam.findOne({ id: teamId });
-            if (!team) {
-                comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
-                return comRes;
-            }
+            // const team = await this.modelTeam.findOne({ id: teamId}, 'members');
+            // if (!team) {
+            //     comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
+            //     return comRes;
+            // }
+            // Check if the member
+            // let mbr:any;
+            // if (KS_MEMBER_STYLE_FOR_SEARCH.test(memberId)){
+            //     mbr = await this.modelKs.findOne({no: memberId}, 'no name');
+            // } else {
+            //     mbr = await this.modelMember.findOne({id: memberId}, 'id name phone');
+            // }
+            // if (!mbr) {
+            //     comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
+            //     return comRes;
+            // }
             // Check if the member exists in the team
-            const existingMember = await this.modelTeamMember.findOne({ teamId, memberId });
+            const existingMember = await this.modelTeamMember.findOne({ teamId, id: memberId });
             if (!existingMember) {
                 comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
                 return comRes;
@@ -192,35 +331,19 @@ export class TeamsService {
             // Update the member information
             const session = await this.connection.startSession();
             session.startTransaction();
-            const updateResult = await this.modelTeamMember.updateOne(
-                { teamId, memberId },
-                { $set: memberInfo },
+            let upd = await this.modelTeamMember.updateOne(
+                { teamId, role: memberInfo.role },
+                { role: TeamMemberPosition.MEMBER },
                 { session }
             );
-            if (updateResult.modifiedCount === 0) {
-                comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
-            }            
-            const updateTeam:Partial<ITeam> = {}
-            if (memberInfo.role === TeamMemberPosition.LEADER) {
-                updateTeam.leader = {
-                    id: memberId,
-                    name: existingMember.name,
-                    phone: existingMember.phone,
-                }
-            } else if (memberInfo.role === TeamMemberPosition.MANAGER) {
-                updateTeam.manager = {
-                    id: memberId,
-                    name: existingMember.name,
-                    phone: existingMember.phone,
-                }
-            }
-            if (Object.keys(updateTeam).length > 0) {
-                const ans = await this.modelTeam.updateOne({ id: teamId }, { $set: updateTeam }, {session });
-                if (ans.modifiedCount === 0) {
-                    comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
-                }
-            }
-            if (comRes.ErrorCode) {
+            console.log('upd1:', upd);
+            upd = await this.modelTeamMember.updateOne(
+                {teamId, id: memberId},
+                memberInfo,
+                {session},
+            )
+            console.log('upd2:', upd, memberInfo)
+            if (!upd.acknowledged) {
                 await session.abortTransaction();
             } else {
                 await session.commitTransaction();
@@ -241,13 +364,25 @@ export class TeamsService {
         const comRes = new CommonResponseDto();
         try {
             // Check if the team exists
-            const team = await this.modelTeam.findOne({ id: teamId });
-            if (!team) {
-                comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
+            // const team = await this.modelTeam.findOne({ id: teamId });
+            // if (!team) {
+            //     comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
+            //     return comRes;
+            // }
+            // Check if the member exists
+            let mbr:any;
+            if (KS_MEMBER_STYLE_FOR_SEARCH.test(memberId)) {
+                mbr = await this.modelKs.findOne({no: memberId}, 'no');
+                console.log('ks:', mbr);
+            } else {
+                mbr = await this.modelMember.findOne({id: memberId}, 'id');
+            }
+            if (!mbr) {
+                comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
                 return comRes;
             }
             // Check if the member exists in the team
-            const existingMember = await this.modelTeamMember.findOne({ teamId, memberId });
+            const existingMember = await this.modelTeamMember.findOne({ teamId, id: memberId });
             if (!existingMember) {
                 comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
                 return comRes;
@@ -255,7 +390,7 @@ export class TeamsService {
             // Delete the member from the team
             const session = await this.connection.startSession();
             session.startTransaction();
-            const deleteResult = await this.modelTeamMember.deleteOne({ teamId, memberId }, { session });
+            const deleteResult = await this.modelTeamMember.deleteOne({ teamId, id: memberId }, { session });
             if (deleteResult.deletedCount === 0) {
                 comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
             } else {
@@ -301,9 +436,10 @@ export class TeamsService {
             const newCredit = new this.modelCreditRecord(newCreditRecord);
             const ans = await newCredit.save({ session });
             if (ans) {
+                const creditScore = team.creditScore ? team.creditScore + creditInfo.score : creditInfo.score;
                 const upd = await this.modelTeam.updateOne(
                     { id: teamId },
-                    { $push: { creditHistory: ans._id } },
+                    { creditScore  ,$push: { creditHistory: ans._id } },
                     { session }
                 );
                 if (upd.modifiedCount === 0) {
@@ -329,6 +465,7 @@ export class TeamsService {
             const team = await this.modelTeam.findOne({id: teamId});
             if (team) {
                 taCreate.teamId = teamId;
+                taCreate.id = uuidv1();
                 const act = new this.modelTeamActivity(taCreate);
                 const ans = await act.save({session});
                 if (ans) {
@@ -365,10 +502,11 @@ export class TeamsService {
             if (Object.keys(modifyAct).length > 0) {
                 const act = await this.modelTeamActivity.findOne({teamId, id: actId});
                 if (act) {
-                    const t = await this.modelTeam.updateOne(
+                    const t = await this.modelTeamActivity.updateOne(
                         { teamId, id: actId}, 
-                        {$set: modifyAct}
+                        { $set: modifyAct}
                     )
+                    console.log('modifyTeamActivity:', t);
                     if (!t) { 
                         comRes.ErrorCode = ErrCode.DATABASE_ACCESS_ERROR;
                     }                
@@ -388,17 +526,26 @@ export class TeamsService {
     async getActivityParticipants(activityId:string):Promise<ActivityParticipantsResponse> {
         const comRes = new ActivityParticipantsResponse();
         try {
-            const act = await this.modelTeamActivity.findOne({id: activityId}, 'participants').populate('participants').exec();
+            const act = await this.modelTeamActivity
+                .findOne({id: activityId}, 'participants')
+                .populate({ 
+                    path:'participants',
+                    populate: {
+                        path: 'member',
+                    }
+                }).exec();
             if (act) {
-                const mbrs = act.participants.map((p) => {
-                    const f = p.activities.find((act) => act.activityId === activityId);
+                const mbrs = act.participants.map((p:IActivityParticipants) => {
                     const nMbr:Partial<IActMemberInfo> = {
-                        id: p.memberId,
-                        name: p.name,
-                        phone: p.phone,
-                        membershipType: p.membershipType,
-                        registrationDate: f.registrationDate,
-                        status: f.status,
+                        ...(p.member as Partial<IMember>),
+                        registrationDate: p.registrationDate,
+                        status: p.status,
+                        // id: p.member.id,
+                        // name: p.name,
+                        // phone: p.phone,
+                        // membershipType: p.membershipType,
+                        // registrationDate: f.registrationDate,
+                        // status: f.status,
                     };
                     return nMbr;
                 });
