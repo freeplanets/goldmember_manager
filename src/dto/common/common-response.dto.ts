@@ -24,6 +24,4 @@ export class CommonResponseDto implements ICommonResponse<any> {
         type: CommonErrorDto,
     })
     error?: ICommonError;
-
-    data?: any;
 }

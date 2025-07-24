@@ -11,6 +11,9 @@ import { TokenGuard } from '../utils/tokens/token-guard';
 import { MEMBER_LEVEL } from '../utils/enum';
 import { MemberTransferLogDto } from '../dto/members/member-transfer-log.dto';
 import { MemberTransferLogRes } from '../dto/members/member-transfer-log-response';
+import { CreditRequestDto } from '../dto/teams/credit-request.dto';
+import { CreditRecordRes } from '../dto/teams/credit-record-response';
+import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
 
 @Controller('members')
 @ApiTags('members')
@@ -125,4 +128,41 @@ export class MembersController {
       .status(HttpStatus.OK)
       .json(comRes);
   }
+  @ApiOperation({
+      summary: "新增會員信用評分",
+      description: "新增會員信用評分.",
+  })
+  @ApiResponse({
+      description: '成功或失敗',
+      type: CommonResponseDto,
+  })
+  @Post('credit/:id')
+  async updateTeamCredit(
+      @Body() creditInfo: CreditRequestDto,
+      @Param('id') id: string,
+      @Req() req: any,
+      @Res() res: Response,
+  ){
+      const result = await this.membersService.updateCredit(id, creditInfo, req.user);
+      return res.status(HttpStatus.OK).json(result);
+  }
+
+      @ApiOperation({
+        summary: "查詢會員信用評分",
+        description: "查詢會員信用評分.",
+    })
+    @ApiResponse({
+        description: '成功或失敗',
+        type: CreditRecordRes,
+    })
+    @ApiParam({name: 'id', description: '會員代號'})
+    @Get('creditrecords/:id')
+    async getCreditRecords(
+        @Param('id') memberId: string,
+        @Query() dates:DateRangeQueryReqDto,
+        @Res() res:Response,
+    ){
+        const rlt = await this.membersService.getCreditRecords(memberId, dates);
+        return res.status(HttpStatus.OK).json(rlt);
+    }
 }

@@ -1,8 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { ICreditRecord, ITeam, ITeamActivity, ITeamMember, ITeamPositionInfo } from '../interface/team-group.if';
 import { TeamStatus } from '../../utils/enum';
-import TeamPositonInfo from '../teams/team-position-info';
 import mongoose, { Document } from 'mongoose';
+import TeamPositonInfo from '../teams/team-position-info';
 
 export type TeamDocument = Document & Team;
 
@@ -17,7 +17,9 @@ export class Team implements ITeam {
     @Prop({enum: TeamStatus})
     status:	TeamStatus; //球隊狀態
 
-    @Prop()
+    @Prop({
+        default: 100,
+    })
     creditScore: number;    //信用評分
 
     @Prop()
@@ -26,15 +28,15 @@ export class Team implements ITeam {
     @Prop()
     description: string;    //球隊描述
 
-    @Prop({
-        type: TeamPositonInfo,
-    })
-    leader:	ITeamPositionInfo;  // 隊長
+    // @Prop({
+    //     type: TeamPositonInfo,
+    // })
+    // leader:	ITeamPositionInfo;  // 隊長
 
-    @Prop({
-        type: TeamPositonInfo,
-    })
-    manager: ITeamPositionInfo; // 經理
+    // @Prop({
+    //     type: TeamPositonInfo,
+    // })
+    // manager: ITeamPositionInfo; // 經理
 
     @Prop({
         type: TeamPositonInfo,
@@ -61,6 +63,7 @@ export class Team implements ITeam {
             ref: 'CreditRecord' 
         }],
         default: [],
+        select: false,
     })
     creditHistory?: ICreditRecord[];
 

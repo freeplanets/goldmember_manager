@@ -12,6 +12,7 @@ import { Context, Handler } from "aws-lambda";
 import { SecuritySchemeObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
 import { INestApplication, ValidationPipe, ValidationPipeOptions } from "@nestjs/common";
 import { ValidationException } from "./utils/validate/validation-exception";
+import { GlobalDataTransPipe } from "./utils/pipes/global-date-trans-pipe";
 
 const authOption:SecuritySchemeObject = {
     description: 'JWT token authorization',
@@ -40,7 +41,6 @@ export async function bootstrapServer():Promise<Server> {
     const adapter = new ExpressAdapter(expressApp);
     //console.log("check0");
     const app = await NestFactory.create(AppModule, adapter);
-    //console.log("check1");
     const crosOp: CorsOptions = {
         origin: '*',
         methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -77,7 +77,7 @@ export async function bootstrapServer():Promise<Server> {
     const vopt:ValidationPipeOptions = {
         exceptionFactory: ValidationException,
     }
-    app.useGlobalPipes(new ValidationPipe(vopt));
+    app.useGlobalPipes(new ValidationPipe(vopt),new GlobalDataTransPipe());
     // app.useGlobalFilters(new GoogleRecaptchaFilter());
     await app.init();
     const cachedServer = createServer(expressApp);
@@ -91,8 +91,10 @@ export const handler: Handler = async (event: any, context: Context): Promise<Re
         // cachedServer = appServer.cachedServer;
         cachedServer = await bootstrapServer();
     }
-    //console.log(event);
-    console.log('path:',event.requestContext.path,',','resourcePath:', event.requestContext.resourcePath, 'pathParameters:', event.pathParameters);
+    // console.log('headers:', event.headers);
+    // console.log('body:', event.body);
+    // console.log('query:', event.query);
+    // console.log('path:',event.requestContext.path,',','resourcePath:', event.requestContext.resourcePath, 'pathParameters:', event.pathParameters);
     const path = event.requestContext.path.replace('/linkougolf/backend', '');
     event.path = path;
     event.requestContext.path = path;

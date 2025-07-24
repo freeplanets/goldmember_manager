@@ -68,6 +68,11 @@ export class ReservationsData implements IReservations {
     participants:string;    //參與人員名單 (個人預約時使用)
 
     @ApiProperty({
+        description: '實際參加人數',
+    })
+    partCount: number;
+
+    @ApiProperty({
         description: '組數',
     })
     groups:number;  //組數

@@ -40,7 +40,7 @@ export class CouponBatchRequestDto implements Partial<ICouponBatch> {
         required: true,
     })
     @IsArray()
-    targetGroups?: MEMBER_GROUP[];
+    targetGroups?: any[];
     
     @ApiProperty({
         description: '進階選項,目前為生日',

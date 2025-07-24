@@ -1,6 +1,7 @@
 import { DS_LEVEL, GENDER, MEMBER_LEVEL } from "../../utils/enum";
 import { ILoginDevice } from "./devices.if";
 import { IModifiedBy } from "./modifyed-by.if";
+import { ICreditRecord } from "./team-group.if";
 
 export interface IMember {
   id?: string;
@@ -37,6 +38,8 @@ export interface IMember {
   devices: Partial<ILoginDevice>[]; //會員登入設備
   isCouponTriggered: boolean; // 因轉送優惠券而產生的會員
   isNotAppMember?: boolean; // 是否非app會員 only use for search Ks Member
+  creditScore: number;    //信用評分
+  creditHistory?: ICreditRecord[];
   _doc?:any;
 }
 
@@ -60,7 +63,7 @@ export interface IMemberTransferLog extends IModifiedBy {
 
 // 查詢 股號，手機，名字(含國興資料)
 
-// 股東會員邀請碼
+// 股東會員邀請碼 8碼(英數文字，英大寫字母，去掉英 I,O，數 1,0), 用過即失效
 
 // 特別會員無券使用優惠券-產生即用券
 // QRCode 新增會員，QRCode包倉內容 (股東會員邀請碼...)

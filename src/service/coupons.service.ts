@@ -4,9 +4,9 @@ import { CouponRequestDto } from '../dto/coupons/coupon-request.dto';
 import { IUser } from '../dto/interface/user.if';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { CouponBatch, CouponBatchDocument } from '../dto/schemas/coupon-batch.schema';
-import mongoose, { FilterQuery, Model } from 'mongoose';
+import mongoose, { FilterQuery, Model, UpdateQuery, UpdateWriteOpResult } from 'mongoose';
 import { Coupon, CouponDocument } from '../dto/schemas/coupon.schema';
-import { ICoupon, ICouponAutoIssuedLog, ICouponBatch } from '../dto/interface/coupon.if';
+import { ICoupon, ICouponAutoIssuedLog, ICouponBatch, ICouponTransferLog } from '../dto/interface/coupon.if';
 import { v1 as uuidv1} from 'uuid';
 import { IModifiedBy } from '../dto/interface/modifyed-by.if';
 import { CouponListResponseDto } from '../dto/coupons/coupon-list-response.dto';
@@ -28,6 +28,11 @@ import { CouponLogRes } from '../dto/coupons/coupon-log-response';
 import { CouponTransferLogReqDto } from '../dto/coupons/coupon-transfer-log-request.dto';
 import { CouponTransferLogRes } from '../dto/coupons/coupon-transfer-log-response';
 import { CouponTransferLog, CouponTransferLogDocument } from '../dto/schemas/coupon-transfer-log.schema';
+import { IbulkWriteItem } from '../dto/interface/common.if';
+import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
+import lang from '../utils/lang';
+import { CommonResponseData } from '../dto/common/common-response.data';
+import { CouponbatchAuthorizeReqDto } from '../dto/coupons/coupon-batch-authorize-request.dto';
 
 @Injectable()
 export class CouponsService {
@@ -53,19 +58,19 @@ export class CouponsService {
       Object.keys(couponRequestDto).forEach((key) => {
         isFilterSet = true;
         // filter[key] = couponRequestDto[key];
-        if (key==='status') {
-          filter.$and = [
-            {status: couponRequestDto.status },
-            {status: { $ne: COUPON_STATUS.NOT_ISSUED }},
-          ]
-        } else {
+        //if (key==='status') {
+          // filter.$and = [
+          //   {status: couponRequestDto.status },
+          //   {status: { $ne: COUPON_STATUS.NOT_ISSUED }},
+          // ]
+        //} else {
           filter[key] = couponRequestDto[key];
-        }
+        //}
       })
       if (isFilterSet) {
-        if (!filter.status && !filter.$and) {
-          filter.status = { $ne: COUPON_STATUS.NOT_ISSUED };
-        }
+        // if (!filter.status && !filter.$and) {
+        //   filter.status = { $ne: COUPON_STATUS.NOT_ISSUED };
+        // }
         console.log('filter:', filter);
         const rlt = await this.modelCoupon.find(filter);
         if (rlt) clRes.data = rlt;  
@@ -97,7 +102,7 @@ export class CouponsService {
   async couponsCodeUse(id: string, user:Partial<IUser>): Promise<CommonResponseDto> {
     const comRes = new CommonResponseDto();
     try {
-      const coupon = await this.modelCoupon.findOne({id}, 'type issueDate status');
+      const coupon = await this.modelCoupon.findOne({id}, 'memberName type issueDate status');
       if (coupon) {
         switch(coupon.status) {
           case COUPON_STATUS.NOT_USED:
@@ -107,9 +112,19 @@ export class CouponsService {
               modifiedByWho: user.username,
               modifiedAt: Date.now(),
             }
+            const d = new Date();
+            const log:Partial<ICouponTransferLog> = {};
+            log.description = `使用 對像:${coupon.memberName}`;
+            log.transferDate = d.toLocaleString('zh-TW', {hour12: false});
+            log.transferDateTS = d.getTime();
             const rlt = await this.modelCoupon.updateOne(
               { id }, 
-              { status: COUPON_STATUS.USED, usedDate: DateWithLeadingZeros(), collector }
+              { 
+                status: COUPON_STATUS.USED, 
+                usedDate: DateWithLeadingZeros(), 
+                collector,
+                $push: { logs: log},
+              }
             )
             await this.modifyCouponStatsUsed(coupon);
             console.log(rlt);
@@ -135,8 +150,65 @@ export class CouponsService {
     }
     return comRes;
   }
-
-  async couponsCodeConvertToPaper(coupon2paper:Partial<ICoupon>, user:Partial<IUser>): Promise<CommonResponseDto> {
+  async couponsCodeConvertToPaper(coupon2papers:Coupon2PaperDto[], user:Partial<IUser>): Promise<CommonResponseDto>{
+    const comRes = new CommonResponseDto();
+    try {
+      const ids:string[] = coupon2papers.map((cpn) => cpn.id);
+      const coupons = await this.modelCoupon.find({
+        id: {$in: ids},
+        $or: [
+          {toPaperNo: {$exists: false}},
+          {toPaperNo: ''}
+        ]
+      }, 'type issueDate status');
+      if (coupons.length > 0) {
+        const d = new Date();
+        const bulks:IbulkWriteItem<CouponDocument, UpdateQuery<CouponDocument>>[] =[];
+        coupon2papers.forEach(coup => {
+          ids.push(coup.id);
+          const log:Partial<ICouponTransferLog> = {
+            description: `${lang.zhTW.CouponToPaper}${coup.toPaperNo}`,
+            transferDate: d.toLocaleString('zh-Tw', {hour12: false}),
+            transferDateTS: d.getTime(),
+          }
+          bulks.push({
+            updateOne: {
+              filter: {id: coup.id},
+              update: {
+                toPaperNo: coup.toPaperNo,
+                $push: { logs: log}
+              },
+            }
+          })
+        });
+        const session = await this.connection.startSession();
+        session.startTransaction()
+        const upd = await this.modelCoupon.bulkWrite(bulks as any, {session});
+        console.log('couponsCodeConvertToPaper upd:', upd);
+        if (upd.modifiedCount) {
+          const promises = coupons.map((coupon) => this.modifyCouponStatsToPaper(coupon, session));
+          const allAns = await Promise.all(promises);
+          const ans = allAns.every((a) => a);
+          if (ans) {
+            await session.commitTransaction();
+          } else {
+            await session.abortTransaction();
+          }
+        } else {
+          await session.abortTransaction();
+        }
+        await session.endSession();
+      } else {
+        comRes.ErrorCode = ErrCode.ERROR_PARAMETER;
+      }
+    } catch (error) {
+      console.log('couponsCodeConvertToPaper error:', error);
+      comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+      comRes.error.extra = error.message;
+    }
+    return comRes;
+  }
+  async couponsCodeConvertToPaperOld(coupon2paper:Partial<ICoupon>, user:Partial<IUser>): Promise<CommonResponseDto> {
     const comRes = new CommonResponseDto();
     try {
       const coupon = await this.modelCoupon.findOne({id: coupon2paper.id}, 'type issueDate status');
@@ -149,11 +221,14 @@ export class CouponsService {
               modifiedByWho: user.username,
               modifiedAt: Date.now(),
             }
+            const session = await this.connection.startSession();
+            session.startTransaction();
             const rlt = await this.modelCoupon.updateOne(
               { id: coupon2paper.id }, 
-              { toPaperNo: coupon2paper.toPaperNo, updater }
+              { toPaperNo: coupon2paper.toPaperNo, updater },
+              { session }
             )
-            await this.modifyCouponStatsToPaper(coupon);
+            await this.modifyCouponStatsToPaper(coupon, session);
             console.log(rlt);
             break;
           case COUPON_STATUS.CANCELED:
@@ -184,7 +259,18 @@ export class CouponsService {
       if (!filter) filter = {}
       if (cblrd.status) {
         //if (!filter) filter = {}
-        filter.status = cblrd.status;
+        // if (cblrd.status === COUPON_BATCH_STATUS.EXPIRED) {
+        //   filter.$and = [
+        //     { expiryDate: { $exists: true}},
+        //     { expiryDate: { $lt: DateWithLeadingZeros()}},
+        //   ]
+        //   filter.$or = [
+        //     { status: COUPON_BATCH_STATUS.NOT_ISSUED },
+        //     { status: COUPON_BATCH_STATUS.EXPIRED },
+        //   ]
+        // } else {
+          filter.status = cblrd.status;
+        //}
       }
       //if (!filter) filter = {}
       if (cblrd.issueMode) {
@@ -192,7 +278,7 @@ export class CouponsService {
       } else {
         filter.issueMode = { $ne: COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC };
       }
-      console.log('filter:', filter);
+      console.log('filter:', filter, filter.$and, filter.$or);
       const list = await this.modelCouponBatch.find(filter, COUPON_BATCH_DETAIL_FIELDS);
       if (list) cbRes.data = list as Partial<ICouponBatch>;
     } catch (e) {
@@ -207,7 +293,7 @@ export class CouponsService {
     couponBatchPostDto: Partial<ICouponBatch>,
     user: Partial<IUser>,
   ): Promise<CommonResponseDto> {
-    const comRes = new CommonResponseDto();
+    const comRes = new CommonResponseData();
     try {
       couponBatchPostDto.creator = {
         modifiedBy: user.id,
@@ -239,16 +325,18 @@ export class CouponsService {
       if (couponBatchPostDto.expiryDate) {
         couponBatchPostDto.expiryDate = DateWithLeadingZeros(couponBatchPostDto.expiryDate);
       } else if (couponBatchPostDto.validityMonths) {
-        const d = couponBatchPostDto.issueDate ? couponBatchPostDto.issueDate : new Date(); 
+        const d = couponBatchPostDto.issueDate ? couponBatchPostDto.issueDate : DateWithLeadingZeros(); //new Date(); 
         const eD = AddMonthLessOneDay(couponBatchPostDto.validityMonths, d);
         couponBatchPostDto.expiryDate = DateWithLeadingZeros(eD);
       }
       const rlt = await this.modelCouponBatch.create([couponBatchPostDto], {session});
       console.log('create coupon batch:', rlt);
       if (rlt) {
+        comRes.data = rlt;
         if (session) {
           const ins = await this.cpFunc.insertCoupons(
             couponBatchPostDto, 
+            this.modelCouponBatch,
             this.modelMember,
             this.modelCoupon,
             this.modelKS,
@@ -258,9 +346,10 @@ export class CouponsService {
           if (ins) {
             const commit = await session.commitTransaction();
             console.log('commit:', commit);
-            comRes.data = rlt;
+            //comRes.data = rlt;
           } else {
             comRes.ErrorCode = ErrCode.COUPONBATCH_ISSUED_ERROR;
+            comRes.data = undefined;
             const abt = await session.abortTransaction();
             console.log('abort:', abt);
           }
@@ -278,7 +367,7 @@ export class CouponsService {
   async couponBatchedId(id: string): Promise<CouponBatchesIdResponseDto> {
     const cbdRes = new CouponBatchesIdResponseDto();
     try {
-      const rlt = await this.modelCouponBatch.findOne({id}, COUPON_BATCH_DETAIL_FIELDS);
+      const rlt = await this.modelCouponBatch.findOne({id});  //, COUPON_BATCH_DETAIL_FIELDS);
       if (rlt) cbdRes.data = rlt;
       else {
         cbdRes.ErrorCode = ErrCode.COUPONBATCH_NOT_FOUND;
@@ -343,11 +432,43 @@ export class CouponsService {
               modifiedByWho: user.username,
               modifiedBy: user.id,
             }
-            const upd = await this.modelCouponBatch.updateOne({id}, {status: COUPON_BATCH_STATUS.ISSUED, authorizer}, {session});
+            const updFilter:FilterQuery<CouponDocument> = {
+              batchId: id,
+            }
+            let upd:UpdateWriteOpResult;
+            // if (cb.issueMode === COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC) {
+            //   if (!authReq.issueDate) {
+            //       await session.endSession()
+            //       comRes.ErrorCode = ErrCode.ERROR_PARAMETER;
+            //       comRes.error.extra = 'miss parameter issueDate';
+            //       return comRes;                
+            //   }
+            //   const cailF:FilterQuery<CouponAutoIssuedLogDocument> = {
+            //     batchId: id,
+            //     issueDate: authReq.issueDate,
+            //   }
+            //   const f = await this.modelCAIL.findOne(cailF);
+            //   if (f) {
+            //     if (f.status === COUPON_BATCH_STATUS.ISSUED) {
+            //       await session.endSession()
+            //       comRes.ErrorCode = ErrCode.COUPONBATCH_CANCEL_ISSUED;
+            //       return comRes;
+            //     }
+            //     updFilter.issueDate = authReq.issueDate;
+            //     upd = await this.modelCAIL.updateOne(
+            //       {batchId: id, issueDate: authReq.issueDate},
+            //       {status: COUPON_BATCH_STATUS.ISSUED, authorizer},
+            //       {session},
+            //     )
+            //   } 
+            // } else {
+              upd = await this.modelCouponBatch.updateOne({id}, {status: COUPON_BATCH_STATUS.ISSUED, authorizer}, {session});
+            //}
             console.log('couponbatch update:', upd);
             const updCP = await this.modelCoupon.updateMany(
               // {batchId: id, notAppMember: false}, // 只變更 app user
-              {batchId: id}, // 改為全部變更所有人
+              // {batchId: id}, // 改為全部變更所有人
+              updFilter,
               {status: COUPON_STATUS.NOT_USED}
             )
             if (updCP.modifiedCount) {
@@ -472,22 +593,28 @@ export class CouponsService {
     console.log('modifyCouponStats upsert:', upsert);
     return upsert;
   }
-  async modifyCouponStatsToPaper(coupon:Partial<ICoupon>) {
-    const year = Number(coupon.issueDate.split('/')[0]);
-    const cStats = await this.modelCS.findOne({type: coupon.type, year});
+  async modifyCouponStatsToPaper(coupon:Partial<ICoupon>, session:mongoose.mongo.ClientSession) {
+    //const year = Number(coupon.issueDate.split('/')[0]);
+    const [ syear, smonth  ] = DateWithLeadingZeros().split("/");
+    const year = parseInt(syear);
+    const month = parseInt(smonth);
+    const cStats = await this.modelCS.findOne({type: coupon.type, year, month});
+    console.log('cStats:', cStats);
     const data = this.initCouponStat();
     if (cStats) {
       Object.keys(data).forEach((key) => {
-          data[key] = cStats[key];
+        if (cStats[key]) data[key] = cStats[key];
       });
-      data.paperCount += 1;
-      data.paperUnused += 1;
-      data.electronicCount -= 1;
-      data.electronicUnused -= 1;
-      const upd = await this.modelCS.updateOne({type: coupon.type, year}, data);
-      console.log('modifyCouponStatsToPaper:', upd);
     }
-  }
+    data.paperCount += 1;
+    data.paperUnused += 1;
+    data.electronicCount -= 1;
+    data.electronicUnused -= 1;
+    console.log('data:', data);
+    const upd = await this.modelCS.updateOne({type: coupon.type, year, month}, data, {upsert:true, session});
+    console.log('modifyCouponStatsToPaper:', upd);
+    return !!upd.acknowledged;
+  }  
   initCouponStat():Partial<ICouponStats> {
     return {
       electronicCount: 0,
@@ -504,11 +631,13 @@ export class CouponsService {
   }
   async getCouponLog(conponLogReq:Partial<ICouponAutoIssuedLog>):Promise<CouponLogRes> {
     const cplogRes = new CouponLogRes();
-    const filters:FilterQuery<CouponAutoIssuedLogDocument> = {};
-    if (conponLogReq.BatchId) {
-      filters.$or = [
-        { BatchId: conponLogReq.BatchId},
-        { originBatchId: conponLogReq.BatchId},
+    const filters:FilterQuery<CouponBatchDocument> = {};
+    if (conponLogReq.batchId) {
+      filters.originId = conponLogReq.batchId
+    } else {
+      filters.$and = [
+        {originId: {$exists: true} },
+        {originId: {$ne: ''}},
       ]
     }
     if (conponLogReq.name) {
@@ -517,8 +646,19 @@ export class CouponsService {
     if (conponLogReq.type) {
       filters.type = conponLogReq.type;
     }
+    console.log('filter:', filters)
     try {
-      cplogRes.data = await this.modelCAIL.find(filters, {_id: false, __v: false});
+      const ans = await this.modelCouponBatch.find(filters, {_id: false, __v: false});
+      cplogRes.data = ans.map((cb) => {
+        const tmp:ICouponAutoIssuedLog = {
+          batchId: cb.id,
+          issueDate: cb.issueDate,
+          totalCoupons: cb.numberOfIssued,
+          name: cb.name,
+        }
+        return tmp;
+      })
+      // cplogRes.data = await this.modelCouponBatch.find(filters, {_id: false, __v: false});
     } catch (e) {
       console.log('getCouponLog error:', e);
       cplogRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
@@ -528,26 +668,31 @@ export class CouponsService {
   }
   async getTransferLog(coupReq:CouponTransferLogReqDto):Promise<CouponTransferLogRes>{
     const cplogRes = new CouponTransferLogRes();
-    const filters:FilterQuery<CouponTransferLogDocument> = {};
+    const filters:FilterQuery<CouponDocument> = {};
     if (coupReq.couponId) {
-      filters.couponId = coupReq.couponId;
+      //filters.couponId = coupReq.couponId;
+      filters.id = coupReq.couponId;
     }
-    if (coupReq.memberName) {
-      filters.$or = [
-        { newOwner: { $regex: `${coupReq.memberName}.*` }},
-        { originalOwner: { $regex: `${coupReq.memberName}.*` }},
-      ];
-    }
-    if (coupReq.memberId) {
-      if (!filters.$or) filters.$or = [];
-      filters.$or.push(
-        { newOwnerId: coupReq.memberId },
-        { originalOwnerId: coupReq.memberId },
-      );
-    }
+    // if (coupReq.memberName) {
+    //   filters.$or = [
+    //     { newOwner: { $regex: `${coupReq.memberName}.*` }},
+    //     { originalOwner: { $regex: `${coupReq.memberName}.*` }},
+    //   ];
+    // }
+    // if (coupReq.memberId) {
+    //   if (!filters.$or) filters.$or = [];
+    //   filters.$or.push(
+    //     { newOwnerId: coupReq.memberId },
+    //     { originalOwnerId: coupReq.memberId },
+    //   );
+    // }
     try {
       console.log('getTransferLog filters:', filters);
-      cplogRes.data = await this.modelCTL.find(filters, {_id: false, __v: false});
+      // cplogRes.data = await this.modelCTL.find(filters, {_id: false, __v: false});
+      const coup = await this.modelCoupon.findOne(filters);
+      if (coup) {
+        cplogRes.data = coup.logs;
+      }
     } catch (e) {
       console.log('getTransferLog error:', e);
       cplogRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;

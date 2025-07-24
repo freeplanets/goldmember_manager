@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { AnnouncementSearch } from '../dto/announcements/announcements-search.dto';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { FilterQuery, Model } from 'mongoose';
 import { Announcement, AnnouncementDocument } from '../dto/schemas/announcement.schema';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Attachment } from '../dto/announcements/attachment';
@@ -20,6 +20,7 @@ import { AnnounceFieldsCheck } from '../dto/announcements/announce-fields-check'
 import { MainFilters } from '../classes/filters/main-filters';
 import { AddMonthLessOneDay, DateWithLeadingZeros } from '../utils/common';
 import { Upload2S3 } from '../utils/upload-2-s3';
+import { KsMember, KsMemberDocument } from '../dto/schemas/ksmember.schema';
 
 @Injectable()
 export class AnnouncementsService {
@@ -33,19 +34,21 @@ export class AnnouncementsService {
     @InjectModel(Announcement.name) private readonly modelAnnouncement:Model<AnnouncementDocument>,
     // @InjectModel(Announcement2Member.name) private readonly modelAnn2Member:Model<Announcement2MemberDocument>,
     @InjectModel(Member.name) private readonly modelMember:Model<MemberDcoument>,
+    @InjectModel(KsMember.name) private readonly modelKs:Model<KsMemberDocument>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ){}
   async getMemberCountByFilter(filters:AnnouncementFilterDto):Promise<AnnouncementsFilterResponseDto> {
     const afRes = new AnnouncementsFilterResponseDto();
     try {
       const filter = this.myFilter.membersFilter(filters.targetGroups, filters.extendFilter);
-      const rlt = await this.modelMember.count(filter);
-      if (rlt) afRes.data = rlt;
+      const cnt = await this.modelMember.countDocuments(filter);
+      const cntKs = await this.getKsMemberCount(filters);
+      console.log("mbr:", cnt, "ksmbr:", cntKs);
+      afRes.data = cnt + cntKs;
     } catch(e) {
+      console.log("getMemberCountByFilter error:", e);
       afRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
-      afRes.error = {
-        extra: e,
-      };
+      afRes.error.extra = e.message;
     }
     return afRes;
   }
@@ -54,12 +57,13 @@ export class AnnouncementsService {
   ): Promise<AnnouncementsResponseDto> {
     const annRes = new AnnouncementsResponseDto();
     try {
-      const filters = this.myFilter.baseDocFilter<AnnouncementDocument, IAnnouncement>(
+      let filters = this.myFilter.baseDocFilter<AnnouncementDocument, IAnnouncement>(
         announcementSearch.targetGroups,
         announcementSearch.type,
         announcementSearch.extendFilter,
       );
-      if (filters) {
+      // if (filters) {
+        if (!filters) filters = {};
         const threeMonthsAgo = DateWithLeadingZeros(AddMonthLessOneDay(-3));
         filters.publishDate = { $gte: threeMonthsAgo };
         console.log('filters:', filters);
@@ -80,9 +84,9 @@ export class AnnouncementsService {
             return itm;
           });
         }  
-      } else {
-        annRes.ErrorCode = ErrCode.ERROR_PARAMETER;
-      }
+      // } else {
+      //   annRes.ErrorCode = ErrCode.ERROR_PARAMETER;
+      // }
     } catch (e) {
       console.log(e);
       annRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
@@ -319,7 +323,16 @@ export class AnnouncementsService {
     }
     return false;
   }
-
+  private async getKsMemberCount(filters:AnnouncementFilterDto) {
+    const filter = this.myFilter.KsMemberFilter(filters.targetGroups, filters.extendFilter);
+    console.log('filter:', filter);
+    const cnt = Object.keys(filter).length;
+    if (cnt > 0) {
+        const ans = await this.modelKs.countDocuments(filter);
+        return ans;
+    }
+    return 0;    
+  }
   // async uploadFile(file:Express.Multer.File) {
   //   console.log('file:', file);
   //   const { originalname } = file;

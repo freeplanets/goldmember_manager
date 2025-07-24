@@ -79,6 +79,7 @@ export enum COUPON_BATCH_STATUS {
   CANCELED = 'canceled',
   ISSUED = 'issued',
   NOT_ISSUED = 'not_issued',
+  EXPIRED = 'expired',
 }
 
 export enum COUPON_BATCH_FREQUNCY {
@@ -111,7 +112,8 @@ export enum SmsCodeUsage {
 
 export enum TeamMemberPosition {
   LEADER = 'leader', 
-  MANAGER = 'manager', 
+  MANAGER = 'manager',
+  CONTACT = 'contact', 
   MEMBER = 'member',
 }
 
@@ -179,4 +181,8 @@ export enum PendingItemType {
 export enum MEMBER_FROM {
   APP = 'Member',
   KS = 'KsMember',
+}
+
+export enum PendingItemStatus {
+  PENDING = 'pending',
 }

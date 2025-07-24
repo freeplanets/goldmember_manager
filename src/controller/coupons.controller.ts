@@ -1,7 +1,7 @@
 import { Controller, Req, Res, HttpStatus, Get, Param, Post, Body, Put, UseGuards } from '@nestjs/common';
 import { CouponsService } from '../service/coupons.service';
 import { Response } from 'express';
-import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiProperty, ApiBody } from '@nestjs/swagger';
 import { CouponResponseDto } from '../dto/coupons/coupon-response.dto';
 import { CouponBatchesResponseDto } from '../dto/coupons/coupon-batches-response.dto';
 import { CouponBatchesIdResponseDto } from '../dto/coupons/coupon-batches-id-response.dto';
@@ -10,13 +10,15 @@ import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { CouponRequestDto } from '../dto/coupons/coupon-request.dto';
 import { CouponListResponseDto } from '../dto/coupons/coupon-list-response.dto';
 import { ErrCode } from '../utils/enumError';
-import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
 import { TokenGuard } from '../utils/tokens/token-guard';
 import { CouponBatchListRequestDto } from '../dto/coupons/coupon-batch-list-request.dto';
 import { CouponAutoIssueLogReqDto } from '../dto/coupons/coupon-auto-issue-log-request.dto';
 import { CouponLogRes } from '../dto/coupons/coupon-log-response';
 import { CouponTransferLogReqDto } from '../dto/coupons/coupon-transfer-log-request.dto';
 import { CouponTransferLogRes } from '../dto/coupons/coupon-transfer-log-response';
+import { CouponBatchModifyDto } from '../dto/coupons/coupon-batch-modify.dto';
+import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
+import { CouponbatchAuthorizeReqDto } from '../dto/coupons/coupon-batch-authorize-request.dto';
 
 @Controller('couponbatches')
 @ApiTags('couponbatches')
@@ -85,13 +87,18 @@ export class CouponsController {
     description: '成功或失敗',
     type: CommonResponseDto,
   })
-  @Post('coupon/convert_to_paper/:id')
+  @ApiBody({
+    description: '電子券ID&紙本票號',
+    type: Coupon2PaperDto,
+    isArray: true, 
+  })
+  @Post('coupon/convert_to_paper/')
   async couponsCodeConvertToPaper(
-    @Body() coupon2paper:Coupon2PaperDto,
+    @Body() coupon2papers:Coupon2PaperDto[],
     @Req() req: any,
     @Res() res: Response,
   ) {
-    const comRes = await this.couponsService.couponsCodeConvertToPaper(coupon2paper, req.user);
+    const comRes = await this.couponsService.couponsCodeConvertToPaper(coupon2papers, req.user);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -161,7 +168,7 @@ export class CouponsController {
   @Put('/:id')
   async couponBatchedIdPut(
     @Param('id') id: string,
-    @Body() couponBatchPostDto: CouponBatchPostDto,
+    @Body() couponBatchPostDto: CouponBatchModifyDto,
     @Req() req: any,
     @Res() res: Response,
   ) {
@@ -191,6 +198,7 @@ export class CouponsController {
   @Post('authorize/:id')
   async couponBatchedIdAuthorize(
     @Param('id') id: string,
+    // @Body() authReq:CouponbatchAuthorizeReqDto,
     @Req() req: any,
     @Res() res: Response,
   ) {

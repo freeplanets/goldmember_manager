@@ -100,7 +100,18 @@ functions:
     handler: src/utils/coupons/coupons-auto-issue.couponsAutoIssue
     timeout: 60
     events:
-      - schedule: "rate(3 hours)"
+      - schedule: "cron(5 9 * * ? *)"
+          # - cron(5 15 * * ? *)
+          #rate: rate(3 hours)
+  CouponExpiredCheck:
+    handler: src/utils/coupons/coupons-expired-check.couponsExpiredCheck
+    timeout: 60
+    events:
+      - schedule: "cron(5 8 * * ? *)"
+          #rate: rate(1 day)
+          # - cron(2 12 * * * ?)
+          # rate: 
+          #timezone: Asia/Taipei
   GetGovHolidays:
     handler: src/utils/holidays/get-gov-holidays-info.getGovHolidaysInfo
     timeout: 60

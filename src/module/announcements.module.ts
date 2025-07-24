@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 // import { Announcement2Member, Announcement2MemberSchema } from '../dto/schemas/announcent2member.schema';
 import { Member, MemberSchema } from '../dto/schemas/member.schema';
 import { LoginToken, LoginTokenSchema } from '../dto/schemas/login-token.schema';
+import { KsMember, KsMemberSchema } from '../dto/schemas/ksmember.schema';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { LoginToken, LoginTokenSchema } from '../dto/schemas/login-token.schema'
       {name: Announcement.name, schema: AnnouncementSchema},
       //{name: Announcement2Member.name, schema: Announcement2MemberSchema},
       {name: Member.name, schema: MemberSchema},
+      {name: KsMember.name, schema: KsMemberSchema},
       {name: LoginToken.name, schema: LoginTokenSchema}
     ])
   ],

@@ -25,4 +25,15 @@ export interface IUser {
     __v?:number;
 }
 
+export interface IUserAccessLog {
+    username: string;
+    path: string;
+    token: string;
+    body: any;
+    query: any;
+    accessDate:string;
+    accessTime:string;
+    accessTimeTS: number;
+}
+
 // 修改密碼，資料，二階段

@@ -1,18 +1,21 @@
 import { FilterQuery, Model } from 'mongoose';
 import { CouponBatch, CouponBatchDocument, CouponBatchSchema } from '../../dto/schemas/coupon-batch.schema';
-import { AddMonthLessOneDay, DateWithLeadingZeros } from '../common';
+import { AddMonth, DateWithLeadingZeros } from '../common';
 import { getMongoDB } from '../database/mongodb'
 import { COUPON_BATCH_FREQUNCY, COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, COUPON_STATUS } from '../enum';
 import { CouponFunc } from './coupon-func';
 import { Member, MemberDcoument, MemberSchema } from '../../dto/schemas/member.schema';
 import { KsMember, KsMemberDocument, KsMemberSchema } from '../../dto/schemas/ksmember.schema';
-import { Coupon, CouponDocument, CouponSchema } from '../../dto/schemas/coupon.schema';
-import { v1 as uuidv1} from 'uuid';
-import { ICouponAutoIssuedLog, ICouponBatch } from '../../dto/interface/coupon.if';
+import { ICouponBatch } from '../../dto/interface/coupon.if';
 import { CouponAutoIssuedLog, CouponAutoIssuedLogSchema } from '../../dto/schemas/coupon-auto-issued-log.schema';
+import { v1 as uuidv1 } from 'uuid';
+import { Coupon, CouponDocument, CouponSchema } from '../../dto/schemas/coupon.schema';
+import { REPLACE_MONTH, REPLACE_YEAR } from '../constant';
 
 
 export const couponsAutoIssue = async () => {
+    const d = new Date();
+    console.log('couponsAutoIssue UTC:', d.getTimezoneOffset(), d.toUTCString());
     console.log('couponsAutoIssue:', new Date().toLocaleString('zh-TW'));
     try {
         const db = await getMongoDB();
@@ -23,86 +26,58 @@ export const couponsAutoIssue = async () => {
         const modelCP = db.model(Coupon.name, CouponSchema);
         const modelLog = db.model(CouponAutoIssuedLog.name, CouponAutoIssuedLogSchema);
         const cpFunc = new CouponFunc();
-        const date = DateWithLeadingZeros();
         const filter:FilterQuery<CouponBatchDocument> = {
-            issueDate: date,
+            // issueDate: date,
             issueMode: COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC,
-            status: COUPON_BATCH_STATUS.NOT_ISSUED,
-            couponCreated: false,
+            status: { $ne: COUPON_BATCH_STATUS.CANCELED },
+            // status: COUPON_BATCH_STATUS.NOT_ISSUED,
+            // couponCreated: false,
         }
-        const foundCBs = await modelCB.find(filter);
-        console.log('foundCBs:', foundCBs);
+        const fCBs = await modelCB.find(filter);
+        console.log('foundCBs ans:', fCBs);
+        const foundCBs = createForIssue(fCBs);
+        console.log('foundCBs ans:', foundCBs);
         for (let i=0, n=foundCBs.length; i< n; i++) {
             let isProcPass = false;
+            const newCB = foundCBs[i];
+            const isIssued = await modelCB.findOne({originId: newCB.originId, issueDate: newCB.issueDate}) 
+            // const isIssued = await modelLog.findOne({batchId: foundCBs[i].id, issueDate: foundCBs[i].issueDate});
+            console.log('isIssued:', isIssued);
+            if (isIssued) {
+                console.log('coupon batch already issued:', isIssued.id);
+                continue;
+            }
             const session = await db.startSession();
             console.log('session:', session.id);
             session.startTransaction();
-            const ans = await cpFunc.insertCoupons(
-                foundCBs[i], 
-                modelMbr as Model<MemberDcoument>, 
-                modelCP as Model<CouponDocument>, 
-                modelKS as Model<KsMemberDocument>,
-                COUPON_STATUS.NOT_ISSUED,
-                session,
-            );
-            if (ans) {
-                const log:ICouponAutoIssuedLog = {
-                    BatchId: foundCBs[i].id,
-                    name: foundCBs[i].name,
-                    type: foundCBs[i].type,
-                    totalCoupons: ans.insertedCount,
-                    issueDate: foundCBs[i].issueDate,
-                    originBatchId: foundCBs[i].originId,
-                    issueDateTs: Date.now(),
+            //const newDoc = await modelCB.create(newCB);
+            newCB.creator = {
+                modifiedByWho: 'system auto',
+                modifiedAt: Date.now(),
+            }
+            const newDoc = new modelCB(newCB);
+            const created = await newDoc.save({session});
+            console.log('newDoc created:', created);
+            if (created) {
+                const ans = await cpFunc.insertCoupons(
+                    newCB,
+                    modelCB as Model<CouponBatchDocument>, 
+                    modelMbr as Model<MemberDcoument>, 
+                    modelCP as Model<CouponDocument>, 
+                    modelKS as Model<KsMemberDocument>,
+                    COUPON_STATUS.NOT_ISSUED,
+                    session,
+                );
+                if (ans) {
+                    isProcPass = true;
                 }
-                const addLog = await modelLog.create([log], {session});
-                console.log('add log:', addLog);
-                if (addLog) {
-                    const newCB:Partial<ICouponBatch> = {
-                        name: foundCBs[i].name,
-                        description: foundCBs[i].description,
-                        type: foundCBs[i].type,
-                        birthMonth: foundCBs[i].birthMonth,
-                        mode: foundCBs[i].mode,
-                        frequency: foundCBs[i].frequency,
-                        validityMonths: foundCBs[i].validityMonths,
-                        couponsPerPerson: 3,
-                        issueMode: foundCBs[i].issueMode,
-                        targetGroups: foundCBs[i].targetGroups,
-                        extendFilter:foundCBs[i].extendFilter,
-                        //issueDate: '2025/05/12',
-                        //expiryDate: '2025/08/12',
-                        status: foundCBs[i].status,
-                        // couponCreated: true,
-                        authorizer: foundCBs[i].authorizer
-                    };
-                    console.log('object check:', newCB );
-                    newCB.originId = foundCBs[i].originId ? foundCBs[i].originId : foundCBs[i].id;
-                    newCB.id = uuidv1();
-                    newCB.issueDate = AddMonthByFrequency(newCB.issueDate, newCB.frequency);
-                    if (newCB.validityMonths) {
-                        newCB.expiryDate = AddMonthLessOneDay(newCB.validityMonths, newCB.issueDate);
-                    }
-                    if (newCB.birthMonth) {
-                        newCB.birthMonth = new Date(newCB.issueDate).getMonth() + 1;
-                    }
-                    const addCB = await modelCB.create([newCB], {session});
-                    console.log('add new coupon batch:' , addCB)
-                    if (addCB) {
-                        const updOldCB = await modelCB.updateOne({id: foundCBs[i].id}, {couponCreated: true}, {session});
-                        console.log('update old coupon batch:', updOldCB);
-                        if (updOldCB) {
-                            isProcPass = true;
-                        }
-                    }
-                } 
             }
             if (isProcPass) {
-                session.commitTransaction();
+                await session.commitTransaction();
             } else {
-                session.abortTransaction();
+               await session.abortTransaction();
             }
-            session.endSession()
+            await session.endSession()
         }
     } catch (e) {
         console.log('couponsAutoIssue error:', e);
@@ -110,7 +85,7 @@ export const couponsAutoIssue = async () => {
 }
 
 function AddMonthByFrequency(date:string, frequency:string) {
-    let addM=0;
+    let addM=1;
     switch(frequency) {
         case COUPON_BATCH_FREQUNCY.MONTHLY:
             addM = 1;
@@ -120,8 +95,44 @@ function AddMonthByFrequency(date:string, frequency:string) {
             break;
         case COUPON_BATCH_FREQUNCY.SEMI_ANNUAL:
             addM = 6;
+            break;
         case COUPON_BATCH_FREQUNCY.YEARLY:
             addM = 12;
     }
-    return AddMonthLessOneDay(addM, date);
+    return AddMonth(addM, date);
+    //return AddMonthLessOneDay(addM, date);
+}
+
+// create couponbatch from couponbatch issueMode autmatic
+function createForIssue(datas:Partial<ICouponBatch>[]) {
+    const needIssueCB:Partial<ICouponBatch>[] = [];
+    const issueDate = DateWithLeadingZeros();
+    datas.forEach((data) => {
+        let cpShouldIssueDate = data.issueDate;
+        while(cpShouldIssueDate <= issueDate) {
+            if (cpShouldIssueDate === issueDate) {
+                const [year, month] = issueDate.split('/');
+                const addMonth = data.validityMonths ? data.validityMonths : 1;
+                const newDataForIssueCB:Partial<ICouponBatch> = {
+                    id: uuidv1(),
+                    name: data.name.replace(REPLACE_YEAR, year).replace(REPLACE_MONTH, month),
+                    type: data.type,
+                    issueMode: COUPON_BATCH_ISSUANCE_METHOD.MANUAL,
+                    targetGroups: data.targetGroups,
+                    extendFilter: data.extendFilter,
+                    issueDate,
+                    expiryDate: AddMonth(addMonth, issueDate),
+                    description: data.description,
+                    mode: data.mode,
+                    couponsPerPerson: data.couponsPerPerson,
+                    originId: data.id,
+                }
+                needIssueCB.push(newDataForIssueCB);
+                break;
+            }            
+            cpShouldIssueDate = AddMonthByFrequency(cpShouldIssueDate, data.frequency);
+            console.log('data check:', cpShouldIssueDate, issueDate);
+        }
+    });
+    return needIssueCB;
 }

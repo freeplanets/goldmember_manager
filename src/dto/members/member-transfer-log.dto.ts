@@ -16,7 +16,7 @@ export class MemberTransferLogDto implements Partial<IMemberTransferLog> {
         required: false,
     })
     @IsOptional()
-    @IsUUID()
+    @IsString()
     memberId?: string;
 }
     

@@ -12,6 +12,8 @@ export interface ICouponBatch extends IHasFilterItem {
     validityMonths?: number;
     couponsPerPerson?: number;
     issueMode?: COUPON_BATCH_ISSUANCE_METHOD; // 手動,  自動
+    numberOfIssued: number;     //總發行張收
+    numberOfIssuers: number;    //總發行人數
     issueDate?: string;
     expiryDate?: string;
     status?: COUPON_BATCH_STATUS;
@@ -41,25 +43,31 @@ export interface ICoupon {
     toPaperNo: string;
     updater: IModifiedBy;
     collector: IModifiedBy;
+    logs:Partial<ICouponTransferLog>[];
 }
 
 export interface ICouponAutoIssuedLog {
-    BatchId: string;
+    batchId: string;
     name?: string;
     type?: string;
     issueDate?: string;
     originBatchId?: string;
     totalCoupons?: number;
+    numberOfIssued?: number;     //總發行張收
+    numberOfIssuers?: number;    //總發行人數
     issueDateTs?: number;
+    authorizer?: IModifiedBy;
+    status?: COUPON_BATCH_STATUS; 
 }
 
 export interface ICouponTransferLog {
     id:string;
     couponId:string;
+    description:string;
     newOwner:string;
     newOwnerId:string;
-    originalOwner:string;
-    originalOwnerId:string;
+    previousOwner:string;
+    previousId:string;
     transferDate: string;
     transferDateTS: number;
 }

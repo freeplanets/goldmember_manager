@@ -13,16 +13,21 @@ export class CouponTransferLog implements ICouponTransferLog {
     couponId: string;
 
     @Prop()
+    description: string;
+
+    @Prop()
     newOwner: string;
 
     @Prop()
     newOwnerId: string;
 
     @Prop()
-    originalOwner: string;
+    previousOwner: string;
+    //originalOwner: string;
 
     @Prop()
-    originalOwnerId: string;
+    previousId: string;
+    //originalOwnerId: string;
 
     @Prop()
     transferDate: string;

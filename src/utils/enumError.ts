@@ -41,6 +41,7 @@ export enum ErrCode {
 	TEAM_ACTIVITY_NOT_FOUND = 'TEAM_ACTIVITY_NOT_FOUND',
 	SELECTED_TIME_SECTION_ASSIGNED = 'SELECTED_TIME_SECTION_ASSIGNED',
 	RESERVATION_NOT_FOUND = 'RESERVATION_NOT_FOUND',
+	MUST_BE_A_APPMEMBER = 'MUST_BE_A_APPMEMBER',
 }
 export enum ErrMsg {
 	MISS_PARAMETER = '參數不足',
@@ -83,6 +84,7 @@ export enum ErrMsg {
 	TEAM_ACTIVITY_NOT_FOUND = '查物此球隊活動資料',
 	SELECTED_TIME_SECTION_ASSIGNED = '選定的時間段已被分配了，請選擇其他時段。',
 	RESERVATION_NOT_FOUND = '找不到預約記錄,請檢查預約ID.',
+	MUST_BE_A_APPMEMBER = '必須是App會員',
 }
 export const getErrorMessage = (code: ErrCode): string => {
 	const errKey = Object.keys(ErrCode).find((key) => ErrCode[key as keyof typeof ErrCode] === code);
@@ -90,6 +92,8 @@ export const getErrorMessage = (code: ErrCode): string => {
 };
 
 export enum DtoErrMsg {
+	ID_STYLE_ERROR = '不正確的id格式',
+	ID_OR_PHONE_AT_LEAST = 'id或手機號碼,請擇一輸入',
 	PHONE_STYLE_ERROR = '電話號碼格式錯誤',
 	PASSWORD_STYLE_ERROR = '密碼格式錯誤,應包含大小寫字母、數字,長度6-15碼',
 	DATE_STYLE_ERROR = '日期格式(YYYY/MM/DD)錯誤',

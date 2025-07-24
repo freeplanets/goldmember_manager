@@ -23,6 +23,7 @@ import { CourseName, MEMBER_LEVEL, ParticipantStatus, ReserveFrom, ReserveStatus
 
 //預約時段資料
 export interface IReserveSection {
+    id?:string;
     date:string;    //($date)日期 (YYYY/MM/DD)
     timeSlot:string;    //時段 (HH:MM)
     startTime:string;   //開始時間 (HH:MM)
@@ -67,8 +68,9 @@ export interface IReservations {
     membershipType:MEMBER_LEVEL;  //會員類型 (個人預約時使用)Enum:[ general_member, dependents, share_holder ]
     playerCount:number; //參與人數 (個人預約時使用)
     participants:string | IReservationParticipant[];    //參與人員名單 (個人預約時使用)
+    partCount: number; // 實際人數 count from participants
     groups:number;  //組數
-    data:IReserveSection[];   //預約時段資料
+    data:Partial<IReserveSection>[];   //預約時段資料
     notes:string;   //備註
     status:ReserveStatus;  //預約狀態 Enum:[ pending, booked, confirmed, cancelled ]
     createdAt:string;   //($date-time)建立時間

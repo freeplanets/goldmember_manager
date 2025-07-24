@@ -15,7 +15,7 @@ import { DtoErrMsg, ErrCode } from '../utils/enumError';
 import { MembersIdResponseDto } from '../dto/members/members-id-response.dto';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { MemberData } from '../dto/members/member.data';
-import { isNumberString } from 'class-validator';
+import { isNumberString, isUUID } from 'class-validator';
 import { IUser } from '../dto/interface/user.if';
 import { MemberGrowth, MemberGrowthDocument } from '../dto/schemas/member-growth.schema';
 import { IMemberGrowth } from '../dto/interface/report.if';
@@ -24,14 +24,22 @@ import { v1 as uuidv1 } from 'uuid';
 import { MemberShareholderSwitch } from '../classes/member/member-shareholder-switch';
 import { MemberTransferLogDto } from '../dto/members/member-transfer-log.dto';
 import { MemberTransferLogRes } from '../dto/members/member-transfer-log-response';
+import { Coupon, CouponDocument } from '../dto/schemas/coupon.schema';
+import { ICreditRecord } from '../dto/interface/team-group.if';
+import { DateWithLeadingZeros } from '../utils/common';
+import { CreditRecord, CreditRecordDocument } from '../dto/schemas/credit-record.schema';
+import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
+import { CreditRecordRes } from '../dto/teams/credit-record-response';
 
 @Injectable()
 export class MembersService {
   constructor(
-    @InjectModel(Member.name) private memberModel:Model<MemberDcoument>,
+    @InjectModel(Member.name) private modelMember:Model<MemberDcoument>,
     @InjectModel(KsMember.name) private ksMemberModel:Model<KsMemberDocument>,
     @InjectModel(MemberGrowth.name) private modelMG:Model<MemberGrowthDocument>,
     @InjectModel(MemberTransferLog.name) private modelMTL:Model<MemberTransferLogDocument>,
+    @InjectModel(Coupon.name) private modelCoupon:Model<CouponDocument>,
+    @InjectModel(CreditRecord.name) private readonly modelCreditRecord:Model<CreditRecordDocument>,
     @InjectConnection() private readonly connection:mongoose.Connection,
   ){}
   async members(search: string, type: string = ''): Promise<MembersResponseDto> {
@@ -64,7 +72,7 @@ export class MembersService {
         type = '';
       }
       console.log(filter);
-      const ans = await this.memberModel.find(filter, `${MEMBER_DEFAULT_FIELDS} phone systemId`);
+      const ans = await this.modelMember.find(filter, `${MEMBER_DEFAULT_FIELDS} phone systemId`);
       const mbrs:Partial<IMember>[] = ans.map((item) => item);
       console.log('isSearchKsMemberToo:', isSearchKsMemberToo);
       if (isSearchKsMemberToo && type !== MEMBER_LEVEL.GENERAL_MEMBER && type.indexOf('*') === -1) {
@@ -126,7 +134,13 @@ export class MembersService {
       } else {
           filter.id = id;
       }
-      const rlt = await this.memberModel.findOne(filter, MEMBER_DETAIL_FIELDS);
+      const rlt = await this.modelMember.
+        findOne(filter, MEMBER_DETAIL_FIELDS);
+        // .
+        // populate({
+        //   path: 'creditHistory',
+        //   select: 'date score reason recordedBy',
+        // });
       console.log('member detail:', rlt);
       if (!rlt){
         if (isSearchKsMemberToo) {
@@ -165,7 +179,11 @@ export class MembersService {
   ): Promise<CommonResponseDto> {
     const comRes = new CommonResponseDto();
     try {
-      const f = await this.memberModel.findOne({id}, 'name isDirector');
+      if (!isUUID(id)) {
+        comRes.ErrorCode = ErrCode.MUST_BE_A_APPMEMBER;
+        return comRes;
+      }
+      const f = await this.modelMember.findOne({id}, 'name isDirector');
       if (f) {
         const modifier:IModifiedBy = {
           modifiedBy: user.id,
@@ -173,7 +191,7 @@ export class MembersService {
           modifiedAt: Date.now(),
           lastValue: f.isDirector,
         }
-        const rlt = await this.memberModel.updateOne(
+        const rlt = await this.modelMember.updateOne(
           {id}, 
           {
             isDirector: membersDirectorStatusRequestDto.isDirector,
@@ -213,10 +231,11 @@ export class MembersService {
     user:Partial<IUser>,
   ): Promise<CommonResponseDto> {
     const memberSW = new MemberShareholderSwitch(
-      this.memberModel,
+      this.modelMember,
       this.ksMemberModel,
       this.modelMTL,
       this.modelMG,
+      this.modelCoupon,
       this.connection,
     );
     return await memberSW.membertypesSwitch(membersConvertToShareholderRequestDto, user);
@@ -231,13 +250,13 @@ export class MembersService {
   //     const {id, membershipType, systemId } = membersConvertToShareholderRequestDto;
   //     if (membershipType === MEMBER_LEVEL.SHARE_HOLDER || membershipType === MEMBER_LEVEL.DEPENDENTS || membershipType === MEMBER_LEVEL.GENERAL_MEMBER) {
   //       // const { user } = req as any;
-  //       const isSystemIdExists = await this.memberModel.findOne({systemId}, 'id');
+  //       const isSystemIdExists = await this.modelMember.findOne({systemId}, 'id');
   //       console.log('isSystemIdExists', isSystemIdExists);
   //       if (isSystemIdExists) {
   //         comRes.ErrorCode = ErrCode.SHARE_HOLDER_ALREADY_BE_TAKEN;
   //         return comRes;
   //       }
-  //       const member = await this.memberModel.findOne({id}, 'name membershipType systemId');
+  //       const member = await this.modelMember.findOne({id}, 'name membershipType systemId');
   //       if (member) {
   //         const ksno = systemId ? systemId : member.systemId; 
   //         const ksmember = await this.ksMemberModel.findOne({no: ksno}, 'id no appUser');
@@ -251,7 +270,7 @@ export class MembersService {
   //             modifiedAt: Date.now(),
   //             lastValue: member.membershipType,
   //           }
-  //           const saveMember = await this.memberModel.updateOne({id},{
+  //           const saveMember = await this.modelMember.updateOne({id},{
   //             membershipType: membershipType,
   //             membershipLastModified: modifier,
   //             systemId: systemId,
@@ -371,4 +390,77 @@ async getMembersTransferLog(req:MemberTransferLogDto):Promise<MemberTransferLogR
     }
     return comRes;
   }
+  async updateCredit(id: string, creditInfo: Partial<ICreditRecord>, user:Partial<IUser>): Promise<CommonResponseDto> {
+      const comRes = new CommonResponseDto();
+      try {
+          // Check if the team exists
+          const team = await this.modelMember.findOne({ id }, 'creditScore');
+          if (!team) {
+              comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
+              return comRes;
+          }
+          // Create a new credit record
+          const newCreditRecord: ICreditRecord = {
+              id: uuidv1(), // Generate a unique ID for the credit record
+              refId: id,
+              score: creditInfo.score,
+              reason: creditInfo.reason,
+              date: DateWithLeadingZeros(),
+              recordedBy: {
+                  modifiedBy: user.id,
+                  modifiedByWho: user.displayName || user.username,
+                  modifiedAt: Date.now(),
+              },
+          };
+          const session = await this.connection.startSession();
+          session.startTransaction();
+
+          const newCredit = new this.modelCreditRecord(newCreditRecord);
+          const ans = await newCredit.save({ session });
+          if (ans) {
+              const creditScore = team.creditScore ? team.creditScore + creditInfo.score : creditInfo.score;
+              const upd = await this.modelMember.updateOne(
+                  { id },
+                  { creditScore  ,$push: { creditHistory: ans._id } },
+                  { session }
+              );
+              if (upd.modifiedCount === 0) {
+                  comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
+              } else {
+                  await session.commitTransaction();
+                  console.log('Member credit updated successfully:', upd);
+              }
+          }
+          await session.endSession();
+      } catch (error) {
+          console.error('Error updating member credit:', error);
+          comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+          comRes.error.extra = error.message;
+      }
+      return comRes;
+  }
+    async getCreditRecords(memberId:string, dates:DateRangeQueryReqDto) {
+        const comRes = new CreditRecordRes();
+        try {
+            const filter:FilterQuery<CreditRecordDocument> = {
+                refId: memberId,
+            }
+            if (dates.endDate && dates.startDate ) {
+                filter.$and =  [
+                    { date: { $gte: dates.startDate }},
+                    { date: { $lte: dates.endDate}},
+                ];
+            } else if ( dates.startDate) {
+                filter.date = { $gte: dates.startDate };
+            } else if (dates.endDate) {
+                filter.date = { $lte: dates.endDate };
+            }
+            comRes.data = await this.modelCreditRecord.find(filter);
+        } catch(error) {
+            console.log('getCreditRecords error:', error);
+            comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+            comRes.error.extra = error.message;
+        }
+        return comRes;
+    }    
 }

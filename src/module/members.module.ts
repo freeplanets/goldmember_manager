@@ -8,6 +8,8 @@ import { KsMember, KsMemberSchema } from '../dto/schemas/ksmember.schema';
 import { LoginToken, LoginTokenSchema } from '../dto/schemas/login-token.schema';
 import { MemberGrowth, MemberGrowthSchema } from '../dto/schemas/member-growth.schema';
 import { MemberTransferLog, MemberTransferLogSchema } from '../dto/schemas/member-transfer-log.schema';
+import { Coupon, CouponSchema } from '../dto/schemas/coupon.schema';
+import { CreditRecord, CreditRecordSchema } from '../dto/schemas/credit-record.schema';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { MemberTransferLog, MemberTransferLogSchema } from '../dto/schemas/membe
       {name:LoginToken.name, schema:LoginTokenSchema},
       {name:MemberGrowth.name, schema:MemberGrowthSchema},
       {name:MemberTransferLog.name, schema:MemberTransferLogSchema},
+      {name:Coupon.name, schema: CouponSchema},
+      {name: CreditRecord.name, schema: CreditRecordSchema},
     ])
   ],
   controllers: [MembersController],

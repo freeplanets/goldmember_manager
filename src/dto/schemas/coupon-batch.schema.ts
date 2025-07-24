@@ -44,11 +44,17 @@ export class CouponBatch implements ICouponBatch {
     })
     issueMode: COUPON_BATCH_ISSUANCE_METHOD; // 手動, 自動
 
+    @Prop()
+    numberOfIssued: number;     //發行張數
+
+    @Prop()
+    numberOfIssuers: number;    //發行人數
+
     @Prop({
-        enum: MEMBER_GROUP,
-        type: Array<MEMBER_GROUP>,
+        // enum: MEMBER_GROUP,
+        // type: Array<MEMBER_GROUP>,
     })
-    targetGroups: MEMBER_GROUP[];
+    targetGroups: any[];
 
     @Prop({
         enum: MEMBER_EXTEND_GROUP,
@@ -69,7 +75,9 @@ export class CouponBatch implements ICouponBatch {
     })
     status?: COUPON_BATCH_STATUS;
 
-    @Prop()
+    @Prop({
+        index: true,
+    })
     originId?: string;
 
     @Prop({

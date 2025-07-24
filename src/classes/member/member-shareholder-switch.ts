@@ -3,7 +3,7 @@ import { MemberGrowthDocument } from '../../dto/schemas/member-growth.schema';
 import { MemberTransferLogDocument } from '../../dto/schemas/member-transfer-log.schema';
 import { MemberDcoument } from '../../dto/schemas/member.schema';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
-import { MEMBER_LEVEL } from '../../utils/enum';
+import { COUPON_STATUS, MEMBER_LEVEL } from '../../utils/enum';
 import { MembersConvertToShareholderRequestDto } from '../../dto/members/members-convert-to-shareholder-request.dto';
 import { IUser } from '../../dto/interface/user.if';
 import { CommonResponseDto } from '../../dto/common/common-response.dto';
@@ -12,6 +12,9 @@ import { IMember } from '../../dto/interface/member.if';
 import { IKsMember } from '../../dto/interface/ks-member.if';
 import { IMemberGrowth } from '../../dto/interface/report.if';
 import { v1 as uuidv1 } from 'uuid';
+import { CouponDocument } from '../../dto/schemas/coupon.schema';
+import { ICouponTransferLog } from '../../dto/interface/coupon.if';
+import lang from '../../utils/lang';
 
 export class MemberShareholderSwitch {
     private mTypes = [MEMBER_LEVEL.SHARE_HOLDER, MEMBER_LEVEL.DEPENDENTS, MEMBER_LEVEL.GENERAL_MEMBER];
@@ -20,6 +23,7 @@ export class MemberShareholderSwitch {
         private readonly modelKsMember: Model<KsMemberDocument>,
         private readonly modelMTL: Model<MemberTransferLogDocument>,
         private readonly modelMG: Model<MemberGrowthDocument>,
+        private readonly modelCoupon: Model<CouponDocument>,
         private readonly connection: mongoose.Connection,
     ){}
     async membertypesSwitch(req: MembersConvertToShareholderRequestDto,
@@ -87,6 +91,28 @@ export class MemberShareholderSwitch {
                                         } 
                                     }   
                                 }
+                                // check coupon is not_used transfer to AppUser
+                                const log:Partial<ICouponTransferLog> = {
+                                    description: `${member.name}${lang.zhTW.MemberTransferToShareHolder}(${ksno})`,
+                                    transferDate: new Date().toLocaleString('zh-TW', {hour12: false}),
+                                    transferDateTS: Date.now(),
+                                };
+                                const updCP = await this.modelCoupon.updateMany(
+                                    {
+                                        memberId: ksno,
+                                        status: COUPON_STATUS.NOT_USED,
+                                    },
+                                    {
+                                        memberId: member.id,
+                                        memberName: member.name,
+                                        notAppMember: false,
+                                        $push: {
+                                            logs: log,
+                                        },
+                                    },
+                                    { session }
+                                );
+                                console.log('updCP:', updCP);
                             }
                             if (isProcPass) {
                                 await session.commitTransaction();

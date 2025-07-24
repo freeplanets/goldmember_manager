@@ -1,9 +1,7 @@
-import { Prop, Schema } from "@nestjs/mongoose";
-import { IReservationParticipant } from "../interface/reservations.if";
-import mongoose from "mongoose";
-import { ParticipantStatus } from "src/utils/enum";
-import { ITeamMember } from "../interface/team-group.if";
-import { IMember } from "../interface/member.if";
+import { Prop, Schema } from '@nestjs/mongoose';
+import { IReservationParticipant } from '../interface/reservations.if';
+import mongoose from 'mongoose';
+import { ParticipantStatus } from '../../utils/enum';
 
 @Schema()
 export class Participant implements Partial<IReservationParticipant> {

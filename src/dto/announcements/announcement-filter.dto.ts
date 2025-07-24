@@ -13,7 +13,7 @@ export class AnnouncementFilterDto implements Partial<IAnnouncement> {
     })
     @IsOptional()
     @IsArray()
-    targetGroups?: MEMBER_GROUP[];
+    targetGroups: MEMBER_GROUP[];
 
     @ApiProperty({
         description: `進階選項,預設為當月份壽星`,

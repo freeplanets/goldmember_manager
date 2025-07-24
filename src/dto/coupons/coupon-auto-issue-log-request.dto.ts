@@ -9,7 +9,7 @@ export class CouponAutoIssueLogReqDto implements Partial<ICouponAutoIssuedLog>{
     })
     @IsOptional()
     @IsUUID()
-    BatchId: string;
+    batchId: string;
 
     @ApiProperty({
         description: '名稱',

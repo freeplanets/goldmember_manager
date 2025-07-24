@@ -67,6 +67,7 @@ export class KsMemberCouponsIssue extends ACouponCreate {
         if (this.data.birthMonth) {
             filter.birthMonth = this.data.birthMonth;
         }
+        filter.appUser = {$eq : ''};
         console.log("getMember ks filter:", filter, filter.$or);
         const ans = await this.ksM.find(filter, 'no appUser');
         return ans.map((ks) => {

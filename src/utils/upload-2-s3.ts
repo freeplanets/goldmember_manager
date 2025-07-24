@@ -43,6 +43,7 @@ export class Upload2S3 {
      */
     async uploadFile(file:Express.Multer.File) {
         console.log('file:', file);
+        file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
         const { originalname } = file;
         this.filename = originalname;
         const ary = originalname.split('.');

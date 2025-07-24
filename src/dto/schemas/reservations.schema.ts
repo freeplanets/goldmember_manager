@@ -53,13 +53,18 @@ export class Reservations implements IReservations {
     })
     participants: IReservationParticipant[];   //參與人員名單 (個人預約時使用)
 
+    @Prop({
+        $size: '$participants',
+    })
+    partCount: number;  // 實際人數 count from participants
+
     @Prop()
     groups:number;  //組數
 
     @Prop({
         type:[ {type:mongoose.Schema.Types.ObjectId, ref: 'ReserveSection'}]
     })
-    data:IReserveSection[];   //預約時段資料
+    data: Partial<IReserveSection>[]; //預約時段資料
 
     @Prop()
     notes:string;   //備註

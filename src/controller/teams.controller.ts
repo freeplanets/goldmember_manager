@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Post, Put, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiHeader, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import TeamCreateRequestDto from '../dto/teams/team-create-request.dto';
 import { TeamsService } from '../service/teams.service';
@@ -15,6 +15,11 @@ import { CreditRequestDto } from '../dto/teams/credit-request.dto';
 import { TeamActivitiesCreateRequestDto } from '../dto/teams/team-activities-create-request.dto';
 import { TeamActivitiesModifyRequestDto } from '../dto/teams/team-activities-modify-request.dto';
 import { ActivityParticipantsResponse } from '../dto/teams/activity-participants-response';
+import { FileNamePipe } from '../utils/pipes/file-name';
+import { FormDataPipe } from '../utils/pipes/form-data';
+import { CreditRecordRes } from '../dto/teams/credit-record-response';
+import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
+import { TeamActivitiesRes } from '../dto/teams/team-activities-response';
 
 @Controller('teams')
 @ApiTags('teams')
@@ -46,10 +51,16 @@ export class TeamsController {
         description: '成功或失敗',
         type: CommonResponseDto,
     })
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('file'))
     @Post()
-    async createTeam(@Body() teamInfo: TeamCreateRequestDto, @Res() res:Response) {
+    async createTeam(
+        @Body(FormDataPipe) teamInfo: TeamCreateRequestDto,
+        @UploadedFile() file: Express.Multer.File,
+        @Res() res:Response
+    ) {
         // Logic to create a team will go here
-        const result = await this.teamsService.createTeam(teamInfo);
+        const result = await this.teamsService.createTeam(teamInfo, file);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -76,10 +87,17 @@ export class TeamsController {
         description: '成功或失敗',
         type: CommonResponseDto,
     })
+    @ApiConsumes('multipart/form-data')
+    @UseInterceptors(FileInterceptor('file'))    
     @Put(':id')
-    async updateTeam(@Param('id') teamId: string, @Body() teamInfo: TeamUpdateRequestDto, @Res() res: Response) {
+    async updateTeam(
+        @Param('id') teamId: string, 
+        @Body(FormDataPipe) teamInfo: TeamUpdateRequestDto,
+        @UploadedFile() file:Express.Multer.File,
+        @Res() res: Response
+    ) {
         // Logic to update a team will go here
-        const result = await this.teamsService.updateTeam(teamId, teamInfo);
+        const result = await this.teamsService.updateTeam(teamId, teamInfo, file);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -100,7 +118,7 @@ export class TeamsController {
     @Post('logo/:id')
     async uploadTeamLogo(
         @Param('id') teamId: string,
-        @Body() fileUploadDto: FileUploadDto,
+        @Body(FileNamePipe) fileUploadDto: FileUploadDto,
         @UploadedFile() file: Express.Multer.File,
         @Res() res: Response) {
         const result = await this.teamsService.uploadTeamLogo(teamId, file);
@@ -186,6 +204,25 @@ export class TeamsController {
     }
 
     @ApiOperation({
+        summary: "查詢球隊信用評分",
+        description: "查詢球隊信用評分.",
+    })
+    @ApiResponse({
+        description: '成功或失敗',
+        type: CreditRecordRes,
+    })
+    @ApiParam({name: 'id', description: '球隊代號'})
+    @Get('creditrecords/:id')
+    async getCreditRecords(
+        @Param('id') teamId: string,
+        @Query() dates:DateRangeQueryReqDto,
+        @Res() res:Response,
+    ){
+        const rlt = await this.teamsService.getCreditRecords(teamId, dates);
+        return res.status(HttpStatus.OK).json(rlt);
+    }
+
+    @ApiOperation({
         summary: "新增球隊活動",
         description: "新增球隊活動.",
     })
@@ -226,6 +263,25 @@ export class TeamsController {
     }
 
     @ApiOperation({
+        summary: '取得活動列表',
+        description: '取得活動列表',
+    })
+    @ApiResponse({
+        description: '成功或失敗',
+        type: TeamActivitiesRes,
+    })
+    @ApiParam({name: 'id', description: '球隊ID', required: true})
+    @Get('activities/:id')
+    async getActivities(
+        @Param('id') teamId: string,
+        @Query() dates:DateRangeQueryReqDto,
+        @Res() res:Response,
+    ){
+        const result = await this.teamsService.getActivities(teamId, dates);
+        return res.status(HttpStatus.OK).json(result);
+    }
+
+    @ApiOperation({
         summary: '取得活動參與者列表',
         description: '取得活動參與者列表',
     })
@@ -242,4 +298,5 @@ export class TeamsController {
         const result = await this.teamsService.getActivityParticipants(activityId);
         return res.status(HttpStatus.OK).json(result);
     }
+   
 }

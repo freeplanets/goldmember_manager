@@ -26,8 +26,9 @@ export interface ITempData {
 }
 
 export interface IHasFilterItem {
+    id?:string;
     type?: string;
-    targetGroups: MEMBER_GROUP[];
+    targetGroups: any[];
     extendFilter?: MEMBER_EXTEND_GROUP[];    
 }
 
@@ -38,4 +39,26 @@ export interface IHoliday {
     isHoliday: boolean;
     holidayCategory: string;
     description: string;
+}
+
+export interface AnyObject {
+    [key:string]:any;
+}
+
+export interface IHasId extends AnyObject {
+    id?:string;
+}
+
+export interface IHasPhone extends AnyObject {
+    phone:string;
+}
+
+export interface IbulkWriteItem<D, U> {
+    insertOne?: {
+        document:D
+    },
+    updateOne?: {
+        filter: any;    // key of document like { key: "yourvalue" }
+        update: U;
+    }
 }

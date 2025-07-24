@@ -2,6 +2,7 @@ import { ICoupon, ICouponBatch } from '../../dto/interface/coupon.if';
 import { IMember } from '../../dto/interface/member.if';
 import { COUPON_STATUS } from '../../utils/enum';
 import { v4 as uuidv4} from 'uuid';
+import { REPLACE_MONTH, REPLACE_YEAR } from '../../utils/constant';
 
 export class CouponsIssue  {
     create(
@@ -13,11 +14,22 @@ export class CouponsIssue  {
         let result:Partial<ICoupon>[]| false =false;
         try {
             //const mbrs = await this.getMember();
+            const d = new Date();
+            const transferDate = d.toLocaleString('zh-Tw', {hour12: false});
+            const transferDateTS = d.getTime();
             console.log('mbr:', mbrs.length);
             const coupons:Partial<ICoupon>[]=[];
             mbrs.forEach((mbr:Partial<IMember>) => {
                 for (let i=0; i<data.couponsPerPerson; i++) {
-                    coupons.push(this.createCoupon(mbr, data, coupon_status));
+                    const cpn = this.createCoupon(mbr, data, coupon_status);
+                    cpn.logs =  [
+                        {
+                            description: `發行 對像:${mbr.name}`,
+                            transferDate,
+                            transferDateTS,
+                        }
+                    ]
+                    coupons.push(cpn);
                 }
             });
             result = coupons;
@@ -28,9 +40,10 @@ export class CouponsIssue  {
         return result;
     }
     private createCoupon(mbr:Partial<IMember>, data:Partial<ICouponBatch>, coupon_status:COUPON_STATUS ):Partial<ICoupon> {
+        const [year, month] = data.issueDate.split('/');
         const tmp:Partial<ICoupon> = {
             batchId: data.id,
-            name: data.name,
+            name: data.name.replace(REPLACE_YEAR, year).replace(REPLACE_MONTH, month),
             //status:  mbr.id ? COUPON_STATUS.NOT_USED : COUPON_STATUS.NOT_ISSUED,
             id: uuidv4(),
             memberId: mbr.id ? mbr.id : mbr.systemId,

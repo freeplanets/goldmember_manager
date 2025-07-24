@@ -20,10 +20,10 @@
 // 2. 目前由總幹事電話預約.
 
 import { MEMBER_LEVEL, TeamActivityRegistrationStatus, TeamActivityStatus, TeamMemberPosition, TeamStatus } from '../../utils/enum';
-import { IMember } from './member.if';
+import { IHasPhone } from './common.if';
 import { IModifiedBy } from './modifyed-by.if';
 
-export interface ITeamPositionInfo {
+export interface ITeamPositionInfo extends IHasPhone {
     id?:string;  //會員 ID
     name: string; // 姓名
     phone: string; // 電話
@@ -107,9 +107,9 @@ export interface ITeam {
     creditScore: number;    //信用評分
     logoUrl: string;    //球隊 Logo URL
     description: string;    //球隊描述
-    leader:	ITeamPositionInfo;  // 隊長
-    manager: ITeamPositionInfo; // 經理
-    contacter: ITeamPositionInfo;   //連絡人
+    leader?: ITeamPositionInfo;  // 隊長
+    manager?: ITeamPositionInfo; // 經理
+    contacter?: ITeamPositionInfo;   //連絡人
     lastActivity: string; //最近活動日期
     members?: ITeamMember[]; // 隊員清單
     creditHistory?: ICreditRecord[]; //評分記錄

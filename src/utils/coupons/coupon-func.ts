@@ -7,11 +7,14 @@ import { COUPON_STATUS, MEMBER_GROUP } from '../enum';
 import { CouponDocument } from '../../dto/schemas/coupon.schema';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
 import { IMember } from '../../dto/interface/member.if';
+import { CouponBatchDocument } from '../../dto/schemas/coupon-batch.schema';
+import { U } from '@faker-js/faker/dist/airline-BUL6NtOJ';
 
 export class CouponFunc {
     private myFilter = new MainFilters();
     async insertCoupons(
-        couponBatchPostDto:Partial<ICouponBatch>, 
+        couponBatchPostDto:Partial<ICouponBatch>,
+        modelCB:Model<CouponBatchDocument>, 
         modelMbr:Model<MemberDcoument>,
         modelCP:Model<CouponDocument>,
         modelKS:Model<KsMemberDocument>,
@@ -32,10 +35,26 @@ export class CouponFunc {
         if (cpns) {
             console.log("cpns:", cpns.length);
             // await this.modifyCouponStats(couponBatchPostDto.type, couponBatchPostDto.issueDate, cpns.length, modelCS);
+            const ins = await modelCP.insertMany(cpns, {rawResult: true, session});
+            console.log('insertCoupon:', ins.insertedCount);
+            if (ins) {
+                couponBatchPostDto.numberOfIssuers = mbrs.length;
+                couponBatchPostDto.numberOfIssued = ins.insertedCount;
+                const updCB = await modelCB.updateOne(
+                    {id: couponBatchPostDto.id}, 
+                    {
+                        numberOfIssuers: mbrs.length,
+                        numberOfIssued: ins.insertedCount,
+                        couponCreated: true,
+                    },
+                    { session }
+                );
+                console.log('updCB', updCB);
+                if (!updCB.acknowledged) return false;
+            }
+            return ins;
         }
-        const ins = await modelCP.insertMany(cpns, {rawResult: true, session});
-        console.log('insertCoupon:', ins.insertedCount);
-        return ins;
+        return false;
     }    
     async getMember(
         couponBatchPostDto:Partial<ICouponBatch>, 
@@ -44,10 +63,27 @@ export class CouponFunc {
     ) {
         console.log('do getMember')
         let ksMbrs: Partial<IMember>[];
-        if (couponBatchPostDto.targetGroups[0] === MEMBER_GROUP.SHARE_HOLDER) {
-            ksMbrs = await this.getKsMember(couponBatchPostDto.targetGroups[0], modelKs, couponBatchPostDto.birthMonth);
+        const ksFilter = this.myFilter.KsMemberFilter(
+            couponBatchPostDto.targetGroups,
+            couponBatchPostDto.extendFilter,
+        )
+        if (Object.keys(ksFilter).length > 0) {
+            const ans = await modelKs.find(ksFilter, 'no appUser name');
+            ksMbrs = ans.map((ks) => {
+                const tmp:Partial<IMember> = {
+                    id: ks.appUser ? ks.appUser : ks.no,
+                    systemId: ks.no,
+                    name: ks.name,
+                }
+                console.log('getKsMember:', tmp.id, tmp.name);
+                return tmp;
+            });
             if (ksMbrs) console.log('ksMbrs:', ksMbrs.length);
         }
+        // if (couponBatchPostDto.targetGroups[0] === MEMBER_GROUP.SHARE_HOLDER) {
+        //     ksMbrs = await this.getKsMember(couponBatchPostDto.targetGroups[0], modelKs, couponBatchPostDto.birthMonth);
+        //     if (ksMbrs) console.log('ksMbrs:', ksMbrs.length);
+        // }
         const filter = this.myFilter.membersFilter(
             couponBatchPostDto.targetGroups,
             couponBatchPostDto.extendFilter,

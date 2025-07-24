@@ -65,9 +65,11 @@ export class SystemParameterService {
             const param = await this.modelSP.findOne({id});
             if (param) {
                 const pass = SystemParamCheck(param.value, value);
+                console.log('pass:', pass);
                 if (pass) {
                     const upd = await this.modelSP.updateOne({id}, {value});
-                    if (!upd.modifiedCount) {
+                    console.log('upd', upd);
+                    if (!upd.acknowledged) {
                         comRes.ErrorCode = ErrCode.ERROR_PARAMETER;
                     }
                 } else {

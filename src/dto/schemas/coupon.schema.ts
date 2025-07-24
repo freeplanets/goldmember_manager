@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { ICoupon } from "../interface/coupon.if";
+import { ICoupon, ICouponTransferLog } from "../interface/coupon.if";
 import { COUPON_STATUS } from "../../utils/enum";
 import { IModifiedBy } from "../interface/modifyed-by.if";
 import { Document } from "mongoose";
@@ -66,6 +66,13 @@ export class Coupon implements ICoupon {
         type: ModifiedByData
     })
     collector: IModifiedBy;
+
+    @Prop({
+        type: Array<Object>,
+        default: [],
+    })
+    logs: Partial<ICouponTransferLog>[];
+
 }
 
 export const CouponSchema = SchemaFactory.createForClass(Coupon);

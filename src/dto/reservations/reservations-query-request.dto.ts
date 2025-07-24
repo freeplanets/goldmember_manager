@@ -8,7 +8,7 @@ import { DateWithLeadingZeros } from '../../utils/common';
 
 export class ReservationsQueryRequestDto implements Partial<IReservations> {
     @ApiProperty({
-        description: '預約狀態我',
+        description: '預約狀態',
         enum: ReserveStatus,
     })
     status?: ReserveStatus;

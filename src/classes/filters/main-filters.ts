@@ -1,46 +1,67 @@
 import { FilterQuery } from 'mongoose';
-import { DS_LEVEL, MEMBER_EXTEND_GROUP, MEMBER_GROUP, MEMBER_LEVEL } from '../../utils/enum';
+import { MEMBER_EXTEND_GROUP, MEMBER_GROUP, MEMBER_LEVEL } from '../../utils/enum';
 import { IMember } from '../../dto/interface/member.if';
-import { IHasFilterItem } from '../../dto/interface/common.if';
+import { IHasFilterItem, IHasId } from '../../dto/interface/common.if';
+import { KS_MEMBER_STYLE_FOR_SEARCH } from '../../utils/constant';
+import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
 
 export class MainFilters {
-    baseDocFilter<D extends IHasFilterItem, I>(targetGroups:MEMBER_GROUP[], type:string|undefined = undefined, extendFilter:MEMBER_EXTEND_GROUP[]|undefined = undefined) {
-      let filters:FilterQuery<D>;
-      if (targetGroups) {
-        const tmpF = {
-          $or: [],
-        }        
-        targetGroups.forEach((itm) => {
-            const tmp:FilterQuery<I>= {
-              targetGroups: { $elemMatch: {$eq: itm }}
-            }
-            tmpF.$or.push(tmp);
-        });
-
-        if (tmpF.$or.length > 1) {
-          filters = {
-            $or: tmpF.$or,
-          }
+  baseDocFilter<D extends IHasFilterItem, I>(targetGroups:MEMBER_GROUP[], type:string|undefined = undefined, extendFilter:MEMBER_EXTEND_GROUP[]|undefined = undefined) {
+    let filters:FilterQuery<D>;
+    let objHasIds:IHasId[] = []
+    if (targetGroups) {
+      const tmpF = {
+        $or: [],
+      }        
+      targetGroups.forEach((itm) => {
+        if (typeof itm === 'object') {
+          objHasIds.push(itm);
         } else {
-          filters = tmpF.$or[0];
+          const tmp:FilterQuery<I>= {
+            targetGroups: { $elemMatch: {$eq: itm }}
+          }
+          tmpF.$or.push(tmp);
         }
-      }
-      if (extendFilter && extendFilter[0] === MEMBER_EXTEND_GROUP.BIRTH_OF_MONTH) {
+      });
+
+      if (tmpF.$or.length > 1) {
         filters = {
-          extendFilter: extendFilter,
-          birthMonth: new Date().getMonth() + 1,
+          $or: tmpF.$or,
         }
+      } else {
+        filters = tmpF.$or[0];
       }
-      if (type){
-        if (!filters) filters = {};
-        filters.type = type;
-      }
-      return filters;      
     }
-    membersFilter(targetGroups:MEMBER_GROUP[], extendFilter:MEMBER_EXTEND_GROUP[]|undefined = undefined) {
-        let filter:FilterQuery<IMember> = {}
-        let gName = '';
-        targetGroups.forEach((group) => {
+    if (extendFilter && extendFilter[0] === MEMBER_EXTEND_GROUP.BIRTH_OF_MONTH) {
+      filters = {
+        extendFilter: extendFilter,
+        birthMonth: new Date().getMonth() + 1,
+      }
+    }
+    if (type){
+      if (!filters) filters = {};
+      filters.type = type;
+    }
+    if (objHasIds.length > 0) {
+      const ids = objHasIds.map((obj) => obj.id);
+      if (filters.$or) {
+        filters.$or.push({
+          id: {$in: ids},
+        })
+      } else {
+        filters.id = { $in: ids};
+      }
+    }
+    return filters;      
+  }
+  membersFilter(targetGroups:MEMBER_GROUP[], extendFilter:MEMBER_EXTEND_GROUP[]|undefined = undefined) {
+      let filter:FilterQuery<IMember> = {}
+      let gName = '';
+      const mbrs:IHasId[] = [];
+      targetGroups.forEach((group) => {
+        if (typeof group === 'object') {
+          mbrs.push(group);
+        } else {
           switch(group) {
             case MEMBER_GROUP.ALL:
               break;
@@ -64,20 +85,116 @@ export class MainFilters {
               filter.isDirector = true
               break;
           }
+        }
+      });
+      if (filter.membershipType && filter.isDirector) {
+          filter = {
+              $or: [
+                  { membershipType: filter.membershipType },
+                  { isDirector: filter.isDirector },
+              ],
+          };
+      }
+      if (mbrs.length > 0) {
+        const ids:string[] = [];
+        mbrs.forEach((obj) => {
+          if (!KS_MEMBER_STYLE_FOR_SEARCH.test(obj.id)) {
+            ids.push(obj.id);
+          }
         });
-        if (filter.membershipType && filter.isDirector) {
-            filter = {
-                $or: [
-                    { membershipType: filter.membershipType },
-                    { isDirector: filter.isDirector },
-                ],
-            };
+        if (ids.length > 0) {
+          if (filter.$or) {
+            filter.$or.push({
+              id: { $in: ids }
+            })
+          } else {
+            filter.id = { $in: ids };
+          }
         }
-        if (extendFilter && extendFilter[0] === MEMBER_EXTEND_GROUP.BIRTH_OF_MONTH ) {
-          //filter.birthMonth = { $in: extendFilter };
-          filter.birthMonth = new Date().getMonth() + 1;
+      }
+      if (extendFilter && extendFilter[0] === MEMBER_EXTEND_GROUP.BIRTH_OF_MONTH ) {
+        //filter.birthMonth = { $in: extendFilter };
+        filter.birthMonth = new Date().getMonth() + 1;
+      }
+      console.log('filter:', filter);
+      return filter;
+  }
+  KsMemberFilter(targetGroups:MEMBER_GROUP[], extendFilter:MEMBER_EXTEND_GROUP[]|undefined = undefined) {
+    // console.log('KsMemberFilter:', targetGroups, extendFilter);
+    let filter:FilterQuery<KsMemberDocument> = {};
+    let shareholder = false;
+    let dependents = false;
+    let mbrs:IHasId[] = [];
+    targetGroups.forEach((g) => {
+      console.log('g:', g, typeof g);
+      if (typeof g === 'object') {
+        mbrs.push(g);
+      } else {
+        if (g === MEMBER_GROUP.ALL || g === MEMBER_GROUP.SHARE_HOLDER) shareholder = true;
+        if (g === MEMBER_GROUP.ALL || g === MEMBER_GROUP.DEPENDENTS) dependents = true;
+      }
+    });
+    // console.log('chk:', shareholder, dependents);
+    if (shareholder) {
+      filter.$or = [
+        { 
+            $and: [
+                { no: { $regex: /^1\d{3}$/ } },
+                { no: { $lt: '1827' }},
+            ]
+        },
+        {
+            $and: [
+                { no: { $regex: /^2\d{3}$/ }},
+                { no: { $lt: '2175'}},
+            ]
         }
-        console.log('filter:', filter);
-        return filter;
+      ]
     }
+    if (dependents) {
+      if (filter.$or) {
+        filter.$or.push({ no: { $regex: /^[56]\d{3}$/ }});
+      } else {
+        filter.no = {};
+        filter.no.$regex = /^[56]\d{3}$/;          
+      }
+    }
+    // console.log('check1:', filter.$or);
+    if (shareholder || dependents) {
+      filter.appUser = { $eq: '' };
+      if (extendFilter && extendFilter[0] === MEMBER_EXTEND_GROUP.BIRTH_OF_MONTH) {
+            const month = parseInt(new Date().toLocaleString('zh-TW', { month: 'numeric'}));
+            filter.birthMonth = month
+      }
+    }
+    if (mbrs.length > 0) {
+      const nos:string[] = [];
+      mbrs.forEach((obj) => {
+        if (KS_MEMBER_STYLE_FOR_SEARCH.test(obj.id)) {
+          nos.push(obj.id);
+        }
+      });
+      console.log('nos:', nos);
+      if (nos.length > 0) {
+        if (filter.$or) {
+          filter.$or.push({
+            no: { $in: nos }
+          })
+        } else if (filter.no) {
+          filter.$or = [
+            {no: filter.no },
+            {no: {$in: nos}}
+          ]
+        } else {
+          filter.no = { $in: nos },
+          filter.$or = [
+            { appUser: {$exists: false }},
+            { appUser: ''},     
+          ]
+        }
+      }
+    }
+    // console.log("getMember ks filter:", filter, filter.$or, filter.appUser);
+    return filter;
+  }    
 }

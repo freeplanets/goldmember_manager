@@ -30,6 +30,17 @@ const getCircularReplacer = () => {
   };
 };
 
+export function getBirthMonth(birthday:string) {
+  if (!birthday) return 0;
+  let spt = "/";
+  if (birthday.indexOf(spt) == -1) spt = "-";
+  const pos1 = birthday.indexOf(spt);
+  const pos2 = birthday.indexOf(spt, pos1+1)
+  if (pos1 ==-1 || pos2 ==-1) return 0;
+  let newStr = birthday.substring(pos1+1, pos2);
+  return Number(newStr);
+}
+
 // return YYYY/MM/DD
 export function DateWithLeadingZeros(date:string=new Date().toLocaleDateString('zh-TW')): string {
   const dd = date.split('/');
@@ -77,9 +88,17 @@ export function formatDateAddSlashes(date: string): string {
  */
 export function SystemParamCheck(oldP:any, newP:any) {
   if (!isObject(newP)) return false;
+  console.log('spc:', newP, oldP);
   return Object.keys(oldP).every((key) => {
-    if (!newP[key]) return false;
-    if (typeof(oldP[key]) !== typeof(newP[key])) return false;
+    // console.log(key,'=> old:', oldP[key],'=> new:', newP[key]);
+    if (!newP[key]) {
+      console.log('key not found:', key);
+      return false;
+    }
+    if (typeof(oldP[key]) !== typeof(newP[key])){
+      console.log('type error:', typeof(oldP[key]), typeof(newP[key]));
+      return false;
+    } 
     // if (isObject(updater[key])) return SystemParamCheck(param[key], updater[key]);
     return true;
   });

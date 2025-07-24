@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { IMember } from "../interface/member.if";
 import { ModifiedByData } from "../data/modified-by.data";
-import { Document } from "mongoose";
+import mongoose, { Document } from "mongoose";
 import { GENDER, MEMBER_LEVEL } from "../../utils/enum";
 import { IModifiedBy } from "../interface/modifyed-by.if";
 import { ILoginDevice } from "../interface/devices.if";
 import { LoginDevice } from "../devices/login-device";
+import { ICreditRecord } from "../interface/team-group.if";
 
 export type MemberDcoument = Document & Member;
 
@@ -127,6 +128,22 @@ export class Member implements IMember {
 
     @Prop()
     isCouponTriggered: boolean;
+
+    @Prop({
+        default: 100,
+    })
+    creditScore: number;    //信用評分
+
+    @Prop({
+        type: [{ 
+            type: mongoose.Schema.Types.ObjectId, 
+            ref: 'CreditRecord' 
+        }],
+        default: [],
+    })
+    creditHistory?: ICreditRecord[];
+
+
 }
 
 export const MemberSchema = SchemaFactory.createForClass(Member);

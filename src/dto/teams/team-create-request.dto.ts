@@ -2,8 +2,9 @@ import { ApiProperty } from "@nestjs/swagger";
 import { ITeam, ITeamPositionInfo } from "../interface/team-group.if";
 import { IsNotEmpty, IsObject, IsOptional, IsString } from "class-validator";
 import TeamPositonInfo from "./team-position-info";
+import { FileUploadDto } from "../common/file-upload.dto";
 
-export default class TeamCreateRequestDto implements Partial<ITeam> {
+export default class TeamCreateRequestDto extends FileUploadDto implements Partial<ITeam> {
     @ApiProperty({
         description: "球隊名稱",
         required: true,
@@ -28,10 +29,9 @@ export default class TeamCreateRequestDto implements Partial<ITeam> {
 
     @ApiProperty({
         description: '連絡人',
-        required: true,
+        required: false,
         type:TeamPositonInfo,
     })
-    @IsObject()
     contacter?: ITeamPositionInfo;
 
     @ApiProperty({

@@ -6,5 +6,5 @@ export interface IPendingITem {
     title: string;  //標題
     date: string;   //日期
     status:	string; //狀態
-    route: string;  //路由
+    route?: string;  //路由
 }

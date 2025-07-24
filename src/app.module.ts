@@ -13,6 +13,10 @@ import { DevicesModule } from './module/devices.module';
 import { TeamsModule } from './module/teams.module';
 import { SystemParameterModule } from './module/system-parameter.module';
 import { ReservationsModule } from './module/reservations.module';
+import { DashboardModule } from './module/dashboard.module';
+import { EventNewsModule } from './module/event-news.module';
+// import { ExecController } from './controller/exec.controller';
+import { ExecModuel } from './module/exec.module';
 // import { InsertMembersIfNotExists } from './utils/synthetic-data/create-members';
 // import { GoogleRecaptchaModule } from '@nestlab/google-recaptcha';
 
@@ -41,8 +45,9 @@ if (process.env.IS_OFFLINE) dbase = process.env.LMONGO_DB;
     AuthModule,  UsersModule, DevicesModule,  
     MembersModule,  AnnouncementsModule,  
     CouponsModule,  ReportsStatsModule,
+    EventNewsModule,
     ReservationsModule,
-    TeamsModule, SystemParameterModule ],
+    TeamsModule, DashboardModule, SystemParameterModule, ExecModuel ],
   controllers: [],
   providers: [],
 })

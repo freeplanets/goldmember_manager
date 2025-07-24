@@ -121,7 +121,7 @@ export class ReservationsService {
         }
         return comRes;
     }
-    async timeSectionCheck(datas:IReserveSection[]) {
+    async timeSectionCheck(datas:Partial<IReserveSection>[]) {
         let filter:FilterQuery<ReserveSectionDocument>;
         let isExisted = false;
         for (let i=0, n=datas.length; i<n; i++) {

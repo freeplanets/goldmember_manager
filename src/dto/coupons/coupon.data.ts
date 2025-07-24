@@ -1,6 +1,6 @@
 import { IsOptional, IsString, IsObject, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { ICoupon } from '../interface/coupon.if';
+import { ICoupon, ICouponTransferLog } from '../interface/coupon.if';
 import { IModifiedBy } from '../interface/modifyed-by.if';
 import { ModifiedByData } from '../data/modified-by.data';
 import { CouponRequestDto } from './coupon-request.dto';
@@ -91,4 +91,9 @@ export class CouponData extends CouponRequestDto implements ICoupon {
   @IsOptional()
   @IsObject()
   collector: IModifiedBy;
+
+  @ApiProperty({
+    description: '異動記錄',
+  })
+  logs: Partial<ICouponTransferLog>[];
 }

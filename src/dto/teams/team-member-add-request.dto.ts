@@ -30,4 +30,6 @@ export class TeamMemberAddRequestDto  {
     @IsOptional()
     @IsString()
     role?: TeamMemberPosition;
+
+    
 }
