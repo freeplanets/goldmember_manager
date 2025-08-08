@@ -1,4 +1,5 @@
-import { MEMBER_EXTEND_GROUP, MEMBER_GROUP } from '../../utils/enum';
+import { FilterQuery, UpdateQuery } from 'mongoose';
+import { MEMBER_EXTEND_GROUP } from '../../utils/enum';
 import { ErrCode } from '../../utils/enumError';
 
 export interface ICommonResponse<T> {
@@ -53,12 +54,23 @@ export interface IHasPhone extends AnyObject {
     phone:string;
 }
 
-export interface IbulkWriteItem<D, U> {
+export interface IbulkWriteItem<D> {
     insertOne?: {
         document:D
     },
     updateOne?: {
-        filter: any;    // key of document like { key: "yourvalue" }
-        update: U;
+        filter: FilterQuery<D>;    // key of document like { key: "yourvalue" }
+        update: UpdateQuery<D>;
     }
+}
+
+export interface ICommonLog {
+    description:string;
+    transferDate: string;
+    transferDateTS: number;  
+}
+
+export interface IReturnObj {
+    data?: any,
+    error?: ErrCode,
 }

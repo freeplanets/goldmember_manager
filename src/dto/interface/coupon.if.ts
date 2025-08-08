@@ -1,5 +1,5 @@
 import { BIRTH_OF_MONTH, COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, COUPON_STATUS } from '../../utils/enum';
-import { IHasFilterItem } from './common.if';
+import { ICommonLog, IHasFilterItem } from './common.if';
 import { IModifiedBy } from './modifyed-by.if';
 
 export interface ICouponBatch extends IHasFilterItem {
@@ -60,16 +60,13 @@ export interface ICouponAutoIssuedLog {
     status?: COUPON_BATCH_STATUS; 
 }
 
-export interface ICouponTransferLog {
+export interface ICouponTransferLog extends ICommonLog {
     id:string;
     couponId:string;
-    description:string;
     newOwner:string;
     newOwnerId:string;
     previousOwner:string;
-    previousId:string;
-    transferDate: string;
-    transferDateTS: number;
+    previousId:string;  
 }
 
 export interface IBirthDayCoupon {}     // 生日券

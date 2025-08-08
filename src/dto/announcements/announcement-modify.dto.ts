@@ -1,15 +1,15 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IAnnouncement, IAttachmemt } from "../interface/announcement.if";
-import { AnnouncementCreateDto } from "./announcement-create.dto";
-import { Attachment } from "./attachment";
-import { DateWithLeadingZeros } from "../../utils/common";
-import { IsOptional, IsString } from "class-validator";
+import { ApiProperty } from '@nestjs/swagger';
+import { IAnnouncement, IAttachmemt } from '../interface/announcement.if';
+import { AnnouncementCreateDto } from './announcement-create.dto';
+import { Attachment } from './attachment';
+import { IsOptional, IsString } from 'class-validator';
+import { DateLocale } from '../../classes/common/date-locale';
 
 export class AnnouncementModifyDto extends AnnouncementCreateDto implements Partial<IAnnouncement> {
     @ApiProperty({
         description: '公告日期',
         required: false,
-        example: DateWithLeadingZeros(),
+        example: new DateLocale().toDateString(),
     })
     @IsOptional()
     @IsString()

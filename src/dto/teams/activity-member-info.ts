@@ -33,7 +33,7 @@ export class ActivityMemberInfo implements Partial<IActMemberInfo> {
     @ApiProperty({
         description: '登記狀態',
         enum: TeamActivityRegistrationStatus,
-        example: TeamActivityRegistrationStatus.COMFIRMED,
+        example: TeamActivityRegistrationStatus.CONFIRMED,
     })
     status?: TeamActivityRegistrationStatus;
 }

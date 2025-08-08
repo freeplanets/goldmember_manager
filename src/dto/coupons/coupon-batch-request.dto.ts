@@ -2,9 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { ICouponBatch } from '../interface/coupon.if';
 import { IsArray, IsOptional, IsString, Matches } from 'class-validator';
 import { COUPON_BATCH_ISSUANCE_METHOD, MEMBER_GROUP, MEMBER_EXTEND_GROUP } from '../../utils/enum';
-import { DateWithLeadingZeros } from '../../utils/common';
 import { DATE_STYLE } from '../../utils/constant';
 import { DtoErrMsg } from '../../utils/enumError';
+import { DateLocale } from '../../classes/common/date-locale';
+
+const myDate = new DateLocale();
 
 export class CouponBatchRequestDto implements Partial<ICouponBatch> {
     @ApiProperty({
@@ -56,7 +58,7 @@ export class CouponBatchRequestDto implements Partial<ICouponBatch> {
     @ApiProperty({
         description: '發行日期',
         required: false,
-        example: DateWithLeadingZeros(),
+        example: myDate.toDateString(),
     })
     @IsOptional()
     @IsString()
@@ -66,7 +68,7 @@ export class CouponBatchRequestDto implements Partial<ICouponBatch> {
     @ApiProperty({
         description: '到期日',
         required: false,
-        example: DateWithLeadingZeros(new Date(Date.now() + 90*24*60*60*1000).toLocaleDateString('zh-TW')),
+        example: myDate.toDateString(new Date(Date.now() + 90*24*60*60*1000)),
     })
     @IsOptional()
     @IsString()

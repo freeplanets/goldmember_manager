@@ -1,7 +1,7 @@
 import { Controller, Req, Res, HttpStatus, Get, Param, Post, Body, Put, UseGuards } from '@nestjs/common';
 import { CouponsService } from '../service/coupons.service';
 import { Response } from 'express';
-import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiProperty, ApiBody } from '@nestjs/swagger';
+import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiProperty, ApiBody, ApiParam } from '@nestjs/swagger';
 import { CouponResponseDto } from '../dto/coupons/coupon-response.dto';
 import { CouponBatchesResponseDto } from '../dto/coupons/coupon-batches-response.dto';
 import { CouponBatchesIdResponseDto } from '../dto/coupons/coupon-batches-id-response.dto';
@@ -18,7 +18,7 @@ import { CouponTransferLogReqDto } from '../dto/coupons/coupon-transfer-log-requ
 import { CouponTransferLogRes } from '../dto/coupons/coupon-transfer-log-response';
 import { CouponBatchModifyDto } from '../dto/coupons/coupon-batch-modify.dto';
 import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
-import { CouponbatchAuthorizeReqDto } from '../dto/coupons/coupon-batch-authorize-request.dto';
+import { CouponUseReqDto } from '../dto/coupons/coupon-use-request.dto';
 
 @Controller('couponbatches')
 @ApiTags('couponbatches')
@@ -69,13 +69,14 @@ export class CouponsController {
     description: '成功或失敗',
     type: CommonResponseDto,
   })
-  @Post('coupon/use/:id')
+  @Post('coupon/use')
   async couponsCodeUse(
-    @Param('id') id: string,
+    // @Param('id') id: string,
+    @Body() { id, notes }:CouponUseReqDto,
     @Req() req: any,
     @Res() res: Response,
   ) {
-    const comRes = await this.couponsService.couponsCodeUse(id, req.user);
+    const comRes = await this.couponsService.couponsCodeUse(id, notes, req.user);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -264,4 +265,22 @@ export class CouponsController {
     res.status(HttpStatus.OK).json(cplogRes);
   }
 
+  @ApiOperation({
+    summary: '優惠券自動批次停用',
+    description: '優惠券自動批次停用',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CouponTransferLogRes,
+  })
+  @ApiParam({name: 'id', description: '優惠券批次 ID', required: true})
+  @Get('automatic/stop/:id')
+  async automaticStop(
+    @Param('id') id:string,
+    @Req() req:any,
+    @Res() res:Response,
+  ) {
+    const rlt = await this.couponsService.automaticStop(id, req.user);
+    return res.status(HttpStatus.OK).json(rlt);
+  }
 }

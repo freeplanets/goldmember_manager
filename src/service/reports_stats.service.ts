@@ -11,11 +11,12 @@ import { CouponStats, CouponStatsDocument } from '../dto/schemas/coupon-stats.sc
 import { ReportStatsResponseDto } from '../dto/resprt-stats-response.dto';
 import { ErrCode } from '../utils/enumError';
 import { ICouponStats, IMemberGrowth, IMemberMonthly, IMemberYearly, IReport } from '../dto/interface/report.if';
-import { DateWithLeadingZeros } from '../utils/common';
 import { MemberActivity, MemberActivityDocument } from '../dto/schemas/member-activity.schema';
+import { DateLocale } from '../classes/common/date-locale';
 
 @Injectable()
 export class ReportsStatsService {
+  private myDate = new DateLocale();
   constructor(
     @InjectModel(Member.name) private readonly modelMember:Model<MemberDcoument>,
     @InjectModel(Coupon.name) private readonly modelCoupon:Model<CouponDocument>,
@@ -346,7 +347,7 @@ export class ReportsStatsService {
             type: types[i], 
             $and: [
               { expiryDate: {$exists: true}},
-              { expiryDate: {$lt: DateWithLeadingZeros()}},
+              { expiryDate: {$lt: this.myDate.toDateString()}},
             ]
           }, {
             status: COUPON_STATUS.EXPIRED

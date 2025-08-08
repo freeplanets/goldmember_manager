@@ -5,7 +5,7 @@ import { IsArray, IsOptional, IsString, Matches } from 'class-validator';
 import { DATE_STYLE, TIME_STYLE } from '../../utils/constant';
 import { DtoErrMsg } from '../../utils/enumError';
 
-export class ReserveSectionDto implements IReserveSection {
+export class ReserveSectionDto implements Partial<IReserveSection> {
     @ApiProperty({
         description: '日期 (YYYY/MM/DD)',
         required: true,

@@ -1,11 +1,11 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IAnnouncement } from "../interface/announcement.if";
-import { IsOptional, IsString, Matches } from "class-validator";
-import { MEMBER_EXTEND_GROUP, MEMBER_GROUP } from "../../utils/enum";
-import { FilesUploadDto } from "../common/files-upload.dto";
-import { DateWithLeadingZeros } from "../../utils/common";
-import { DATE_STYLE } from "../../utils/constant";
-import { DtoErrMsg } from "../../utils/enumError";
+import { ApiProperty } from '@nestjs/swagger';
+import { IAnnouncement } from '../interface/announcement.if';
+import { IsOptional, IsString, Matches } from 'class-validator';
+import { MEMBER_EXTEND_GROUP, MEMBER_GROUP } from '../../utils/enum';
+import { FilesUploadDto } from '../common/files-upload.dto';
+import { DateLocale } from '../../classes/common/date-locale';
+
+const myDate = new DateLocale();
 
 export class AnnouncementCreateDto extends FilesUploadDto implements Partial<IAnnouncement> {
     @ApiProperty({
@@ -18,9 +18,10 @@ export class AnnouncementCreateDto extends FilesUploadDto implements Partial<IAn
 
     @ApiProperty({
         description: '內容',
-        required: true,
+        required: false,
         example: '一般公告'
     })
+    @IsOptional()
     @IsString()
     content?: string;
 
@@ -34,7 +35,7 @@ export class AnnouncementCreateDto extends FilesUploadDto implements Partial<IAn
     @ApiProperty({
         description: '公告日期',
         required: true,
-        example: DateWithLeadingZeros(),
+        example: myDate.toDateString(),
     })
     @IsString()
     publishDate?: string;
@@ -81,11 +82,12 @@ export class AnnouncementCreateDto extends FilesUploadDto implements Partial<IAn
     @ApiProperty({
         description: '發送對象',
         required: false,
-        enum: MEMBER_GROUP,
-        isArray: true,
-        example: [ MEMBER_GROUP.GENERAL_MEMBER, MEMBER_GROUP.ALL]
+        // enum: MEMBER_GROUP,
+        // isArray: true,
+        example: [ MEMBER_GROUP.GENERAL_MEMBER,{id: 'cba4f060-19d8-11f0-9afd-717ef138f560'}, MEMBER_GROUP.ALL]
     })
-    targetGroups: [MEMBER_GROUP];
+    targetGroups?: any[];
+    //targetGroups: [MEMBER_GROUP];
 
     @ApiProperty({
         description: `進階選項,為當月份壽星`,

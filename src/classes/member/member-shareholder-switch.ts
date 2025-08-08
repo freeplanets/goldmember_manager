@@ -15,9 +15,11 @@ import { v1 as uuidv1 } from 'uuid';
 import { CouponDocument } from '../../dto/schemas/coupon.schema';
 import { ICouponTransferLog } from '../../dto/interface/coupon.if';
 import lang from '../../utils/lang';
+import { DateLocale } from '../common/date-locale';
 
 export class MemberShareholderSwitch {
     private mTypes = [MEMBER_LEVEL.SHARE_HOLDER, MEMBER_LEVEL.DEPENDENTS, MEMBER_LEVEL.GENERAL_MEMBER];
+    private myDate = new DateLocale();
     constructor(
         private readonly modelMember: Model<MemberDcoument>,
         private readonly modelKsMember: Model<KsMemberDocument>,
@@ -94,7 +96,7 @@ export class MemberShareholderSwitch {
                                 // check coupon is not_used transfer to AppUser
                                 const log:Partial<ICouponTransferLog> = {
                                     description: `${member.name}${lang.zhTW.MemberTransferToShareHolder}(${ksno})`,
-                                    transferDate: new Date().toLocaleString('zh-TW', {hour12: false}),
+                                    transferDate: this.myDate.toDateTimeString(),
                                     transferDateTS: Date.now(),
                                 };
                                 const updCP = await this.modelCoupon.updateMany(

@@ -17,7 +17,6 @@ import { CouponBatchesResponseDto } from '../dto/coupons/coupon-batches-response
 import { Member, MemberDcoument } from '../dto/schemas/member.schema';
 import { COUPON_BATCH_DETAIL_FIELDS } from '../utils/base-fields-for-searh';
 import { CouponBatchesIdResponseDto } from '../dto/coupons/coupon-batches-id-response.dto';
-import { AddMonthLessOneDay, DateWithLeadingZeros } from '../utils/common';
 import { MainFilters } from '../classes/filters/main-filters';
 import { CouponStats, CouponStatsDocument } from '../dto/schemas/coupon-stats.schema';
 import { CouponFunc } from '../utils/coupons/coupon-func';
@@ -32,12 +31,13 @@ import { IbulkWriteItem } from '../dto/interface/common.if';
 import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
 import lang from '../utils/lang';
 import { CommonResponseData } from '../dto/common/common-response.data';
-import { CouponbatchAuthorizeReqDto } from '../dto/coupons/coupon-batch-authorize-request.dto';
+import { DateLocale } from '../classes/common/date-locale';
 
 @Injectable()
 export class CouponsService {
   private myFilter = new MainFilters();
   private cpFunc = new CouponFunc();
+  private myDate = new DateLocale();
   constructor(
     @InjectModel(CouponBatch.name) private readonly modelCouponBatch:Model<CouponBatchDocument>,
     @InjectModel(Coupon.name) private readonly modelCoupon:Model<CouponDocument>,
@@ -99,11 +99,13 @@ export class CouponsService {
     return cpRes;
   }
 
-  async couponsCodeUse(id: string, user:Partial<IUser>): Promise<CommonResponseDto> {
+  async couponsCodeUse(id: string[], notes:string, user:Partial<IUser>): Promise<CommonResponseDto> {
     const comRes = new CommonResponseDto();
     try {
-      const coupon = await this.modelCoupon.findOne({id}, 'memberName type issueDate status');
-      if (coupon) {
+      const coupons = await this.modelCoupon.find({id: {$in: id}}, 'id memberName type issueDate status');
+      const bluks:IbulkWriteItem<CouponDocument>[]=[];
+      for (let i=0, n=coupons.length; i<n; i+=1) {
+        const coupon = coupons[i];
         switch(coupon.status) {
           case COUPON_STATUS.NOT_USED:
           //case COUPON_STATUS.READY_TO_USE:
@@ -112,35 +114,53 @@ export class CouponsService {
               modifiedByWho: user.username,
               modifiedAt: Date.now(),
             }
-            const d = new Date();
             const log:Partial<ICouponTransferLog> = {};
-            log.description = `使用 對像:${coupon.memberName}`;
-            log.transferDate = d.toLocaleString('zh-TW', {hour12: false});
-            log.transferDateTS = d.getTime();
-            const rlt = await this.modelCoupon.updateOne(
-              { id }, 
-              { 
-                status: COUPON_STATUS.USED, 
-                usedDate: DateWithLeadingZeros(), 
-                collector,
-                $push: { logs: log},
+            const memo = notes ? ',memo:' + notes : '';
+            log.description = `使用 對象:${coupon.memberName}${memo} op:${user.username}`;
+            log.transferDate = this.myDate.toDateTimeString();
+            log.transferDateTS = Date.now();
+            bluks.push({
+              updateOne: {
+                filter: {id: coupon.id},
+                update: { 
+                  status: COUPON_STATUS.USED, 
+                  usedDate: this.myDate.toDateString(), 
+                  collector,
+                  $push: { logs: log},
+                } 
               }
-            )
-            await this.modifyCouponStatsUsed(coupon);
-            console.log(rlt);
+            })
+            // const rlt = await this.modelCoupon.updateOne(
+            //   { id }, 
+            //   { 
+            //     status: COUPON_STATUS.USED, 
+            //     usedDate: this.myDate.toDateString(), 
+            //     collector,
+            //     $push: { logs: log},
+            //   }
+            // )
+            // await this.modifyCouponStatsUsed(coupon);
+            // console.log(rlt);
             break;
           case COUPON_STATUS.CANCELED:
             comRes.ErrorCode = ErrCode.COUPON_CANCELED_ERROR;
             return comRes;
           case COUPON_STATUS.NOT_ISSUED:
-            comRes.ErrorCode = ErrCode.COUPON_CANCELED_ERROR;
+            comRes.ErrorCode = ErrCode.COUPON_NOT_ISSUED_ERROR;
             return comRes;
           case COUPON_STATUS.USED:
             comRes.ErrorCode = ErrCode.COUPON_USED_ERROR;
             return comRes;
         }
-      } else {
-        comRes.ErrorCode = ErrCode.COUPON_NOT_FOUND;
+      }
+      if (bluks.length > 0) {
+        const upd = await this.modelCoupon.bulkWrite(bluks as any);
+        console.log('conpon use upd:', upd);
+        if (upd) {
+          for (let i=0, n=coupons.length; i<n; i+=1) {
+            await this.modifyCouponStatsUsed(coupons[i]);
+          }            
+        }
       }
       // if (!rlt) comRes.ErrorCode = ErrCode.DATABASE_ACCESS_ERROR;
     } catch (e) {
@@ -163,12 +183,12 @@ export class CouponsService {
       }, 'type issueDate status');
       if (coupons.length > 0) {
         const d = new Date();
-        const bulks:IbulkWriteItem<CouponDocument, UpdateQuery<CouponDocument>>[] =[];
+        const bulks:IbulkWriteItem<CouponDocument>[] =[];
         coupon2papers.forEach(coup => {
           ids.push(coup.id);
           const log:Partial<ICouponTransferLog> = {
             description: `${lang.zhTW.CouponToPaper}${coup.toPaperNo}`,
-            transferDate: d.toLocaleString('zh-Tw', {hour12: false}),
+            transferDate: this.myDate.toDateTimeString(),
             transferDateTS: d.getTime(),
           }
           bulks.push({
@@ -256,21 +276,10 @@ export class CouponsService {
     const cbRes = new CouponBatchesResponseDto();
     try {
       let filter = this.myFilter.baseDocFilter<CouponBatchDocument, ICouponBatch>(cblrd.targetGroups, cblrd.type, cblrd.extendFilter);
+      console.log('filter:', filter);
       if (!filter) filter = {}
       if (cblrd.status) {
-        //if (!filter) filter = {}
-        // if (cblrd.status === COUPON_BATCH_STATUS.EXPIRED) {
-        //   filter.$and = [
-        //     { expiryDate: { $exists: true}},
-        //     { expiryDate: { $lt: DateWithLeadingZeros()}},
-        //   ]
-        //   filter.$or = [
-        //     { status: COUPON_BATCH_STATUS.NOT_ISSUED },
-        //     { status: COUPON_BATCH_STATUS.EXPIRED },
-        //   ]
-        // } else {
           filter.status = cblrd.status;
-        //}
       }
       //if (!filter) filter = {}
       if (cblrd.issueMode) {
@@ -278,7 +287,7 @@ export class CouponsService {
       } else {
         filter.issueMode = { $ne: COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC };
       }
-      console.log('filter:', filter, filter.$and, filter.$or);
+      if (filter) console.log('filter:', filter, filter.$and, filter.$or);
       const list = await this.modelCouponBatch.find(filter, COUPON_BATCH_DETAIL_FIELDS);
       if (list) cbRes.data = list as Partial<ICouponBatch>;
     } catch (e) {
@@ -319,15 +328,16 @@ export class CouponsService {
         session = await this.connection.startSession();
         session.startTransaction();
       }
-      if (couponBatchPostDto.issueDate) {
-        couponBatchPostDto.issueDate = DateWithLeadingZeros(couponBatchPostDto.issueDate);
-      } 
-      if (couponBatchPostDto.expiryDate) {
-        couponBatchPostDto.expiryDate = DateWithLeadingZeros(couponBatchPostDto.expiryDate);
-      } else if (couponBatchPostDto.validityMonths) {
-        const d = couponBatchPostDto.issueDate ? couponBatchPostDto.issueDate : DateWithLeadingZeros(); //new Date(); 
-        const eD = AddMonthLessOneDay(couponBatchPostDto.validityMonths, d);
-        couponBatchPostDto.expiryDate = DateWithLeadingZeros(eD);
+      // if (couponBatchPostDto.issueDate) {
+      //   couponBatchPostDto.issueDate = this.myDate.toDateString(couponBatchPostDto.issueDate);
+      // } 
+      // if (couponBatchPostDto.expiryDate) {
+      //   couponBatchPostDto.expiryDate = this.myDate.toDateString(couponBatchPostDto.expiryDate);
+      // } else 
+      if (couponBatchPostDto.validityMonths) {
+        const d = couponBatchPostDto.issueDate ? couponBatchPostDto.issueDate : this.myDate.toDateString(); //new Date(); 
+        const eD = this.myDate.AddMonthLessOneDay(couponBatchPostDto.validityMonths, d);
+        couponBatchPostDto.expiryDate = eD;  //this.myDate.toDateString(eD);
       }
       const rlt = await this.modelCouponBatch.create([couponBatchPostDto], {session});
       console.log('create coupon batch:', rlt);
@@ -595,9 +605,7 @@ export class CouponsService {
   }
   async modifyCouponStatsToPaper(coupon:Partial<ICoupon>, session:mongoose.mongo.ClientSession) {
     //const year = Number(coupon.issueDate.split('/')[0]);
-    const [ syear, smonth  ] = DateWithLeadingZeros().split("/");
-    const year = parseInt(syear);
-    const month = parseInt(smonth);
+    const {year, month} = this.myDate.getYearMonth();
     const cStats = await this.modelCS.findOne({type: coupon.type, year, month});
     console.log('cStats:', cStats);
     const data = this.initCouponStat();
@@ -614,7 +622,22 @@ export class CouponsService {
     const upd = await this.modelCS.updateOne({type: coupon.type, year, month}, data, {upsert:true, session});
     console.log('modifyCouponStatsToPaper:', upd);
     return !!upd.acknowledged;
-  }  
+  }
+  async automaticStop(id:string, user:Partial<IUser>) {
+    const comRes = new CommonResponseDto();
+    try {
+      const upd = await this.modelCouponBatch.updateOne(
+        {id, issueMode: COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC},
+        {status: COUPON_BATCH_STATUS.STOPPED}
+      )
+      console.log('automaticStop', upd);
+    } catch (error) {
+      console.log('automaticStop error:', error);
+      comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+      comRes.error.extra = error.message;
+    } 
+    return comRes;
+  }
   initCouponStat():Partial<ICouponStats> {
     return {
       electronicCount: 0,

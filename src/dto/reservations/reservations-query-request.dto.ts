@@ -4,7 +4,9 @@ import { ReserveStatus, ReserveType } from '../../utils/enum';
 import { IsString, Matches } from 'class-validator';
 import { DATE_STYLE } from '../../utils/constant';
 import { DtoErrMsg } from '../../utils/enumError';
-import { DateWithLeadingZeros } from '../../utils/common';
+import { DateLocale } from '../../classes/common/date-locale';
+
+const myDate = new DateLocale();
 
 export class ReservationsQueryRequestDto implements Partial<IReservations> {
     @ApiProperty({
@@ -15,7 +17,7 @@ export class ReservationsQueryRequestDto implements Partial<IReservations> {
 
     @ApiProperty({
         description: '開始日期 (YYYY/MM/DD)',
-        example: DateWithLeadingZeros(),
+        example: myDate.toDateString(),
     })
     @IsString()
     @Matches(DATE_STYLE, {message: DtoErrMsg.DATE_STYLE_ERROR})
@@ -23,7 +25,7 @@ export class ReservationsQueryRequestDto implements Partial<IReservations> {
 
     @ApiProperty({
         description: '結束日期 (YYYY/MM/DD)',
-        example: DateWithLeadingZeros(),
+        example: myDate.toDateString(),
     })
     @IsString()
     @Matches(DATE_STYLE, {message: DtoErrMsg.DATE_STYLE_ERROR})

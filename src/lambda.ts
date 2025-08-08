@@ -77,7 +77,7 @@ export async function bootstrapServer():Promise<Server> {
     const vopt:ValidationPipeOptions = {
         exceptionFactory: ValidationException,
     }
-    app.useGlobalPipes(new ValidationPipe(vopt),new GlobalDataTransPipe());
+    app.useGlobalPipes(new GlobalDataTransPipe(), new ValidationPipe(vopt));
     // app.useGlobalFilters(new GoogleRecaptchaFilter());
     await app.init();
     const cachedServer = createServer(expressApp);

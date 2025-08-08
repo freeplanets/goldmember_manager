@@ -3,6 +3,9 @@ import { IMember } from '../../dto/interface/member.if';
 import { COUPON_STATUS } from '../../utils/enum';
 import { v4 as uuidv4} from 'uuid';
 import { REPLACE_MONTH, REPLACE_YEAR } from '../../utils/constant';
+import { DateLocale, TIME_SETTING } from '../common/date-locale';
+
+const myDate = new DateLocale();
 
 export class CouponsIssue  {
     create(
@@ -15,7 +18,7 @@ export class CouponsIssue  {
         try {
             //const mbrs = await this.getMember();
             const d = new Date();
-            const transferDate = d.toLocaleString('zh-Tw', {hour12: false});
+            const transferDate = myDate.toDateTimeString();
             const transferDateTS = d.getTime();
             console.log('mbr:', mbrs.length);
             const coupons:Partial<ICoupon>[]=[];
@@ -24,7 +27,7 @@ export class CouponsIssue  {
                     const cpn = this.createCoupon(mbr, data, coupon_status);
                     cpn.logs =  [
                         {
-                            description: `發行 對像:${mbr.name}`,
+                            description: `發行 對象:${mbr.name}`,
                             transferDate,
                             transferDateTS,
                         }
@@ -40,7 +43,7 @@ export class CouponsIssue  {
         return result;
     }
     private createCoupon(mbr:Partial<IMember>, data:Partial<ICouponBatch>, coupon_status:COUPON_STATUS ):Partial<ICoupon> {
-        const [year, month] = data.issueDate.split('/');
+        const [year, month, day] = data.issueDate.split('/');
         const tmp:Partial<ICoupon> = {
             batchId: data.id,
             name: data.name.replace(REPLACE_YEAR, year).replace(REPLACE_MONTH, month),

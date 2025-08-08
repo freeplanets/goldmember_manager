@@ -2,18 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 import { EventNews, EventNewsDocument } from '../dto/schemas/event-news.schema';
-import { EventNewsOp } from '../classes/eventnews/event-news-op';
+import { BaseOp } from '../classes/eventnews/event-news-op';
 import { IEventNews } from '../dto/interface/event-news';
 import { FuncWithTryCatch } from '../classes/common/func.def';
 import { IUser } from '../dto/interface/user.if';
 import { EventNewsQueryRequest } from '../dto/eventnews/event-news-query-request.dto';
-import { DateWithLeadingZeros } from '../utils/common';
+import { DateLocale } from '../classes/common/date-locale';
 
 @Injectable()
 export class EventNewsService {
-    private dbOP:EventNewsOp<EventNewsDocument>;
+    private dbOP:BaseOp<EventNewsDocument>;
+    private myDate = new DateLocale();
     constructor(@InjectModel(EventNews.name) private readonly modelEN:Model<EventNewsDocument>){
-        this.dbOP = new EventNewsOp(modelEN);
+        this.dbOP = new BaseOp(modelEN);
     }
 
     async add(eventNews:Partial<IEventNews>, user:Partial<IUser>) {
@@ -66,7 +67,7 @@ export class EventNewsService {
         } else if (query.dateEnd) {
             filter.dateEnd = query.dateEnd;
         } else {
-            filter.dateStart = { $gte: DateWithLeadingZeros() };
+            filter.dateStart = { $gte: this.myDate.toDateString() };
         }
         console.log('filter:', filter);
         return FuncWithTryCatch(this.dbOP.list, filter);

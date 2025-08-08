@@ -1,7 +1,7 @@
+import { DateLocale } from '../../classes/common/date-locale';
 import { Holiday, HolidayDocument, HolidaySchema } from '../../dto/schemas/holiday.schema';
 import { getMongoDB } from '../database/mongodb'
 import { GovHolidays } from './gov-holidys';
-import { formatDateAddSlashes } from '../common';
 import { FilterQuery } from 'mongoose';
 
 interface bulkWriteItem {
@@ -12,6 +12,8 @@ interface bulkWriteItem {
     }
 }
 
+const myDate = new DateLocale();
+
 export const getGovHolidaysInfo = async ():Promise<void> => {
     try {
         const db = await getMongoDB();
@@ -21,7 +23,7 @@ export const getGovHolidaysInfo = async ():Promise<void> => {
         if (data && data.length > 0) {
             const holidays: bulkWriteItem[] = data.map(item => ({
                 updateOne: {
-                    filter: { year: parseInt(item.year), date: formatDateAddSlashes(item.date) },
+                    filter: { year: parseInt(item.year), date: myDate.toDateString(item.date) },
                     update: { 
                         name: item.name || '',
                         isHoliday: item.isholiday === '是',

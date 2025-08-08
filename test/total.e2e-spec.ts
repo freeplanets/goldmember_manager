@@ -11,13 +11,14 @@ import { COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, MEMBER_GROUP, SmsCod
 import { CouponsModule } from '../src/module/coupons.module';
 import { CouponBatchListRequestDto } from '../src/dto/coupons/coupon-batch-list-request.dto';
 import { CouponBatchPostDto } from '../src/dto/coupons/coupon-batch-post.dto';
-import { DateWithLeadingZeros } from '../src/utils/common';
 import { CouponRequestDto } from '../src/dto/coupons/coupon-request.dto';
+import { DateLocale } from '../src/classes/common/date-locale';
 
 describe('AuthController (e2e)', () => {
   let app: INestApplication;
   let service: AuthService;
   let userModel: Model<User>
+  const myDate = new DateLocale();
   const username = process.env.LMONGO_USER;
   const password = process.env.LMONGO_PASS;
   const resource = process.env.LMONGO_HOST;
@@ -88,7 +89,7 @@ describe('AuthController (e2e)', () => {
       targetGroups: [
         MEMBER_GROUP.DEPENDENTS,
       ],
-      issueDate: DateWithLeadingZeros(),
+      issueDate: myDate.toDateString(),
       couponsPerPerson: 1,
       validityMonths: 1,
     }

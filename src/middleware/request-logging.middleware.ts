@@ -4,13 +4,14 @@ import { Request, Response, NextFunction } from 'express';
 import { IUser, IUserAccessLog } from '../dto/interface/user.if';
 import { UserAccessLog, UserAccessLogSchema } from '../dto/schemas/user-access-log.schema';
 import { getMongoDB } from '../utils/database/mongodb';
+import { DateLocale } from '../classes/common/date-locale';
 // import { CommonResponseDto } from '../dto/common-response.dto';
 // import { ErrCode, ErrMsg } from '../utils/enumError';
 
 @Injectable()
 export class RequestLoggingMiddleware implements NestMiddleware {
   private readonly logger: Logger;
-
+  private myDate = new DateLocale();
   constructor() {
     this.logger = new Logger('Request');
   }
@@ -55,8 +56,8 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       const d=new Date();
       const log:Partial<IUserAccessLog> = {
         path: path,
-        accessDate: d.toLocaleDateString('zh-TW'),
-        accessTime: d.toLocaleTimeString('zh-TW', {hour12: false}),
+        accessDate: this.myDate.toDateString(),
+        accessTime: this.myDate.toTimeString(),
         accessTimeTS: d.getTime(),
       }
       if (body) log.body = body;

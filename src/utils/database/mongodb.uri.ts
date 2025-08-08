@@ -11,5 +11,5 @@ if (process.env.IS_OFFLINE) {
     rpSet = process.env.LMONGO_REPLICA_SET;
 }
 const encodePassword = encodeURIComponent(password);
-console.log('getDbUri:', username, password, resource, port, rpSet);
+// console.log('getDbUri:', username, password, resource, port, rpSet);
 export const MongoUri = `mongodb://${username}:${encodePassword}@${resource}:${port}/?retryWrites=true&w=majority&replicaSet=${rpSet}`;

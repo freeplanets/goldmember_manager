@@ -80,6 +80,7 @@ export enum COUPON_BATCH_STATUS {
   ISSUED = 'issued',
   NOT_ISSUED = 'not_issued',
   EXPIRED = 'expired',
+  STOPPED = 'stopped',
 }
 
 export enum COUPON_BATCH_FREQUNCY {
@@ -133,7 +134,7 @@ export enum TeamActivityRegistrationStatus {
   REQUESTED = 'requested',
   REJECTED = 'rejected',
   ACCEPTED = 'accepted',
-  COMFIRMED = 'comfirmed',
+  CONFIRMED = 'confirmed',
 }
 
 export enum CourseName {
@@ -185,4 +186,10 @@ export enum MEMBER_FROM {
 
 export enum PendingItemStatus {
   PENDING = 'pending',
+}
+
+export enum ActionOp {
+  CREATE = 'create',
+  MODIFY = 'modify',
+  CANCELED = 'canceled',
 }

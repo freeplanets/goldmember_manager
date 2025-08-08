@@ -4,24 +4,31 @@ import { IMember } from '../../dto/interface/member.if';
 import { IHasFilterItem, IHasId } from '../../dto/interface/common.if';
 import { KS_MEMBER_STYLE_FOR_SEARCH } from '../../utils/constant';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
+import { DateLocale } from '../common/date-locale';
 
 export class MainFilters {
+  private myDate = new DateLocale();
   baseDocFilter<D extends IHasFilterItem, I>(targetGroups:MEMBER_GROUP[], type:string|undefined = undefined, extendFilter:MEMBER_EXTEND_GROUP[]|undefined = undefined) {
-    let filters:FilterQuery<D>;
+    let filters:FilterQuery<D>={};
     let objHasIds:IHasId[] = []
     if (targetGroups) {
       const tmpF = {
         $or: [],
       }        
-      targetGroups.forEach((itm) => {
+      targetGroups.forEach((itm:any) => {
+        console.log('targetGroups type:', typeof itm, itm);
+        let tmp:FilterQuery<I>;
         if (typeof itm === 'object') {
-          objHasIds.push(itm);
-        } else {
-          const tmp:FilterQuery<I>= {
-            targetGroups: { $elemMatch: {$eq: itm }}
+          //objHasIds.push(itm);
+          tmp = {
+            targetGroups: { $elemMatch: {id: itm.id }}          
           }
-          tmpF.$or.push(tmp);
+        } else {
+          tmp = {
+            targetGroups: { $elemMatch: { $eq: itm }}
+          }
         }
+        tmpF.$or.push(tmp);
       });
 
       if (tmpF.$or.length > 1) {
@@ -29,7 +36,7 @@ export class MainFilters {
           $or: tmpF.$or,
         }
       } else {
-        filters = tmpF.$or[0];
+        if (tmpF.$or[0]) filters = tmpF.$or[0];
       }
     }
     if (extendFilter && extendFilter[0] === MEMBER_EXTEND_GROUP.BIRTH_OF_MONTH) {
@@ -39,18 +46,8 @@ export class MainFilters {
       }
     }
     if (type){
-      if (!filters) filters = {};
+      //if (!filters) filters = {};
       filters.type = type;
-    }
-    if (objHasIds.length > 0) {
-      const ids = objHasIds.map((obj) => obj.id);
-      if (filters.$or) {
-        filters.$or.push({
-          id: {$in: ids},
-        })
-      } else {
-        filters.id = { $in: ids};
-      }
     }
     return filters;      
   }
@@ -163,7 +160,7 @@ export class MainFilters {
     if (shareholder || dependents) {
       filter.appUser = { $eq: '' };
       if (extendFilter && extendFilter[0] === MEMBER_EXTEND_GROUP.BIRTH_OF_MONTH) {
-            const month = parseInt(new Date().toLocaleString('zh-TW', { month: 'numeric'}));
+            const month = this.myDate.getMonth();
             filter.birthMonth = month
       }
     }

@@ -1,28 +1,29 @@
 import { Coupon, CouponDocument, CouponSchema } from '../../dto/schemas/coupon.schema';
 import { CouponBatch, CouponBatchDocument, CouponBatchSchema } from '../../dto/schemas/coupon-batch.schema';
-import { DateWithLeadingZeros } from '../common';
 import { getMongoDB } from '../database/mongodb';
 import { COUPON_BATCH_STATUS, COUPON_STATUS } from '../enum';
 import { FilterQuery } from 'mongoose';
 import { CouponStats, CouponStatsSchema } from '../../dto/schemas/coupon-stats.schema';
 import lang from '../lang';
+import { DateLocale, TIME_SETTING } from '../../classes/common/date-locale';
+
+const myDate = new DateLocale();
 
 export const couponsExpiredCheck = async () => {
     const d = new Date();
-    console.log('couponsExpiredCheck UTC:', d.getTimezoneOffset(), d.toUTCString());
-    console.log('couponsExpiredCheck:', new Date().toLocaleString('zh-TW'));
     try {
+        console.log('couponsExpiredCheck UTC:', d.getTimezoneOffset(), d.toUTCString());
+        console.log('couponsExpiredCheck:', myDate.toDateString());
         const db = await getMongoDB();
         const modelCB = db.model(CouponBatch.name, CouponBatchSchema);
         const modelCoupon = db.model(Coupon.name, CouponSchema );
         const modelCS = db.model(CouponStats.name, CouponStatsSchema);
-        const locale = 'zh-TW';
-        const d = new Date();
+        // const locale = 'zh-TW';
         //未發行，已過期處理
         let filter:FilterQuery<CouponBatchDocument> | FilterQuery<CouponDocument> = {
             $and: [
                 { expiryDate: { $exists: true }},
-                { expiryDate: { $lt: DateWithLeadingZeros()}},
+                { expiryDate: { $lt: myDate.toDateString() }},
             ],
             status: COUPON_BATCH_STATUS.NOT_ISSUED,
         }
@@ -62,7 +63,7 @@ export const couponsExpiredCheck = async () => {
                         $push: {
                             logs: {
                                 description: lang.zhTW.CouponExpired,
-                                transferDate: d.toLocaleString(locale, {hour12: false}),
+                                transferDate: myDate.toDateTimeString(),
                                 transferDateTS: d.getTime(),                          
                             }                        
                         }
@@ -102,10 +103,15 @@ export const couponsExpiredCheck = async () => {
         ]);
         console.log("groups:", groups);
         if (isProcPass && groups.length > 0) {
-            const smonth = d.toLocaleString(locale, {month: 'numeric'});
-            const syear = d.toLocaleString(locale, {year: 'numeric'});
-            const month = parseInt(smonth);
-            const year = parseInt(syear);
+            const monOptions = { ...TIME_SETTING.options };
+            monOptions.month = 'numeric';
+            const yearOptions = { ...TIME_SETTING.options};
+            monOptions.year = 'numeric';
+            // const smonth = d.toLocaleString(TIME_SETTING.locale, monOptions);
+            // const syear = d.toLocaleString(TIME_SETTING.locale, yearOptions);
+            // const month = parseInt(smonth);
+            // const year = parseInt(syear);
+            const {year, month} = myDate.getYearMonth();
             const promises = groups.map((group) => {
                 return modelCS.updateOne(
                     { type: group._id, year, month },
@@ -141,7 +147,7 @@ export const couponsExpiredCheck = async () => {
                         $push: {
                             logs: {
                                 description: lang.zhTW.CouponExpired,
-                                transferDate: d.toLocaleString(locale, {hour12: false}),
+                                transferDate: myDate.toDateTimeString(),
                                 transferDateTS: d.getTime(),                          
                             }
                         }

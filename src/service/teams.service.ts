@@ -7,7 +7,6 @@ import { v1 as uuidv1 } from 'uuid';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { ErrCode } from '../utils/enumError';
 import { IActivityParticipants, IActMemberInfo, ICreditRecord, ITeam, ITeamActivity, ITeamMember, ITeamPositionInfo } from '../dto/interface/team-group.if';
-import { DateWithLeadingZeros } from '../utils/common';
 import { GetTeamsResponse } from '../dto/teams/get-teams-response';
 import { TeamDetailResponse } from '../dto/teams/team-detail-response';
 import { Upload2S3 } from '../utils/upload-2-s3';
@@ -30,6 +29,7 @@ import { CreditRecordRes } from '../dto/teams/credit-record-response';
 import { CommonResponseData } from '../dto/common/common-response.data';
 import { TeamActivitiesRes } from '../dto/teams/team-activities-response';
 import { TEAM_DETAIL_FIELDS } from '../utils/base-fields-for-searh';
+import { DateLocale } from '../classes/common/date-locale';
 
 interface I_TMPositon {
     T: TeamPositonInfo;
@@ -38,6 +38,7 @@ interface I_TMPositon {
 
 @Injectable()
 export class TeamsService {
+    private myDate = new DateLocale();
     constructor(
         @InjectModel(Team.name) private readonly modelTeam:Model<TeamDocument>,
         @InjectModel(TeamMember.name) private readonly modelTeamMember:Model<TeamMemberDocument>,
@@ -208,7 +209,7 @@ export class TeamsService {
         const comRes = new CommonResponseDto();
         try {
             const updTeam:UpdateQuery<TeamDocument> = {};
-            const updTMData:IbulkWriteItem<ITeamMember, UpdateQuery<TeamMemberDocument>>[] = [];
+            const updTMData:IbulkWriteItem<TeamMemberDocument>[] = [];
             if (teamInfo.name) updTeam.name = teamInfo.name;
             if (teamInfo.description) updTeam.description = teamInfo.description;
             if (teamInfo.status) updTeam.status = teamInfo.status;
@@ -240,10 +241,10 @@ export class TeamsService {
                         const tmp = await this.getMember(pmbr);
                         tmp.teamId = team.id;
                         tmp.role = pos,
-                        tmp.joinDate = DateWithLeadingZeros();
+                        tmp.joinDate = this.myDate.toDateString();
                         tmp.isActive = true;
                         updTMData.push({
-                            insertOne: { document: tmp },
+                            insertOne: { document: tmp as any },
                         })
                     }
                     // 如果有相同職務的其他會員則改為一般會員
@@ -329,7 +330,7 @@ export class TeamsService {
     async addTeamMember(teamId: string, memberInfo: TeamMemberAddRequestDto): Promise<CommonResponseDto> {
         const comRes = new CommonResponseDto();
         const session = await this.connection.startSession();
-        const bulkW:IbulkWriteItem<ITeamMember, UpdateQuery<TeamMemberDocument>>[]=[];
+        const bulkW:IbulkWriteItem<TeamMemberDocument>[]=[];
         try {
             // Check if the team exists
             const team = await this.modelTeam.findOne({ id: teamId },'id');
@@ -361,7 +362,7 @@ export class TeamsService {
                 console.log("mbr:", mbr);
                 bulkW.push({
                     insertOne: {
-                        document: mbr,
+                        document: mbr as any,
                     }
                 });
             }
@@ -554,7 +555,7 @@ export class TeamsService {
                 refId: teamId,
                 score: creditInfo.score,
                 reason: creditInfo.reason,
-                date: DateWithLeadingZeros(),
+                date: this.myDate.toDateString(),
                 recordedBy: {
                     modifiedBy: user.id,
                     modifiedByWho: user.displayName || user.username,
@@ -698,7 +699,7 @@ export class TeamsService {
         } else {
             tmbr = await this.getAppMember(obj);
         }
-        tmbr.joinDate = DateWithLeadingZeros();
+        tmbr.joinDate = this.myDate.toDateString();
         tmbr.isActive = true;
         if (obj.phone) {
             tmbr.phone = obj.phone;

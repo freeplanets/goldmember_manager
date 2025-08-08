@@ -1,5 +1,4 @@
-import { isArray, isObject } from "class-validator";
-import { IParameter } from "./settings/settings.if";
+import { isObject } from 'class-validator';
 
 /**
  * @author 
@@ -30,56 +29,57 @@ const getCircularReplacer = () => {
   };
 };
 
-export function getBirthMonth(birthday:string) {
-  if (!birthday) return 0;
-  let spt = "/";
-  if (birthday.indexOf(spt) == -1) spt = "-";
-  const pos1 = birthday.indexOf(spt);
-  const pos2 = birthday.indexOf(spt, pos1+1)
-  if (pos1 ==-1 || pos2 ==-1) return 0;
-  let newStr = birthday.substring(pos1+1, pos2);
-  return Number(newStr);
-}
+// export function getBirthMonth(birthday:string) {
+//   if (!birthday) return 0;
+//   let spt = '/';
+//   if (birthday.indexOf(spt) == -1) spt = '-';
+//   const pos1 = birthday.indexOf(spt);
+//   const pos2 = birthday.indexOf(spt, pos1+1)
+//   if (pos1 ==-1 || pos2 ==-1) return 0;
+//   let newStr = birthday.substring(pos1+1, pos2);
+//   return Number(newStr);
+// }
 
-// return YYYY/MM/DD
-export function DateWithLeadingZeros(date:string=new Date().toLocaleDateString('zh-TW')): string {
-  const dd = date.split('/');
-  const year = dd[0];
-  const month = dd[1].padStart(2, '0');
-  const day = dd[2].padStart(2, '0');
-  return `${year}/${month}/${day}`;
-}
+// // return YYYY/MM/DD
+// export function DateWithLeadingZeros(date:string=new Date().toLocaleDateString(TIME_SETTING.locale, TIME_SETTING.options)): string {
+//   const dd = date.split('/');
+//   const year = dd[0];
+//   const month = dd[1].padStart(2, '0');
+//   const day = dd[2].padStart(2, '0');
+//   return `${year}/${month}/${day}`;
+// }
 
-export function LocalDateTimeString() {
-  const time = new Date().toLocaleTimeString('zh-tw', {hourCycle: 'h23'});
-  const date = DateWithLeadingZeros();
-  return `${date} ${time}`;
-}
+// export function LocalDateTimeString() {
+//   const time = new Date().toLocaleTimeString(TIME_SETTING.locale, TIME_SETTING.options);
+//   const date = DateWithLeadingZeros();
+//   return `${date} ${time}`;
+// }
 
-export function AddMonth(months:number, date:string|Date|undefined = undefined){
-  if (date) {
-    date = new Date(date);
-  } else {
-    date = new Date();
-  }
-  return new Date(date.setMonth(date.getMonth() + months)).toLocaleDateString('zh-TW');
-}
+// export function AddMonth(months:number, date:string|Date|undefined = undefined){
+//   if (date) {
+//     date = new Date(date);
+//   } else {
+//     date = new Date();
+//   }
+//   const d = new Date(date.setMonth(date.getMonth() + months));
+//   return d.toLocaleDateString(TIME_SETTING.locale, TIME_SETTING.options);
+// }
 
-export function AddMonthLessOneDay(months:number, date:string|Date|undefined = undefined){
-  const d = new Date(AddMonth(months, date));
-  console.log(d);
-  return new Date(d.setDate(d.getDate()-1)).toLocaleDateString('zh-TW');
-}
+// export function AddMonthLessOneDay(months:number, date:string|Date|undefined = undefined){
+//   const d = new Date(AddMonth(months, date));
+//   console.log(d);
+//   return new Date(d.setDate(d.getDate()-1)).toLocaleDateString(TIME_SETTING.locale, TIME_SETTING.options);
+// }
 
-export function formatDateAddSlashes(date: string): string {
-    if (date.length !== 8) {
-        throw new Error('Date string must be in the format YYYYMMDD');
-    }
-    const year = date.substring(0, 4);
-    const month = date.substring(4, 6);
-    const day = date.substring(6, 8);
-    return `${year}/${month}/${day}`;
-}
+// export function formatDateAddSlashes(date: string): string {
+//     if (date.length !== 8) {
+//         throw new Error('Date string must be in the format YYYYMMDD');
+//     }
+//     const year = date.substring(0, 4);
+//     const month = date.substring(4, 6);
+//     const day = date.substring(6, 8);
+//     return `${year}/${month}/${day}`;
+// }
 /**
  * param Object checker , update shall have same porperty and value type
  * array will not check inside (if array must update whole array)

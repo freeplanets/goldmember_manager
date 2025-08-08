@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ERROR_TYPE, MEMBER_LEVEL } from '../utils/enum';
-import { ERROR_MESSAGE, KS_DEPENDENTS_STYLE_FOR_SEARCH, KS_MEMBER_STYLE_FOR_SEARCH, KS_SHAREHOLDER_STYLE_FOR_SEARCH, PHONE_STYLE_FOR_SEARCH, STATUS_CODE } from '../utils/constant';
+import { ALL_CHINESE, ALL_DIGITAL, ERROR_MESSAGE, INCLUDE_CHINESE, INCLUDE_ENGLISH, KS_COM_SHAREHOLDER_STYLE, KS_DEPENDENTS_STYLE_FOR_SEARCH, KS_HUM_SHAREHOLDER_STYLE, KS_MEMBER_STYLE_FOR_SEARCH, KS_SHAREHOLDER_STYLE_FOR_SEARCH, PHONE_STYLE_FOR_SEARCH, STATUS_CODE } from '../utils/constant';
 import { MembersDirectorStatusRequestDto } from '../dto/members/members-director-status-request.dto';
 import { MembersConvertToShareholderRequestDto } from '../dto/members/members-convert-to-shareholder-request.dto';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
@@ -26,13 +26,14 @@ import { MemberTransferLogDto } from '../dto/members/member-transfer-log.dto';
 import { MemberTransferLogRes } from '../dto/members/member-transfer-log-response';
 import { Coupon, CouponDocument } from '../dto/schemas/coupon.schema';
 import { ICreditRecord } from '../dto/interface/team-group.if';
-import { DateWithLeadingZeros } from '../utils/common';
 import { CreditRecord, CreditRecordDocument } from '../dto/schemas/credit-record.schema';
 import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
 import { CreditRecordRes } from '../dto/teams/credit-record-response';
+import { DateLocale } from '../classes/common/date-locale';
 
 @Injectable()
 export class MembersService {
+  private myDate = new DateLocale();
   constructor(
     @InjectModel(Member.name) private modelMember:Model<MemberDcoument>,
     @InjectModel(KsMember.name) private ksMemberModel:Model<KsMemberDocument>,
@@ -55,43 +56,84 @@ export class MembersService {
         }
       }
       const filter:FilterQuery<IMember> = {};
+      let ksFilter:FilterQuery<KsMemberDocument> = {};
       if (KS_MEMBER_STYLE_FOR_SEARCH.test(search)){
         filter.systemId = { $regex: `${search}.*` };
+        ksFilter.no = { $regex: `${search}.*` };
         isSearchKsMemberToo = true;
-      } else if (PHONE_STYLE_FOR_SEARCH.test(search)) {
-        filter.phone = { $regex: `${search}.*`};
-      } else {
+      } else if (ALL_CHINESE.test(search)) {
+        filter.$or = [
+              {name: {$regex: `.*${search}.*`}},
+              {displayName: {$regex: `.*${search}.*`}}
+            ]; 
+        ksFilter.name = { $regex: `${search}.*` };      
+        isSearchKsMemberToo = true;
+      } else if(INCLUDE_CHINESE.test(search)) {
         filter.$or = [
               {name: {$regex: `.*${search}.*`}},
               {displayName: {$regex: `.*${search}.*`}}
             ];
+      } else if (INCLUDE_ENGLISH.test(search)) {
+        filter.$or = [
+              {name: {$regex: `.*${search}.*`}},
+              {displayName: {$regex: `.*${search}.*`}}
+            ];        
+      } else if ( ALL_DIGITAL.test(search) || PHONE_STYLE_FOR_SEARCH.test(search)) {
+        filter.phone = { $regex: `${search}.*`};
       }
       if (type && type !== MEMBER_LEVEL.ALL && type.indexOf('*') === -1) {
         filter.membershipType = type;
       } else {
         type = '';
       }
-      console.log(filter);
+      console.log(filter, filter.$or);
       const ans = await this.modelMember.find(filter, `${MEMBER_DEFAULT_FIELDS} phone systemId`);
       const mbrs:Partial<IMember>[] = ans.map((item) => item);
       console.log('isSearchKsMemberToo:', isSearchKsMemberToo);
       if (isSearchKsMemberToo && type !== MEMBER_LEVEL.GENERAL_MEMBER && type.indexOf('*') === -1) {
         console.log('search ks member');
-        const ksFilter:FilterQuery<KsMemberDocument> = {};
-        let ksType = '';
-        let testpass =false;
-        if (KS_SHAREHOLDER_STYLE_FOR_SEARCH.test(search)) {
-          ksType = MEMBER_LEVEL.SHARE_HOLDER;
-        }
-        if (KS_DEPENDENTS_STYLE_FOR_SEARCH.test(search)) {
-          ksType = MEMBER_LEVEL.DEPENDENTS;
-        }
-        if (!type || (type && type === ksType)) {
-          ksFilter.no = { $regex: `${search}.*` };
-        } else {
-          ksFilter.no = '99999';
-        }
+
+        // if (!type || (type && type === ksType)) {
+        //   ksFilter.no = { $regex: `${search}.*` };
+        // } else {
+        //   ksFilter.no = '99999';
+        // }
         console.log('ksFilter:', ksFilter);
+        if (type === MEMBER_LEVEL.SHARE_HOLDER) {
+          ksFilter.$or = [
+            { 
+                $and: [
+                    { no: { $regex: /^1\d{3}$/ } },
+                    { no: { $lt: '1827' }},
+                ]
+            },
+            {
+                $and: [
+                    { no: { $regex: /^2\d{3}$/ }},
+                    { no: { $lt: '2175'}},
+                ]
+            }
+          ]
+        } else if (type===MEMBER_LEVEL.DEPENDENTS) {
+          if (ksFilter.$or) {
+            ksFilter.$or.push({ no: { $regex: /^[56]\d{3}$/ }});
+          } else {
+            if (!ksFilter.no) {
+              ksFilter.no = {};
+              ksFilter.no.$regex = /^[56]\d{3}$/;          
+            } else {
+              const nofilter = {no: { ...ksFilter.no } };
+              console.log('nofiler:', nofilter);
+              //ksFilter.no = undefined;
+              ksFilter = {};
+              ksFilter.$and = [
+                nofilter,
+                { no : { $regex : /^[56]\d{3}$/ }}
+              ]
+            }
+          }
+        } 
+        console.log('ksFilter:', ksFilter, ' no:', ksFilter.no, ' and:' ,ksFilter.$and, ' or:', ksFilter.$or);
         const ksMbrs = await this.ksMemberModel.find(ksFilter);
         console.log('ksMbrs:', ksMbrs.length);
         if (ksMbrs.length) {
@@ -99,6 +141,15 @@ export class MembersService {
             const f = mbrs.find((m) => m.systemId === item.no);
             if (f) {
               return;
+            }
+            let ksType = '';
+            ksType = MEMBER_LEVEL.GENERAL_MEMBER;
+            if (KS_HUM_SHAREHOLDER_STYLE.test(item.no) && item.no < '1827') {
+              ksType = MEMBER_LEVEL.SHARE_HOLDER;
+            } else if (KS_COM_SHAREHOLDER_STYLE.test(item.no) && item.no < '2175') {
+              ksType = MEMBER_LEVEL.SHARE_HOLDER; 
+            } if (KS_DEPENDENTS_STYLE_FOR_SEARCH.test(item.no)) {
+              ksType = MEMBER_LEVEL.DEPENDENTS;
             }
             const tmp:Partial<IMember> = {
               id: item.no,
@@ -405,7 +456,7 @@ async getMembersTransferLog(req:MemberTransferLogDto):Promise<MemberTransferLogR
               refId: id,
               score: creditInfo.score,
               reason: creditInfo.reason,
-              date: DateWithLeadingZeros(),
+              date: this.myDate.toDateString(),
               recordedBy: {
                   modifiedBy: user.id,
                   modifiedByWho: user.displayName || user.username,

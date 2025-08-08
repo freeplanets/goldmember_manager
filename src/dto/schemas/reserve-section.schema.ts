@@ -10,6 +10,12 @@ export class ReserveSection implements IReserveSection {
     @Prop({index:true, unique: true})
     id: string;
 
+    @Prop()
+    reservationId: string;
+
+    @Prop({index:true})
+    refId: string;
+
     @Prop({index: true})
     date:string;    //($date)日期 (YYYY/MM/DD)
 

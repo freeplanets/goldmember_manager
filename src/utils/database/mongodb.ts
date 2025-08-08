@@ -14,7 +14,7 @@ export const getDbUri = ():string => {
         rpSet = process.env.LMONGO_REPLICA_SET;
     }
     const encodePassword = encodeURIComponent(password);
-    console.log('getDbUri:', username, password, resource, port, rpSet);
+    // console.log('getDbUri:', username, password, resource, port, rpSet);
     return `mongodb://${username}:${encodePassword}@${resource}:${port}/?retryWrites=true&w=majority&replicaSet=${rpSet}`;
 }
 export const getMongoDB = async ():Promise<mongoose.Mongoose> => {

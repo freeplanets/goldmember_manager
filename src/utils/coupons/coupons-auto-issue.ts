@@ -1,6 +1,5 @@
 import { FilterQuery, Model } from 'mongoose';
 import { CouponBatch, CouponBatchDocument, CouponBatchSchema } from '../../dto/schemas/coupon-batch.schema';
-import { AddMonth, DateWithLeadingZeros } from '../common';
 import { getMongoDB } from '../database/mongodb'
 import { COUPON_BATCH_FREQUNCY, COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, COUPON_STATUS } from '../enum';
 import { CouponFunc } from './coupon-func';
@@ -11,13 +10,15 @@ import { CouponAutoIssuedLog, CouponAutoIssuedLogSchema } from '../../dto/schema
 import { v1 as uuidv1 } from 'uuid';
 import { Coupon, CouponDocument, CouponSchema } from '../../dto/schemas/coupon.schema';
 import { REPLACE_MONTH, REPLACE_YEAR } from '../constant';
+import { DateLocale, TIME_SETTING } from '../../classes/common/date-locale';
 
+const myDate = new DateLocale();
 
 export const couponsAutoIssue = async () => {
     const d = new Date();
-    console.log('couponsAutoIssue UTC:', d.getTimezoneOffset(), d.toUTCString());
-    console.log('couponsAutoIssue:', new Date().toLocaleString('zh-TW'));
     try {
+        console.log('couponsAutoIssue UTC:', d.getTimezoneOffset(), d.toUTCString());
+        console.log('couponsAutoIssue:', myDate.toDateString());
         const db = await getMongoDB();
         // const connection = db.createConnection();
         const modelCB = db.model(CouponBatch.name, CouponBatchSchema);
@@ -29,7 +30,10 @@ export const couponsAutoIssue = async () => {
         const filter:FilterQuery<CouponBatchDocument> = {
             // issueDate: date,
             issueMode: COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC,
-            status: { $ne: COUPON_BATCH_STATUS.CANCELED },
+            $and: [
+                { status: { $ne: COUPON_BATCH_STATUS.STOPPED } },
+                { status: { $ne: COUPON_BATCH_STATUS.CANCELED } },
+            ],
             // status: COUPON_BATCH_STATUS.NOT_ISSUED,
             // couponCreated: false,
         }
@@ -99,19 +103,19 @@ function AddMonthByFrequency(date:string, frequency:string) {
         case COUPON_BATCH_FREQUNCY.YEARLY:
             addM = 12;
     }
-    return AddMonth(addM, date);
+    return myDate.AddMonth(addM, date);
     //return AddMonthLessOneDay(addM, date);
 }
 
 // create couponbatch from couponbatch issueMode autmatic
 function createForIssue(datas:Partial<ICouponBatch>[]) {
     const needIssueCB:Partial<ICouponBatch>[] = [];
-    const issueDate = DateWithLeadingZeros();
+    const issueDate = myDate.toDateString();
     datas.forEach((data) => {
         let cpShouldIssueDate = data.issueDate;
         while(cpShouldIssueDate <= issueDate) {
             if (cpShouldIssueDate === issueDate) {
-                const [year, month] = issueDate.split('/');
+                const [year, month, day] = issueDate.split('/');
                 const addMonth = data.validityMonths ? data.validityMonths : 1;
                 const newDataForIssueCB:Partial<ICouponBatch> = {
                     id: uuidv1(),
@@ -121,7 +125,7 @@ function createForIssue(datas:Partial<ICouponBatch>[]) {
                     targetGroups: data.targetGroups,
                     extendFilter: data.extendFilter,
                     issueDate,
-                    expiryDate: AddMonth(addMonth, issueDate),
+                    expiryDate: myDate.AddMonth(addMonth, issueDate),
                     description: data.description,
                     mode: data.mode,
                     couponsPerPerson: data.couponsPerPerson,

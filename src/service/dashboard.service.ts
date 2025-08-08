@@ -9,10 +9,11 @@ import { Pendings } from '../dto/dashboard/pending.data';
 import { IPendingITem } from '../dto/interface/dashboard.if';
 import { COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, PendingItemStatus, PendingItemType, ReserveStatus } from '../utils/enum';
 import { ErrCode } from '../utils/enumError';
-import { DateWithLeadingZeros } from '../utils/common';
+import { DateLocale } from '../classes/common/date-locale';
 
 @Injectable()
 export class DashboardService {
+    private myDate = new DateLocale();
     constructor(
         @InjectModel(Reservations.name) private readonly modelRvn:Model<ReservationsDocument>,
         @InjectModel(Announcement.name) private readonly modelAnn:Model<AnnouncementDocument>,
@@ -38,7 +39,7 @@ export class DashboardService {
                 $and: [
                     {$and: [
                         {expiryDate: {$exists: true}},
-                        {expiryDate: { $gte: DateWithLeadingZeros() }},
+                        {expiryDate: { $gte: this.myDate.toDateString() }},
                     ]},
                     {authorizer: {$exists: false}}
                 ]

@@ -4,7 +4,7 @@ import { v1 as uuidv1 } from 'uuid';
 import { IHasId } from '../../dto/interface/common.if';
 import { asyncfunc } from '../common/func.def';
 
-export class EventNewsOp<T extends IHasId> extends ADbBasicMethods<T> {
+export class BaseOp<T extends IHasId> extends ADbBasicMethods<T> {
     constructor(private readonly model:Model<T>) {
         super();
     }
@@ -29,8 +29,12 @@ export class EventNewsOp<T extends IHasId> extends ADbBasicMethods<T> {
     }
 
     list:asyncfunc = async (params:any): Promise<T[]> => {
-        const [filter]=  params;
-        return this.model.find(filter);
+        const [filter, path]=  params;
+        const find = this.model.find(filter);
+        if (path) {
+            find.populate(path);
+        }
+        return find;
     }
 
     findOne:asyncfunc = async (params:any): Promise<T> => {

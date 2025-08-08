@@ -20,10 +20,13 @@
 // dashboard -> 筆數,
 // 會員，球隊評分欄位
 import { CourseName, MEMBER_LEVEL, ParticipantStatus, ReserveFrom, ReserveStatus, ReserveType, TimeSectionType } from '../../utils/enum';
+import { ICommonLog } from './common.if';
 
 //預約時段資料
 export interface IReserveSection {
     id?:string;
+    reservationId: string;
+    refId: string;  // member id, or team id
     date:string;    //($date)日期 (YYYY/MM/DD)
     timeSlot:string;    //時段 (HH:MM)
     startTime:string;   //開始時間 (HH:MM)
@@ -34,7 +37,7 @@ export interface IReserveSection {
 }
 
 //預約歷史記錄
-export interface IReserveHistory {
+export interface IReserveHistory extends ICommonLog {
     date:string;    //($date)日期
     time:string;    //時間
     id:string;  //操作人員ID
@@ -75,5 +78,7 @@ export interface IReservations {
     status:ReserveStatus;  //預約狀態 Enum:[ pending, booked, confirmed, cancelled ]
     createdAt:string;   //($date-time)建立時間
     reservedFrom:ReserveFrom;    //預約來源 Enum:[ app, backend ]
-    history:IReserveHistory[];
+    history:Partial<IReserveHistory>[];
 }
+
+// 再確認檢查 欄位

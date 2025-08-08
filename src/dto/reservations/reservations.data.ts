@@ -2,7 +2,7 @@ import { MEMBER_LEVEL, ReserveFrom, ReserveStatus, ReserveType } from '../../uti
 import { IReservations, IReserveHistory, IReserveSection } from '../interface/reservations.if';
 import { ApiProperty } from '@nestjs/swagger';
 import { ReserveSectionDto } from './reserve-section.dto';
-import { ReserveHistory } from './reserve-history';
+//import { ReserveHistory } from './reserve-history';
 
 export class ReservationsData implements IReservations {
     @ApiProperty({
@@ -110,7 +110,7 @@ export class ReservationsData implements IReservations {
 
     @ApiProperty({
         description: '預約歷史記錄',
-        type: ReserveHistory,
+        //type: ReserveHistory,
         isArray: true,
     })
     history:IReserveHistory[];  

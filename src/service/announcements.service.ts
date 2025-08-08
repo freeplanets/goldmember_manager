@@ -18,9 +18,9 @@ import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { AnnouncementsIdResponseDto } from '../dto/announcements/announcements-id-response.dto';
 import { AnnounceFieldsCheck } from '../dto/announcements/announce-fields-check';
 import { MainFilters } from '../classes/filters/main-filters';
-import { AddMonthLessOneDay, DateWithLeadingZeros } from '../utils/common';
 import { Upload2S3 } from '../utils/upload-2-s3';
 import { KsMember, KsMemberDocument } from '../dto/schemas/ksmember.schema';
+import { DateLocale } from '../classes/common/date-locale';
 
 @Injectable()
 export class AnnouncementsService {
@@ -30,6 +30,7 @@ export class AnnouncementsService {
   // });
   private Upload2S3 = new Upload2S3();
   private myFilter = new MainFilters();
+  private myDate = new DateLocale();
   constructor(
     @InjectModel(Announcement.name) private readonly modelAnnouncement:Model<AnnouncementDocument>,
     // @InjectModel(Announcement2Member.name) private readonly modelAnn2Member:Model<Announcement2MemberDocument>,
@@ -63,8 +64,9 @@ export class AnnouncementsService {
         announcementSearch.extendFilter,
       );
       // if (filters) {
+      console.log('filter:',filters);
         if (!filters) filters = {};
-        const threeMonthsAgo = DateWithLeadingZeros(AddMonthLessOneDay(-3));
+        const threeMonthsAgo = this.myDate.AddMonthLessOneDay(-3);
         filters.publishDate = { $gte: threeMonthsAgo };
         console.log('filters:', filters);
         const rlt = await this.modelAnnouncement.find(filters);
@@ -109,6 +111,7 @@ export class AnnouncementsService {
         return comRes;
       }
       announcementCreateDto = dtoChk.Data;
+      console.log('after check:', announcementCreateDto);
       if (files.length > 0 ) {
         //const promises = files.map((file) => this.uploadFile(file))
         const promises = files.map((file) => this.upload(file))
@@ -239,10 +242,10 @@ export class AnnouncementsService {
     const comRes = new CommonResponseDto();
     try {
       const ann = await this.modelAnnouncement.findOne(
-        {id}, 
+        {id, authorizer: { $exists: false}}, 
         'publishDate expiryDate isPublished targetGroups method');
       if (ann) {
-        if (!ann.isPublished) {
+        //if (!ann.isPublished) {
           // const isSended = await this.sendMemberAnnouncement(ann);
           //const isPublished = await this.publishMemberAnnouncement(id);
           
@@ -267,7 +270,7 @@ export class AnnouncementsService {
               console.log("announcementsIdPublish isModified show false");
               comRes.ErrorCode = ErrCode.ANNOUNCE_PUBLISH_ERROR;
             }
-        }
+        //}
       } else {
         comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
       }
@@ -283,7 +286,7 @@ export class AnnouncementsService {
     try {
       const ann = await this.modelAnnouncement.findOne({id}, 'isPublished');
       if (ann) {
-        if (ann.isPublished) {
+        if (ann.isPublished || typeof (ann.isPublished) === 'undefined') {
           const authorizer:IModifiedBy = {
             modifiedBy: user.id,
             modifiedByWho: user.username,

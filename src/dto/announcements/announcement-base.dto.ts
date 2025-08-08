@@ -1,8 +1,10 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IAnnouncement } from "../interface/announcement.if";
-import { IsArray, IsBoolean, IsOptional, IsString } from "class-validator";
-import { MEMBER_GROUP } from "../../utils/enum";
-import { DateWithLeadingZeros } from "../../utils/common";
+import { ApiProperty } from '@nestjs/swagger';
+import { IAnnouncement } from '../interface/announcement.if';
+import { IsArray, IsBoolean, IsOptional, IsString } from 'class-validator';
+import { MEMBER_GROUP } from '../../utils/enum';
+import { DateLocale } from '../../classes/common/date-locale';
+
+const myDate = new DateLocale();
 
 export class AnnouncementBaseDto implements Partial<IAnnouncement> {
     @ApiProperty({
@@ -34,7 +36,7 @@ export class AnnouncementBaseDto implements Partial<IAnnouncement> {
     @ApiProperty({
         description: '公告日期',
         required: false,
-        example: DateWithLeadingZeros(),
+        example: myDate.toDateString(),
     })
     @IsOptional()
     @IsString()
