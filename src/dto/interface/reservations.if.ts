@@ -34,6 +34,7 @@ export interface IReserveSection {
     course:CourseName;  //球道 Enum:[ west, east, south ]
     courses:CourseName[];    // 球道列表 (時間範圍預約時使用)
     type:TimeSectionType;    //時段類型 (單一時段或時間範圍) Enum:[ timeslot, range ]
+    status:ReserveStatus;  //預約狀態 Enum:[ pending, booked, confirmed, cancelled ]
 }
 
 //預約歷史記錄

@@ -9,11 +9,11 @@ import { DateLocale } from '../common/date-locale';
 import { IReturnObj } from '../../dto/interface/common.if';
 import { ErrCode } from '../../utils/enumError';
 import { IUser } from '../../dto/interface/user.if';
-import { ReservationsQueryRequestDto } from '../../dto/reservations/reservations-query-request.dto';
-import { ReservationStatusRequestDto } from 'src/dto/reservations/reservation-status.request.dto';
-import { ParticipantData } from 'src/dto/reservations/participant.data';
 //import { ReservationsQueryRequestDto } from '../../dto/bookings/reservations-query-request.dto';
-
+import { DateRangeQueryReqDto } from '../../dto/common/date-range-query-request.dto';
+import { ReservationsQueryRequestDto } from '../../dto/reservations/reservations-query-request.dto';
+import { ReservationStatusRequestDto } from '../../dto/reservations/reservation-status.request.dto';
+import { ParticipantData } from '../../dto/reservations/participant.data';
 
 export class ReserveOp {
     private myDate:DateLocale = new DateLocale();
@@ -22,6 +22,14 @@ export class ReserveOp {
         private readonly modelRS:Model<ReserveSectionDocument>,
         private readonly connection:mongoose.Connection,
     ) {}
+    async getById(id:string):Promise<IReturnObj> {
+        const returnObj:IReturnObj = {};
+        returnObj.data = await this.modelReserve.findOne({id}).populate({
+            path: 'data',
+            select: 'date timeSlot startTime endTime course courses type',
+        });
+        return returnObj;
+    } 
     async get(rqr:ReservationsQueryRequestDto, user:Partial<IMember>|undefined):Promise<IReturnObj> {
         const returnObj:IReturnObj = {
             data: [],
@@ -65,22 +73,22 @@ export class ReserveOp {
         }
         return returnObj;
     }
-    async getById(id:string):Promise<IReturnObj> {
+    async list(date:string|DateRangeQueryReqDto):Promise<IReturnObj> {
         const returnObj:IReturnObj = {};
-        returnObj.data = await this.modelReserve.findOne({id}).populate({
-            path: 'data',
-            select: 'date timeSlot startTime endTime course courses type',
-        });
-        return returnObj;
-    }
-    async list(date:string):Promise<IReturnObj> {
-        const returnObj:IReturnObj = {};
-        const filter:FilterQuery<ReserveSectionDocument> = {
-            date,
-            //status: { $ne: ReserveStatus.CANCELLED },
+        const filter:FilterQuery<ReserveSectionDocument> = {}
+        if (typeof date === 'string') {
+            filter.date =  date;
+        } else {
+            if (!date.startDate) date.startDate = this.myDate.toDateString();
+            if (!date.endDate) date.endDate = date.startDate;
+            filter.$and = [
+                { date: { $gte: date.startDate}},
+                { date: {$lte: date.endDate}},
+            ]
         }
+        filter.status = { $ne: ReserveStatus.CANCELLED };
         console.log('list filter:', filter);
-        returnObj.data = await this.modelRS.find(filter, 'date timeSlot startTime endTime course courses type');
+        returnObj.data = await this.modelRS.find(filter, 'date timeSlot startTime endTime course courses type status');
         console.log('returnObj.data:', returnObj.data);
         return returnObj;
     }
@@ -104,6 +112,7 @@ export class ReserveOp {
                 data.id = uuidv1();
                 data.reservationId = createResv.id;
                 data.refId = createResv.teamId ? createResv.teamId : createResv.memberId;
+                data.status = ReserveStatus.PENDING;
             })
             const secDatas = await this.modelRS.insertMany(datas, {session});
             if (secDatas.length > 0) {
@@ -121,6 +130,8 @@ export class ReserveOp {
                 const his = this.createHistory(user, ActionOp.CREATE);
                 createResv.createdAt = his.transferDate;
                 createResv.history = [his];
+                createResv.status = ReserveStatus.PENDING;
+                // createResv.status = ReserveStatus.BOOKED;
                 const cr = await this.modelReserve.create([createResv], {session});
                 console.log('createReservation:', cr);
                 returnObj.data = cr;
@@ -174,27 +185,31 @@ export class ReserveOp {
         }
         return returnObj;
     }
-    async cancel(id:string, user:Partial<IUser | IMember>, teamId: string):Promise<IReturnObj>{
+    async modifyStatus(id:string,resv:ReservationStatusRequestDto, user:Partial<IUser | IMember>) {
         const returnObj:IReturnObj = {}
         const filter:FilterQuery<ReservationsDocument>={
             id,
         };
-        if (!teamId) {
-            filter.memberId = user.id;
-        } else {
-            filter.teamId = teamId;
-        }
-        const found = await this.modelReserve.findOne(filter, 'id data');
+        if (resv.teamId) filter.teamId = resv.teamId;
+        if (resv.memberId) filter.memberId = resv.memberId
+        // if (!teamId) {
+        //     filter.memberId = user.id;
+        // } else {
+        //     filter.teamId = teamId;
+        // }
+        const found = await this.modelReserve.findOne(filter, 'id data status');
         if (found) {
             const tsids = found.data.map((v) => v);
             const session = await this.connection.startSession();
             session.startTransaction();
-            const updrs = await this.modelRS.updateMany({_id: {$in: tsids}}, {status: ReserveStatus.CANCELLED}, {session});
+            const updrs = await this.modelRS.updateMany({_id: {$in: tsids}}, {status: resv.status}, {session});
             console.log('updrs:', updrs);
             if (updrs.acknowledged) {
-                const his = this.createHistory(user, ActionOp.CANCELED)
+                const act = resv.status === ReserveStatus.CANCELLED ? ActionOp.CANCELED : ActionOp.MODIFY;
+                const his = this.createHistory(user, act);
+                his.description = `${his.description} status: ${found.status} -> ${resv.reason} 原由:${resv.reason}`;
                 const upd = await this.modelReserve.updateOne(filter, {
-                    status: ReserveStatus.CANCELLED,
+                    status: resv.status,
                     $push: { history: his },
                 });
                 console.log('upd:', upd);
@@ -209,21 +224,16 @@ export class ReserveOp {
         }
         return returnObj;
     }
-    async modifyStatus(id:string, stsObj:ReservationStatusRequestDto, user:Partial<IUser>):Promise<IReturnObj> {
-        const returnObj:IReturnObj = {};
-        const found = await this.modelReserve.findOne({id}, 'status');
-        if (found) {
-            const his = this.createHistory(user, ActionOp.MODIFY);
-            his.description = `${his.description} status: ${found.status} -> ${stsObj.reason} 原由:${stsObj.reason}`;
-            const upd = await this.modelReserve.updateOne(
-                {id}, 
-                {status : stsObj.status, $push: { history: his}}
-            );
-            if (upd.acknowledged) returnObj.data = id;
-        } else {
-            returnObj.error = ErrCode.RESERVATION_NOT_FOUND;
+    async cancel(id:string, user:Partial<IUser | IMember>, teamId: string=''):Promise<IReturnObj>{
+        const resv = new ReservationStatusRequestDto();
+        resv.status = ReserveStatus.CANCELLED;
+        if (teamId) resv.teamId = teamId;
+        else {
+            if ((user as IMember).name) {
+                resv.memberId = user.id;
+            }
         }
-        return returnObj;
+        return this.modifyStatus(id, resv, user);
     }
     async getParticipants(id:string):Promise<IReturnObj> {
         const returnObj:IReturnObj = {}
@@ -254,7 +264,7 @@ export class ReserveOp {
             returnObj.error = ErrCode.RESERVATION_NOT_FOUND;
         }
         return returnObj;
-    }      
+    }     
     async timeSectionCheck(datas:Partial<IReserveSection>[], revId:string = '') {
         console.log('timeSectionCheck', typeof datas, datas);
         const dfF:FilterQuery<ReserveSectionDocument> = {};

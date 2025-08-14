@@ -14,6 +14,7 @@ import { MemberTransferLogRes } from '../dto/members/member-transfer-log-respons
 import { CreditRequestDto } from '../dto/teams/credit-request.dto';
 import { CreditRecordRes } from '../dto/teams/credit-record-response';
 import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
+import { InvitationCodeRes } from '../dto/members/invitation-codes-response';
 
 @Controller('members')
 @ApiTags('members')
@@ -147,22 +148,38 @@ export class MembersController {
       return res.status(HttpStatus.OK).json(result);
   }
 
-      @ApiOperation({
-        summary: "查詢會員信用評分",
-        description: "查詢會員信用評分.",
-    })
-    @ApiResponse({
-        description: '成功或失敗',
-        type: CreditRecordRes,
-    })
-    @ApiParam({name: 'id', description: '會員代號'})
-    @Get('creditrecords/:id')
-    async getCreditRecords(
-        @Param('id') memberId: string,
-        @Query() dates:DateRangeQueryReqDto,
-        @Res() res:Response,
-    ){
-        const rlt = await this.membersService.getCreditRecords(memberId, dates);
-        return res.status(HttpStatus.OK).json(rlt);
-    }
+  @ApiOperation({
+    summary: "查詢會員信用評分",
+    description: "查詢會員信用評分.",
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CreditRecordRes,
+  })
+  @ApiParam({name: 'id', description: '會員代號'})
+  @Get('creditrecords/:id')
+  async getCreditRecords(
+      @Param('id') memberId: string,
+      @Query() dates:DateRangeQueryReqDto,
+      @Res() res:Response,
+  ){
+      const rlt = await this.membersService.getCreditRecords(memberId, dates);
+      return res.status(HttpStatus.OK).json(rlt);
+  }
+
+  @ApiOperation({
+    summary: "會員認證碼列表",
+    description: "會員認證碼列表.",
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: InvitationCodeRes,
+  })
+  @Post('invitationcodes')
+  async getInvitationCodes(
+    @Res() res:Response,
+  ){
+      const rlt = await this.membersService.getInvitationCodes();
+      return res.status(HttpStatus.OK).json(rlt);
+  }
 }

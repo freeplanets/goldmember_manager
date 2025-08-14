@@ -1,3 +1,6 @@
+import { IOrganization } from '../dto/interface/common.if';
+import { ORGANIZATION_TYPE } from './enum';
+
 /**
  * @author 
  * @description Common Status Code
@@ -15,6 +18,12 @@ export const STATUS_CODE = {
 export const ERROR_MESSAGE = {
   SERVER_ERROR: '請聯絡開發團隊。',
 };
+const default_organization:IOrganization = {
+  id: 'linkougolf',
+  type: ORGANIZATION_TYPE.COURT,
+  name: '林口高爾夫球場',
+}
+export const ORGANIZATION = default_organization;
 
 export const VERIFY_CODE_MESSAGE = '林口高爾夫球場管理系統認證碼[{CODE}],請勿分享他人。';
 export const USERNAME_STYPE = new RegExp(/^((?=.{6,15}$)(?=.*\d).*|(?=.{6,15}$)(?=.*[a-zA-Z]).*|(?=.{6,15}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).*|(?=.{6,15}$)(?=.*\d)(?=.*[a-zA-Z])(?=.*[!\u0022#$%&'()*+,./:;<=>?@[\]\^_`{|}~-]).*)/);
@@ -35,11 +44,12 @@ export const INCLUDE_CHINESE = new RegExp(/[\u4E00-\u9FA5]+/, 'g'); //包含中�
 export const ALL_CHINESE = new RegExp(/^[\u4E00-\u9FA5]+$/);  //全中文檢查
 export const INCLUDE_ENGLISH = new RegExp(/^[a-zA-Z]+/); //包括英文
 export const ALL_DIGITAL = new RegExp(/^[0-9]+$/);
-export const UUID_V1_STYLE = new RegExp(/^[0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/, "i");
-export const UUID_V4_STYLE = new RegExp(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/, "i");
+export const UUID_V1_STYLE = new RegExp(/^[0-9a-f]{8}-[0-9a-f]{4}-1[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/, 'i');
+export const UUID_V4_STYLE = new RegExp(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/, 'i');
 
 
 export const PASSWORD_RETRY_COUNT = 5;
 export const PASSWORD_RETRY_TIME = 1800000; // 3分鐘
+export const THREE_MONTH =  7776000000; // 1000*60*60*24*90 = 90天
 export const REPLACE_YEAR = '{year}';
 export const REPLACE_MONTH = '{month}';

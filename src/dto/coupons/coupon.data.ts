@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsObject, IsEnum } from 'class-validator';
+import { IsOptional, IsString, IsObject, IsEnum, IsNumber } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { ICoupon, ICouponTransferLog } from '../interface/coupon.if';
 import { IModifiedBy } from '../interface/modifyed-by.if';
@@ -73,6 +73,14 @@ export class CouponData extends CouponRequestDto implements ICoupon {
   @IsOptional()
   @IsString()
   toPaperNo: string;
+
+  @ApiProperty({
+    description:'轉為紙本(號碼)時間戳',
+    required: false,
+  })
+  @IsOptional()
+  @IsNumber()
+  toPaperTS: number;
 
   @ApiProperty({
     description: '修改人',

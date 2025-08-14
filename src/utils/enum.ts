@@ -118,6 +118,13 @@ export enum TeamMemberPosition {
   MEMBER = 'member',
 }
 
+export enum TeamMemberStatus {
+  APPLYING = 'applying',  //申請中
+  INVITING = 'inviting',  //邀請中
+  CANCELLED = 'cancelled',  //拒絕申請或邀請
+  CONFIRMED = 'confirmed'
+}
+
 export enum TeamActivityStatus {
   UPCOMING = 'upcoming', 
   ONGOING = 'ongoing', 
@@ -192,4 +199,19 @@ export enum ActionOp {
   CREATE = 'create',
   MODIFY = 'modify',
   CANCELED = 'canceled',
+}
+
+export enum MessageType {
+  INDIVIDUAL = 'individual',
+  ALL = 'all',
+}
+
+export enum COLLECTION_REF {
+  Member = 'Member',
+  KsMember = 'KsMember',
+}
+
+export enum ORGANIZATION_TYPE {
+  COURT = 'court',
+  TEAM = 'team',
 }

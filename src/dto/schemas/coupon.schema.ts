@@ -4,6 +4,7 @@ import { COUPON_STATUS } from "../../utils/enum";
 import { IModifiedBy } from "../interface/modifyed-by.if";
 import { Document } from "mongoose";
 import { ModifiedByData } from "../data/modified-by.data";
+// import { ModifyBySchema } from "./modify-by.schema";
 
 export type CouponDocument = Document & Coupon;
 
@@ -53,6 +54,9 @@ export class Coupon implements ICoupon {
 
     @Prop()
     toPaperNo: string;
+
+    @Prop()
+    toPaperTS: number;
 
     @Prop()
     notAppMember?: boolean;

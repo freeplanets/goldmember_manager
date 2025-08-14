@@ -165,4 +165,13 @@ export class AnnouncementsController {
     const comRes  = await this.announcementsService.announcementsIdUnpublish(id, req.user);
     return res.status(HttpStatus.OK).json(comRes);
   }
+
+  @Get('reformdata/fortest')
+  async reformdata(
+    @Res() res:Response,
+  ) {
+    console.log('reformdata start');
+    const ans = await this.announcementsService.refromData();
+    return res.status(HttpStatus.OK).json(ans);
+  }
 }

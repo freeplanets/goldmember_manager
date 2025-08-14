@@ -1,5 +1,5 @@
 import { FilterQuery, UpdateQuery } from 'mongoose';
-import { MEMBER_EXTEND_GROUP } from '../../utils/enum';
+import { MEMBER_EXTEND_GROUP, ORGANIZATION_TYPE } from '../../utils/enum';
 import { ErrCode } from '../../utils/enumError';
 
 export interface ICommonResponse<T> {
@@ -61,7 +61,14 @@ export interface IbulkWriteItem<D> {
     updateOne?: {
         filter: FilterQuery<D>;    // key of document like { key: "yourvalue" }
         update: UpdateQuery<D>;
-    }
+    },
+    updateMany?: {
+        filter: FilterQuery<D>;    // key of document like { key: "yourvalue" }
+        update: UpdateQuery<D>;
+    },    
+    deleteOne?: {
+      filter: FilterQuery<D>;
+    },
 }
 
 export interface ICommonLog {
@@ -73,4 +80,11 @@ export interface ICommonLog {
 export interface IReturnObj {
     data?: any,
     error?: ErrCode,
+    extra?: any;
+}
+
+export interface IOrganization {
+    id:string;
+    type: ORGANIZATION_TYPE;
+    name: string;
 }

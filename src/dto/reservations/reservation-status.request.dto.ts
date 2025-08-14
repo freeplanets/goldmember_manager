@@ -19,4 +19,20 @@ export class ReservationStatusRequestDto implements Partial<IReservations> {
     @IsOptional()
     @IsString()
     reason?: string;
+
+    @ApiProperty({
+        description: '原預約球隊ID',
+        required: false,
+    })
+    @IsOptional()
+    @IsString()
+    teamId?: string;
+
+    @ApiProperty({
+        description: '原預約會員ID',
+        required: false,
+    })
+    @IsOptional()
+    @IsString()
+    memberId?: string;
 }

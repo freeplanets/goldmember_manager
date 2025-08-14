@@ -10,6 +10,7 @@ import { MemberGrowth, MemberGrowthSchema } from '../dto/schemas/member-growth.s
 import { MemberTransferLog, MemberTransferLogSchema } from '../dto/schemas/member-transfer-log.schema';
 import { Coupon, CouponSchema } from '../dto/schemas/coupon.schema';
 import { CreditRecord, CreditRecordSchema } from '../dto/schemas/credit-record.schema';
+import { InvitationCode, InvitationCodeSchema } from '../dto/schemas/invitation-code.schema';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { CreditRecord, CreditRecordSchema } from '../dto/schemas/credit-record.s
       {name:MemberGrowth.name, schema:MemberGrowthSchema},
       {name:MemberTransferLog.name, schema:MemberTransferLogSchema},
       {name:Coupon.name, schema: CouponSchema},
-      {name: CreditRecord.name, schema: CreditRecordSchema},
+      {name:CreditRecord.name, schema: CreditRecordSchema},
+      {name:InvitationCode.name, schema: InvitationCodeSchema}
     ])
   ],
   controllers: [MembersController],

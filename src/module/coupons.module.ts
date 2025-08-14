@@ -11,6 +11,7 @@ import { Member, MemberSchema } from '../dto/schemas/member.schema';
 import { CouponStats, CouponStatsSchema } from '../dto/schemas/coupon-stats.schema';
 import { CouponAutoIssuedLog, CouponAutoIssuedLogSchema } from '../dto/schemas/coupon-auto-issued-log.schema';
 import { CouponTransferLog, CouponTransferLogSchema } from '../dto/schemas/coupon-transfer-log.schema';
+import { Announcement, AnnouncementSchema } from '../dto/schemas/announcement.schema';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { CouponTransferLog, CouponTransferLogSchema } from '../dto/schemas/coupo
       { name: KsMember.name, schema: KsMemberSchema},
       { name: CouponAutoIssuedLog.name, schema: CouponAutoIssuedLogSchema},
       { name: CouponTransferLog.name, schema: CouponTransferLogSchema },
+      { name: Announcement.name, schema: AnnouncementSchema},
     ]),
   ],
   controllers: [CouponsController],

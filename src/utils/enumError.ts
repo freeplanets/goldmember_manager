@@ -42,6 +42,7 @@ export enum ErrCode {
 	SELECTED_TIME_SECTION_ASSIGNED = 'SELECTED_TIME_SECTION_ASSIGNED',
 	RESERVATION_NOT_FOUND = 'RESERVATION_NOT_FOUND',
 	MUST_BE_A_APPMEMBER = 'MUST_BE_A_APPMEMBER',
+	ANNOUNCEMENT_NOT_FOUND = 'ANNOUNCEMENT_NOT_FOUND',
 }
 export enum ErrMsg {
 	MISS_PARAMETER = '參數不足',
@@ -85,6 +86,7 @@ export enum ErrMsg {
 	SELECTED_TIME_SECTION_ASSIGNED = '選定的時間段已被分配了，請選擇其他時段。',
 	RESERVATION_NOT_FOUND = '找不到預約記錄,請檢查預約ID.',
 	MUST_BE_A_APPMEMBER = '必須是App會員',
+	ANNOUNCEMENT_NOT_FOUND = '查無公告。',
 }
 export const getErrorMessage = (code: ErrCode): string => {
 	const errKey = Object.keys(ErrCode).find((key) => ErrCode[key as keyof typeof ErrCode] === code);

@@ -12,21 +12,7 @@ export default class TeamCreateRequestDto extends FileUploadDto implements Parti
     @IsString()
     @IsNotEmpty()
     name?: string;
-
-    @ApiProperty({
-        description: "隊長",
-        required: false,
-        type: TeamPositonInfo,
-    })
-    leader?: ITeamPositionInfo;
-
-    @ApiProperty({
-        description: "經理",
-        required: false,
-        type: TeamPositonInfo,
-    })
-    manager: ITeamPositionInfo;
-
+    
     @ApiProperty({
         description: '連絡人',
         required: false,

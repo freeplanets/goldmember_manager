@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { Announcement, AnnouncementDocument } from '../dto/schemas/announcement.schema';
 import { CouponBatch, CouponBatchDocument } from '../dto/schemas/coupon-batch.schema';
 import { Reservations, ReservationsDocument } from '../dto/schemas/reservations.schema';
@@ -34,25 +34,18 @@ export class DashboardService {
         return comRes;
     }
     async getAnns(pendings:Pendings) {
-        const anns = await this.modelAnn.find(
-            {
-                $and: [
-                    {$and: [
-                        {expiryDate: {$exists: true}},
-                        {expiryDate: { $gte: this.myDate.toDateString() }},
-                    ]},
-                    {authorizer: {$exists: false}}
-                ]
-
-            }
-            // {
-            //     $or:[
-            //         { isPublished: false },
-            //         { isPublished: { $exists: false} },
-            //     ]
-            // },
-
-        );
+        const filter:FilterQuery<AnnouncementDocument> = {
+            $and: [
+                {$and: [
+                    {expiryDate: {$exists: true}},
+                    {expiryDate: { $gte: this.myDate.toDateString() }},
+                ]},
+                // {publishedTs: {$gte: Date.now() - THREE_MONTH }},
+                {authorizer: {$exists: false}}
+            ]
+        }
+        console.log('getAnns filter:', filter.$and)
+        const anns = await this.modelAnn.find(filter);
         anns.forEach((ann) => {
             const itm:IPendingITem = {
                 id: ann.id,

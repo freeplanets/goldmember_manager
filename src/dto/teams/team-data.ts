@@ -41,18 +41,6 @@ export class TeamData implements ITeam {
     description: string;    //球隊描述
 
     @ApiProperty({
-        description: '隊長資訊',
-        type: TeamPositonInfo,
-    })
-    leader:	ITeamPositionInfo;  // 隊長
-
-    @ApiProperty({
-        description: '經理資訊',
-        type: TeamPositonInfo,
-    })
-    manager: ITeamPositionInfo; // 經理
-
-    @ApiProperty({
         description: '連絡人資訊',
         type: TeamPositonInfo,
     })

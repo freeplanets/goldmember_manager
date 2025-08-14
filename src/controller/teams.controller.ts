@@ -298,5 +298,13 @@ export class TeamsController {
         const result = await this.teamsService.getActivityParticipants(activityId);
         return res.status(HttpStatus.OK).json(result);
     }
+
+    @Get('teammember/reform')
+    async reformTM(
+        @Res() res:Response,
+    ) {
+        await this.teamsService.reformTM();
+        return res.status(HttpStatus.OK).json();
+    }
    
 }

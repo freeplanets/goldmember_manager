@@ -51,7 +51,7 @@ export class Team implements ITeam {
         type: [{ 
             type: mongoose.Schema.Types.ObjectId, 
             ref: 'TeamMember',
-            select: 'id name role joinDate phone membershipType isActive systemId',
+            select: 'id name role joinDate phone membershipType isActive systemId pic',
         }],
         default: [],
     })

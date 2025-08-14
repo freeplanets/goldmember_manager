@@ -1,3 +1,5 @@
+import { DATE_STYLE } from '../../utils/constant';
+
 interface ITimeSetting {
   locale: Intl.LocalesArgument;
   options: Intl.DateTimeFormatOptions;
@@ -30,7 +32,7 @@ export class DateLocale  {
     toDateString(date:string | number | Date | undefined = '', splitStyle = '') {
         // if (!date) 
         if (date && typeof date === 'string') {
-            console.log('DateLocale toDateString check0:');
+            // console.log('DateLocale toDateString check0:');
             let mySplitStyle:string;
             if (date.indexOf('/') !== -1 ) mySplitStyle = '/';
             if (date.indexOf('-') !== -1 ) mySplitStyle = '-';
@@ -88,8 +90,8 @@ export class DateLocale  {
     }
     getBirthMonth(birthday:string) {
         if (!birthday) return 0;
-        let spt = "/";
-        if (birthday.indexOf(spt) == -1) spt = "-";
+        let spt = '/';
+        if (birthday.indexOf(spt) == -1) spt = '-';
         const pos1 = birthday.indexOf(spt);
         const pos2 = birthday.indexOf(spt, pos1+1)
         if (pos1 ==-1 || pos2 ==-1) return 0;
@@ -111,6 +113,15 @@ export class DateLocale  {
         //return new Date(d.setDate(d.getDate()-1)).toLocaleDateString('zh-TW');
         return this.toDateString(new Date(d.setDate(d.getDate() -1)));
     }
+    AddDate(date:string|Date|undefined = undefined, day:number=1) {
+        if (date) {
+            date = new Date(date);
+        } else {
+            date = new Date();
+        }
+        const d = new Date(date.setDate(date.getDate() + day));
+        return this.toDateString(d);        
+    }
     private formatDateAddSlashes(date: string, splitStyle = ''): string {
         if (date.length !== 8) {
             throw new Error('Date string must be in the format YYYYMMDD');
@@ -120,5 +131,19 @@ export class DateLocale  {
         const day = date.substring(6, 8);
         if (!splitStyle) splitStyle = '/';
         return `${year}${splitStyle}${month}${splitStyle}${day}`;
+    }
+    toTS(date:string='') {
+        const d = new Date();
+        let diff = d.getHours() === d.getUTCHours() ? -8 : 0;
+        let year= d.getUTCFullYear();
+        let month= d.getUTCMonth();
+        let day= d.getUTCDate();
+        if (date && DATE_STYLE.test(date)) {
+            [year, month, day] = date.split('/').map((dd)=> parseInt(dd));
+            month = month - 1;
+        }
+        const ts = new Date(year, month, day, diff, 0, 0).getTime();
+        console.log(date, year, month, day, d.getHours(), d.getUTCHours(), diff, d.getTime(), ts);
+        return ts;
     }
 }

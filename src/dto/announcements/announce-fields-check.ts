@@ -28,7 +28,17 @@ export class AnnounceFieldsCheck {
                             this._annDta[key] = data;
                         }
                     } else if (isArray(annDta[key])) {
-                        this._annDta[key] = annDta[key].map((v:string) => v.trim());
+                        this._annDta[key] = annDta[key].map((v:string) => {
+                            const {data, error} = this.targetGroupCheck(v);
+                            if (error) {
+                                this._error;
+                                return '';
+                            } else {
+                                //this._annDta[key] = data;
+                                return data;
+                            }
+                            //v.trim()
+                        });
                     } else {
                         isErrorOccur = true;
                         error[key] = {
@@ -104,19 +114,20 @@ export class AnnounceFieldsCheck {
     targetGroupCheck(annDta:string):IReturnObj {
         const rtn:IReturnObj={};
         try {
-            if (annDta.indexOf('[') !== -1) {
+            if (annDta.indexOf('[') !== -1 || annDta.indexOf('{') !== -1) {
                 rtn.data = JSON.parse(annDta);
             } else {
-                rtn.data = annDta.split(',').map(
-                    (v:string) => {
-                        console.log('v:', v);
-                        if (v.indexOf('{') !== -1) {
-                            return JSON.parse(v);
-                        } else {
-                            return v.trim();
-                        }
-                    }
-                );
+                rtn.data = annDta.trim();
+                // rtn.data = annDta.split(',').map(
+                //     (v:string) => {
+                //         console.log('v:', v);
+                //         if (v.indexOf('{') !== -1) {
+                //             return JSON.parse(v);
+                //         } else {
+                //             return v.trim();
+                //         }
+                //     }
+                // );
             }
         } catch (err) {
             console.log('json parse error:', err);

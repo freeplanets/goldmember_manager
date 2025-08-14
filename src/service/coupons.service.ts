@@ -32,12 +32,20 @@ import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
 import lang from '../utils/lang';
 import { CommonResponseData } from '../dto/common/common-response.data';
 import { DateLocale } from '../classes/common/date-locale';
+import { CouponTransferDto } from '../dto/coupons/coupon-transfer.dto';
+import { IMember } from '../dto/interface/member.if';
+import { KS_MEMBER_STYLE_FOR_SEARCH, PHONE_STYLE, UUID_V4_STYLE } from '../utils/constant';
+import { MessageOp } from '../classes/announcements/message-op';
+import { Announcement, AnnouncementDocument } from '../dto/schemas/announcement.schema';
+import { sendSMSCode } from '../utils/sms';
+import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
 
 @Injectable()
 export class CouponsService {
   private myFilter = new MainFilters();
   private cpFunc = new CouponFunc();
   private myDate = new DateLocale();
+  private msgOp:MessageOp;
   constructor(
     @InjectModel(CouponBatch.name) private readonly modelCouponBatch:Model<CouponBatchDocument>,
     @InjectModel(Coupon.name) private readonly modelCoupon:Model<CouponDocument>,
@@ -46,8 +54,11 @@ export class CouponsService {
     @InjectModel(KsMember.name) private readonly modelKS:Model<KsMemberDocument>,
     @InjectModel(CouponAutoIssuedLog.name) private readonly modelCAIL:Model<CouponAutoIssuedLogDocument>,
     @InjectModel(CouponTransferLog.name) private readonly modelCTL:Model<CouponTransferLogDocument>,
+    @InjectModel(Announcement.name) private readonly modelAnn:Model<AnnouncementDocument>,
     @InjectConnection() private readonly connection:mongoose.Connection,
-  ){}
+  ){
+    this.msgOp = new MessageOp(modelAnn);
+  }
   async coupons(
     couponRequestDto: CouponRequestDto,
   ): Promise<CouponListResponseDto> {
@@ -87,7 +98,13 @@ export class CouponsService {
   async couponsCode(id: string): Promise<CouponResponseDto> {
     const cpRes = new CouponResponseDto();
     try {
-      const rlt = await this.modelCoupon.findOne({id});
+      const filter:FilterQuery<CouponDocument> = {};
+      if (UUID_V4_STYLE.test(id)) {
+        filter.id = id;
+      } else {
+        filter.toPaperNo = id;
+      }
+      const rlt = await this.modelCoupon.findOne(filter);
       if (rlt) cpRes.data = rlt;
       else {
         cpRes.ErrorCode = ErrCode.COUPON_NOT_FOUND;
@@ -196,6 +213,7 @@ export class CouponsService {
               filter: {id: coup.id},
               update: {
                 toPaperNo: coup.toPaperNo,
+                toPaperTS: Date.now(),
                 $push: { logs: log}
               },
             }
@@ -223,6 +241,105 @@ export class CouponsService {
       }
     } catch (error) {
       console.log('couponsCodeConvertToPaper error:', error);
+      comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+      comRes.error.extra = error.message;
+    }
+    return comRes;
+  }
+  async couponsTransfer(coupT:CouponTransferDto, user:Partial<IUser>) {
+    const comRes = new CommonResponseDto();
+    try {
+
+      const filter:FilterQuery<CouponDocument> = {
+        memberId: coupT.fromId,
+        id: { $in: coupT.couponIds },
+        status: COUPON_STATUS.NOT_USED,
+      }
+      const founds = await this.modelCoupon.find(filter);
+      if (founds.length === coupT.couponIds.length) {
+
+        const toMbr = await this.getMemberByIdOrNo(coupT.toId, coupT.fromId);
+        if (toMbr) {
+          let fromName = '';
+          const bulks:IbulkWriteItem<CouponDocument>[] = [];
+          founds.forEach((coupon)=> {
+            const log:Partial<ICouponTransferLog> = {};
+            fromName = coupon.memberName;
+            const memo = coupT.notes ? ` 備註:${coupT.notes}` : '';
+            log.description = `${coupon.memberName}轉讓給${toMbr.name}${memo}`;
+            log.transferDate = this.myDate.toDateTimeString();
+            log.transferDateTS = Date.now();            
+            bulks.push({
+              updateOne: {
+                filter: {id: coupon.id},
+                update: {
+                  memberId: toMbr.id,
+                  memberName: toMbr.name,
+                  updater: {
+                    modifiedByWho: user.username,
+                    modifiedAt: Date.now(),
+                    modifiedBy: user.id,
+                  },
+                  $push: { logs: log}
+                },
+              }
+            })
+          });
+          if (bulks.length > 0) {
+            const upds = await this.modelCoupon.bulkWrite(bulks as any);
+            console.log('upds:', upds);
+            const dt = this.myDate.toDateTimeString();
+            let smsPhone = '';
+            if (PHONE_STYLE.test(toMbr.name)) {
+              smsPhone = toMbr.name;
+            }
+            if (smsPhone) {
+              const phone = smsPhone.indexOf('#')>0 ? smsPhone.split('#')[0] : smsPhone;
+              //const msg = `林口高爾夫球場通知，${mbr.name}剛剛發送了${bulks.length}張優惠券給你，請查看。`;
+              const msg = lang.zhTW.CouponTransferTo.replace('{from}', fromName).replace('{number}', bulks.length+'');
+              const sms = await sendSMSCode(phone, msg);
+              console.log('sms:', sms);
+            } else {
+              const msgApp = lang.zhTW.CouponTransforToAppUser.replace('{from}', fromName).replace('{datetime}', dt).replace('{number}', bulks.length+'');
+              this.msgOp.createPersonalMsg(coupT.toId, msgApp);
+              //console.log('transfer to', ans1);
+            }
+            const msgSelf = lang.zhTW.CouponTransferToForSelf.replace('{datetime}', dt).replace('{number}', bulks.length+'').replace('{to}', toMbr.name);
+            this.msgOp.createPersonalMsg(coupT.fromId, msgSelf);
+            const ans = await this.msgOp.send();
+            console.log('transfer msg self:', ans);
+          }          
+        } else {
+          comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
+        }
+      } else {
+        comRes.ErrorCode = ErrCode.COUPON_NOT_FOUND;
+      }
+    } catch (error) {
+      console.log('couponsTransfer error:', error);
+      comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+      comRes.error.extra = error.message;
+    }
+    return comRes;
+  }
+  async couponsUsedList(dates:DateRangeQueryReqDto) {
+    const comRes = new CouponListResponseDto();
+    try {
+      dates.endDate = this.myDate.AddDate(dates.endDate);
+      const st = this.myDate.toTS(dates.startDate);
+      const ed = this.myDate.toTS(dates.endDate);
+      const filter:FilterQuery<CouponDocument> = {
+        status: COUPON_STATUS.USED,
+        $and: [
+          {'collector.modifiedAt': { $gt: st } },
+          {'collector.modifiedAt': { $lt: ed } },
+        ]
+      };
+      console.log(filter, filter.$and);
+      const list = await this.modelCoupon.find(filter);
+      comRes.data = list;
+    } catch (error) {
+      console.log('couponsUsedList error:', error);
       comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
       comRes.error.extra = error.message;
     }
@@ -723,4 +840,63 @@ export class CouponsService {
     }
     return cplogRes;
   }
+  private async getMemberByIdOrNo(idno:string, fromid:string) {
+    if (KS_MEMBER_STYLE_FOR_SEARCH.test(idno)) {
+      return this.getKsMebmerByOn(idno);
+    } else {
+      return this.getMemberById(idno, fromid);
+    }
+  }
+  private async getMemberById(id:string, fromid:string):Promise<Partial<IMember>| false> {
+    const filter:FilterQuery<MemberDcoument> = {};
+    let isPhoneSearch = false;
+    if (PHONE_STYLE.test(id)) {
+      filter.phone = id;
+      isPhoneSearch = true;
+    } else {
+      filter.id = id;
+    }
+    const f = await this.modelMember.findOne(filter);
+    if (f) {
+      return {
+        id: f.id,
+        name: f.name ? f.name : f.phone,
+        systemId: f.systemId,
+      }
+    } else if (isPhoneSearch) {
+      const jDoeId = await this.createJDoeMember(id, fromid);
+      if (jDoeId) {
+        return  {
+          id: jDoeId,
+          name: id,
+          systemId: '',
+        } 
+      }
+    }
+    return false;
+  }
+  private async getKsMebmerByOn(no:string):Promise<Partial<IMember>| false> {
+    const f = await this.modelKS.findOne({no});
+    if (f) {
+      return {
+        id: f.no,
+        name: f.name,
+        systemId: f.no,
+      }
+    }
+    return false;
+  }
+  private async createJDoeMember(phone:string, mbrId:string){
+    const J_Doe:Partial<IMember> = {
+      id: uuidv1(),
+      phone,
+      //isLocked: true,
+      isCouponTriggered: true,
+      notes: `會員(ID){${mbrId}}轉贈優惠券,而新增之會員`, 
+    }
+    const newMbr = await this.modelMember.create(J_Doe);
+    console.log('createJDoeMember', newMbr);
+    if (newMbr) return newMbr.id;
+    return false;
+  }  
 }

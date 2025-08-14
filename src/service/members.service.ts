@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ERROR_TYPE, MEMBER_LEVEL } from '../utils/enum';
 import { ALL_CHINESE, ALL_DIGITAL, ERROR_MESSAGE, INCLUDE_CHINESE, INCLUDE_ENGLISH, KS_COM_SHAREHOLDER_STYLE, KS_DEPENDENTS_STYLE_FOR_SEARCH, KS_HUM_SHAREHOLDER_STYLE, KS_MEMBER_STYLE_FOR_SEARCH, KS_SHAREHOLDER_STYLE_FOR_SEARCH, PHONE_STYLE_FOR_SEARCH, STATUS_CODE } from '../utils/constant';
 import { MembersDirectorStatusRequestDto } from '../dto/members/members-director-status-request.dto';
@@ -30,6 +30,8 @@ import { CreditRecord, CreditRecordDocument } from '../dto/schemas/credit-record
 import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
 import { CreditRecordRes } from '../dto/teams/credit-record-response';
 import { DateLocale } from '../classes/common/date-locale';
+import { InvitationCode, InvitationCodeDocument } from '../dto/schemas/invitation-code.schema';
+import { InvitationCodeRes } from '../dto/members/invitation-codes-response';
 
 @Injectable()
 export class MembersService {
@@ -41,6 +43,7 @@ export class MembersService {
     @InjectModel(MemberTransferLog.name) private modelMTL:Model<MemberTransferLogDocument>,
     @InjectModel(Coupon.name) private modelCoupon:Model<CouponDocument>,
     @InjectModel(CreditRecord.name) private readonly modelCreditRecord:Model<CreditRecordDocument>,
+    @InjectModel(InvitationCode.name) private readonly modelIC:Model<InvitationCodeDocument>,
     @InjectConnection() private readonly connection:mongoose.Connection,
   ){}
   async members(search: string, type: string = ''): Promise<MembersResponseDto> {
@@ -513,5 +516,22 @@ async getMembersTransferLog(req:MemberTransferLogDto):Promise<MemberTransferLogR
             comRes.error.extra = error.message;
         }
         return comRes;
-    }    
+    }
+    async getInvitationCodes() {
+      const comRes = new InvitationCodeRes();
+      try {
+        const filter:FilterQuery<InvitationCodeDocument> = {
+          $or: [
+            {isTransferred: false},
+            {isTransferred: { $exists: false}}
+          ],
+        }
+        comRes.data = (await this.modelIC.find(filter, 'no name code isCodeUsed')) as any;
+      } catch (error) {
+        console.log('getInvitationCodes error:', error);
+        comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+        comRes.error.extra = error.message;
+      }
+      return comRes;
+    }
 }

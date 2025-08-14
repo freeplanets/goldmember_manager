@@ -26,10 +26,13 @@ export const FuncWithTryCatch: tryfunc<any> = async (f: asyncfunc, ...arp:any) =
 export const FuncWithTryCatchNew: funcReturnObj<any> = async (obj: any, functionName:string, ...arp:any) => {
     const comRes:ICommonResponse<any> = new CommonResponseDto()
     try {
-        const { data, error }  = await obj[functionName](...arp);
+        const { data, error, extra }  = await obj[functionName](...arp);
         console.log('data:', data, 'error:', error);
         if (error) {
             comRes.ErrorCode = error;
+                        if (extra) {
+                comRes.error.extra = extra;
+            }
         } else {
             // if (data.id) 
             comRes.data = data;

@@ -10,7 +10,7 @@ import { IActivityParticipants, IActMemberInfo, ICreditRecord, ITeam, ITeamActiv
 import { GetTeamsResponse } from '../dto/teams/get-teams-response';
 import { TeamDetailResponse } from '../dto/teams/team-detail-response';
 import { Upload2S3 } from '../utils/upload-2-s3';
-import { TeamMemberPosition } from '../utils/enum';
+import { COLLECTION_REF, TeamMemberPosition, TeamMemberStatus } from '../utils/enum';
 import { Member, MemberDcoument } from '../dto/schemas/member.schema';
 import { IUser } from '../dto/interface/user.if';
 import { CreditRecord, CreditRecordDocument } from '../dto/schemas/credit-record.schema';
@@ -59,11 +59,11 @@ export class TeamsService {
                 .find(filter, TEAM_DETAIL_FIELDS)
                 .populate({
                     path: 'members',
-                    // select: 'name role joinDate',
-                    // populate: {
-                    //     path: 'member',
-                    //     select: 'id name phone membershipType systemId',
-                    // },
+                    select: 'role joinDate handicap status memberInfo memberFrom',
+                    populate: {
+                        path: 'memberInfo',
+                        select: 'id no name pic handicap phone',
+                    },
                 })
                 // .populate({
                 //     path: 'creditHistory',
@@ -89,13 +89,13 @@ export class TeamsService {
                 .findOne({ id: teamId }, TEAM_DETAIL_FIELDS)
                 .populate({
                     path:'members', 
-                    // select: 'name joinDate role memberFrom',
-                    // populate: {
-                    //     path: 'member',
-                    //     select: 'id no name phone membershipType systemId',
-                    //     localField: 'name',
-                    //     foreignField: 'member',
-                    // }
+                    select: 'role joinDate handicap status memberInfo memberFrom',
+                    populate: {
+                        path: 'memberInfo',
+                        select: 'id no name pic handicap phone',
+                        //localField: 'name',
+                        //foreignField: 'member',
+                    }
                 })
                 // .populate({
                 //     path: 'creditHistory',
@@ -693,7 +693,7 @@ export class TeamsService {
         return comRes;
     }
     async getMember<T extends IHasId>(obj:T){
-        let tmbr:ITeamMember={};
+        let tmbr:Partial<ITeamMember>={};
         if (KS_MEMBER_STYLE_FOR_SEARCH.test(obj.id)) {
             tmbr = await this.getKsMember(obj.id);
         } else {
@@ -701,9 +701,9 @@ export class TeamsService {
         }
         tmbr.joinDate = this.myDate.toDateString();
         tmbr.isActive = true;
-        if (obj.phone) {
-            tmbr.phone = obj.phone;
-        }
+        // if (obj.phone) {
+        //     tmbr.phone = obj.phone;
+        // }
         if (obj.role) {
             tmbr.role = obj.role;
         }
@@ -711,11 +711,13 @@ export class TeamsService {
         return tmbr;        
     }
     async getKsMember(no:string) {
-        let tmbr:ITeamMember={};
+        let tmbr:Partial<ITeamMember>={};
         try {
             const obj = await this.modelKs.findOne({no});
-            tmbr.id = obj.no;
-            tmbr.name = obj.name;
+            //tmbr.id = obj.no;
+            //tmbr.name = obj.name;
+            tmbr.memberInfo = obj._id;
+            tmbr.memberFrom = COLLECTION_REF.KsMember;
             // tmbr.phone = obj.phone;
             tmbr.handicap = 0;
             
@@ -725,27 +727,27 @@ export class TeamsService {
         return tmbr;
     }
     async getAppMember<T extends IHasId>(obj:T){
-        let tmbr:ITeamMember={};
+        let tmbr:Partial<ITeamMember>={};
         try {
             const mbr = await this.modelMember.findOne(
                 {id: obj.id}, 
-                'id name phone membershipType systemId handicap'
+                'id'
             );
             console.log('getAppMember:', obj, mbr);
             if (mbr) {
                  tmbr = {
                     id:	mbr.id,
-                    name: mbr.name,
-                    phone: mbr.phone,
-                    membershipType: mbr.membershipType,
-                    systemId: mbr.systemId,
+                    memberInfo: mbr._id,
+                    memberFrom: COLLECTION_REF.Member,
+                    // name: mbr.name,
+                    // phone: mbr.phone,
+                    // membershipType: mbr.membershipType,
+                    // systemId: mbr.systemId,
                     handicap: mbr.handicap,
+                    //status: TeamMemberStatus.CONFIRMED,
                 }
             } else {
-                tmbr = {
-                    name: obj.name,
-                    phone: obj.phone,
-                }
+                tmbr = {}
             }
             return tmbr;
         } catch (err) {
@@ -755,18 +757,18 @@ export class TeamsService {
     }
     teamPosCheck(info:TeamCreateRequestDto) {
         const tmPoss:I_TMPositon[] = [];
-        if (info.leader) {
-            tmPoss.push({
-                T: info.leader,
-                Pos: TeamMemberPosition.LEADER,
-            })
-        }
-        if(info.manager) {
-            tmPoss.push({
-                T: info.manager,
-                Pos: TeamMemberPosition.MANAGER,
-            })            
-        }
+        // if (info.leader) {
+        //     tmPoss.push({
+        //         T: info.leader,
+        //         Pos: TeamMemberPosition.LEADER,
+        //     })
+        // }
+        // if(info.manager) {
+        //     tmPoss.push({
+        //         T: info.manager,
+        //         Pos: TeamMemberPosition.MANAGER,
+        //     })            
+        // }
         if (info.contacter) {
             tmPoss.push({
                 T: info.contacter,
@@ -823,5 +825,33 @@ export class TeamsService {
             comRes.error.extra = error.message;
         }
         return comRes;        
+    }
+    async reformTM() {
+        const tmrs = await this.modelTeamMember.find({}, 'id');
+        const bulks:IbulkWriteItem<TeamMemberDocument>[] = [];
+        for(let i=0,n=tmrs.length;i < n;i+=1) {
+            const tmr = tmrs[i];
+            let ans:any;
+            let refPath='';
+            if (KS_MEMBER_STYLE_FOR_SEARCH.test(tmr.id)) {
+                ans = await this.modelKs.findOne({no: tmr.id}, 'no');
+                refPath = COLLECTION_REF.KsMember;
+            } else {
+                ans = await this.modelMember.findOne({id: tmr.id}, 'id');
+                refPath = COLLECTION_REF.Member;
+            }
+            console.log('reformTM', tmr.id, ans);
+            if (!ans) continue;
+            bulks.push({
+                updateMany: {
+                    filter: { id: tmr.id },
+                    update: { memberInfo: ans._id, memberFrom: refPath },
+                }
+            });
+        }
+        if (bulks.length > 0) {
+            const upd = await this.modelTeamMember.bulkWrite(bulks as any);
+            console.log(upd);
+        }
     }
 }

@@ -41,6 +41,7 @@ export interface ICoupon {
     originalOwner?: string;
     notAppMember?: boolean;
     toPaperNo: string;
+    toPaperTS: number;
     updater: IModifiedBy;
     collector: IModifiedBy;
     logs:Partial<ICouponTransferLog>[];

@@ -19,6 +19,8 @@ import { CouponTransferLogRes } from '../dto/coupons/coupon-transfer-log-respons
 import { CouponBatchModifyDto } from '../dto/coupons/coupon-batch-modify.dto';
 import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
 import { CouponUseReqDto } from '../dto/coupons/coupon-use-request.dto';
+import { CouponTransferDto } from '../dto/coupons/coupon-transfer.dto';
+import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
 
 @Controller('couponbatches')
 @ApiTags('couponbatches')
@@ -103,6 +105,41 @@ export class CouponsController {
     return res.status(HttpStatus.OK).json(comRes);
   }
 
+  @ApiOperation({
+    summary: '轉移優惠券',
+    description: '',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CommonResponseDto,
+  })
+  @Post('coupon/transfer')
+  async couponsTransfer(
+    @Body() coupTransfer:CouponTransferDto,
+    @Req() req: any,
+    @Res() res: Response,
+  ) {
+    const comRes = await this.couponsService.couponsTransfer(coupTransfer, req.user);
+    return res.status(HttpStatus.OK).json(comRes);
+  }
+
+  @ApiOperation({
+    summary: '依日期查詢優惠劵使用情形',
+    description: '',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CommonResponseDto,
+  })
+  @Post('coupon/used_list')
+  async couponsUsedList(
+    @Body() dates:DateRangeQueryReqDto,
+    @Res() res: Response,
+  ) {
+    const comRes = await this.couponsService.couponsUsedList(dates);
+    return res.status(HttpStatus.OK).json(comRes);
+  }  
+  
   @ApiOperation({
     summary: '取得優惠券批次列表',
     description: '',
