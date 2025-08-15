@@ -10,7 +10,7 @@ export class MessageOp {
     private myDate = new DateLocale();
     private bluks:IbulkWriteItem<AnnouncementDocument>[]=[]
     constructor(private db:Model<AnnouncementDocument>){}
-    createPersonalMsg(targetId:string, msg:string) {
+    createPersonalMsg(targetId:string, title: string,msg:string) {
         const cont:Partial<IAnnouncement> = {
             id: uuidv1(),
             //targetId,
@@ -19,6 +19,7 @@ export class MessageOp {
             ],
             publishDate: this.myDate.toDateString(),
             expiryDate: this.myDate.AddMonth(3),
+            title,
             content: msg,
             type: MessageType.INDIVIDUAL,
             isPublished: true,
@@ -41,7 +42,9 @@ export class MessageOp {
         if (this.bluks.length > 0) {
             let opt = {}
             if (session) opt = {session}
-            return this.db.bulkWrite(this.bluks as any, opt);
+            const sends =  await this.db.bulkWrite(this.bluks as any, opt);
+            this.bluks = [];
+            return sends;
         } else {
             return true;
         }

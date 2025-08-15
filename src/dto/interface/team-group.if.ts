@@ -42,9 +42,9 @@ export interface ITeamMember {
     // from member table
     memberInfo: string;
     memberFrom?: COLLECTION_REF;  // 參照 Member or KsMember
-    id?:	string; // 會員 ID
+    //id?:	string; // 會員 ID
     // name?: string; // 會員姓名
-    // phone?: string; // 電話
+    phone?: string; // 電話
     // membershipType?: MEMBER_LEVEL; //會員類型
     //systemId?: string;   // 國興ID
     handicap?: number;  // for first time

@@ -214,14 +214,21 @@ export class TeamsService {
             if (teamInfo.description) updTeam.description = teamInfo.description;
             if (teamInfo.status) updTeam.status = teamInfo.status;
             if (teamInfo.contacter) updTeam.contacter = teamInfo.contacter;
-            const team = await this.modelTeam.findOne({id: teamId}).populate('members');
+            const team = await this.modelTeam.findOne({id: teamId}).populate({
+                    path: 'members',
+                    select: 'role joinDate handicap status memberInfo memberFrom',
+                    populate: {
+                        path: 'memberInfo',
+                        select: 'id no name pic handicap',
+                    },
+                });
             if (team) {
                 const tmPoss = this.teamPosCheck(teamInfo);
                 for(let i=0, n=tmPoss.length;i<n;i++) {
                     const pmbr = tmPoss[i].T;
                     const pos = tmPoss[i].Pos;
                     // 修改成員是否已在會員表列中
-                    const f = team.members.find((mbr) => mbr.id === pmbr.id);
+                    const f = team.members.find((mbr) => (mbr.memberInfo as any).id === pmbr.id);
                     if (f) {
                         // 如果職務不同，則修改職務
                         if (f.role !== pos) {
@@ -250,7 +257,7 @@ export class TeamsService {
                     // 如果有相同職務的其他會員則改為一般會員
                     const fPos = team.members.find((mbr) => mbr.role === pos);
                     if (fPos) {
-                        if (fPos.id !== pmbr.id) {
+                        if ((fPos.memberInfo as any).id !== pmbr.id) {
                             updTMData.push({
                                 updateOne: {
                                     filter: { _id: fPos._id, role: pos },
@@ -339,7 +346,13 @@ export class TeamsService {
                 return comRes;
             }
             console.log('team:', team);
-            const teamMbr = await this.modelTeamMember.findOne({teamId, id: memberInfo.memberId});
+            const obj:IHasId = {
+                id: memberInfo.memberId,
+                phone: memberInfo.phone,
+                role: memberInfo.role,
+            }
+            const mbr = await this.getMember(obj);
+            const teamMbr = await this.modelTeamMember.findOne({teamId, memberInfo: mbr.memberInfo});
             if (teamMbr) {
                 if (teamMbr.role === memberInfo.role) {
                     comRes.ErrorCode = ErrCode.TEAM_MEMBER_ALREADY_EXISTS;
@@ -347,17 +360,11 @@ export class TeamsService {
                 }
                 bulkW.push({
                     updateOne: {
-                        filter: { teamId, id: memberInfo.memberId},
+                        filter: { teamId, memberInfo: mbr.memberInfo},
                         update: { role: memberInfo.role },
                     }
                 });
             } else {
-                const obj:IHasId = {
-                    id: memberInfo.memberId,
-                    phone: memberInfo.phone,
-                    role: memberInfo.role,
-                }
-                const mbr = await this.getMember(obj);
                 mbr.teamId = teamId;
                 console.log("mbr:", mbr);
                 bulkW.push({
@@ -450,9 +457,14 @@ export class TeamsService {
             //     return comRes;
             // }
             // Check if the member exists in the team
+            const obj:IHasId = {
+                id: memberId,
+            };
+            const mbr = await this.getMember(obj);
             const filter:FilterQuery<TeamMemberDocument> = {
                 teamId,
-                id: memberId,
+                //id: memberId,
+                memberInfo: mbr.memberInfo,
             }
             const existingMember = await this.modelTeamMember.findOne(filter);
             console.log("existingMember:", filter, existingMember);
@@ -470,7 +482,7 @@ export class TeamsService {
             );
             console.log('upd1:', upd);
             upd = await this.modelTeamMember.updateOne(
-                {teamId, id: memberId},
+                {teamId, memberInfo: mbr.memberInfo},
                 memberInfo,
                 {session},
             )
@@ -514,7 +526,7 @@ export class TeamsService {
                 return comRes;
             }
             // Check if the member exists in the team
-            const existingMember = await this.modelTeamMember.findOne({ teamId, id: memberId });
+            const existingMember = await this.modelTeamMember.findOne({ teamId, memberInfo: mbr._id });
             if (!existingMember) {
                 comRes.ErrorCode = ErrCode.MEMBER_NOT_FOUND;
                 return comRes;
@@ -522,7 +534,7 @@ export class TeamsService {
             // Delete the member from the team
             const session = await this.connection.startSession();
             session.startTransaction();
-            const deleteResult = await this.modelTeamMember.deleteOne({ teamId, id: memberId }, { session });
+            const deleteResult = await this.modelTeamMember.deleteOne({ teamId, memberInfo: mbr._id }, { session });
             if (deleteResult.deletedCount === 0) {
                 comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
             } else {
@@ -701,9 +713,10 @@ export class TeamsService {
         }
         tmbr.joinDate = this.myDate.toDateString();
         tmbr.isActive = true;
-        // if (obj.phone) {
-        //     tmbr.phone = obj.phone;
-        // }
+        tmbr.status = TeamMemberStatus.CONFIRMED;
+        if (obj.phone) {
+            tmbr.phone = obj.phone;
+        }
         if (obj.role) {
             tmbr.role = obj.role;
         }
@@ -736,7 +749,7 @@ export class TeamsService {
             console.log('getAppMember:', obj, mbr);
             if (mbr) {
                  tmbr = {
-                    id:	mbr.id,
+                    //id:	mbr.id,
                     memberInfo: mbr._id,
                     memberFrom: COLLECTION_REF.Member,
                     // name: mbr.name,

@@ -32,8 +32,8 @@ export class TeamMember implements Partial<ITeamMember> {
     // @Prop()
     // name?: string;
 
-    // @Prop()
-    // phone?: string;
+    @Prop()
+    phone?: string;
 
     // @Prop()
     // membershipType?: MEMBER_LEVEL;
@@ -62,6 +62,6 @@ export class TeamMember implements Partial<ITeamMember> {
 export const TeamMemberSchema = SchemaFactory.createForClass(TeamMember);
 
 TeamMemberSchema.index(
-    { teamId: 1, id: 1 },
+    { teamId: 1, memberInfo: 1 },
     { unique: true },
 );

@@ -293,6 +293,7 @@ export class CouponsService {
             if (PHONE_STYLE.test(toMbr.name)) {
               smsPhone = toMbr.name;
             }
+            const title = '優惠券轉贈通知';
             if (smsPhone) {
               const phone = smsPhone.indexOf('#')>0 ? smsPhone.split('#')[0] : smsPhone;
               //const msg = `林口高爾夫球場通知，${mbr.name}剛剛發送了${bulks.length}張優惠券給你，請查看。`;
@@ -301,11 +302,11 @@ export class CouponsService {
               console.log('sms:', sms);
             } else {
               const msgApp = lang.zhTW.CouponTransforToAppUser.replace('{from}', fromName).replace('{datetime}', dt).replace('{number}', bulks.length+'');
-              this.msgOp.createPersonalMsg(coupT.toId, msgApp);
+              this.msgOp.createPersonalMsg(coupT.toId, title, msgApp);
               //console.log('transfer to', ans1);
             }
             const msgSelf = lang.zhTW.CouponTransferToForSelf.replace('{datetime}', dt).replace('{number}', bulks.length+'').replace('{to}', toMbr.name);
-            this.msgOp.createPersonalMsg(coupT.fromId, msgSelf);
+            this.msgOp.createPersonalMsg(coupT.fromId, title, msgSelf);
             const ans = await this.msgOp.send();
             console.log('transfer msg self:', ans);
           }          
