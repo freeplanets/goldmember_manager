@@ -2,7 +2,7 @@ import { Body, Controller, Get, HttpStatus, Param, Post, Put, Query, Req, Res, U
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ReservationsResponse } from '../dto/reservations/reservations-response';
 import { ReservationsService } from '../service/reservations.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ReservationsQueryRequestDto } from '../dto/reservations/reservations-query-request.dto';
 import { ReservationCreateRequestDto } from '../dto/reservations/reservation-create-request.dto';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
@@ -11,6 +11,7 @@ import { ReservationResponse } from '../dto/reservations/reservation-response';
 import { ReservationModifyRequestDto } from '../dto/reservations/reservation-modify-request.dto';
 import { ReservationStatusRequestDto } from '../dto/reservations/reservation-status.request.dto';
 import { ParticipantsResponse } from '../dto/reservations/participants-response';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('reservations')
 @ApiTags('reservations')
@@ -30,9 +31,11 @@ export class ReservationsController {
     @Get()
     async getReservations(
         @Query() qryParam: ReservationsQueryRequestDto,
+        @Req() req:Request,
         @Res() res:Response,
     ){
         const result = await this.rsvService.getReservations(qryParam);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
 
     }
@@ -52,6 +55,7 @@ export class ReservationsController {
         @Res() res:Response,
     ) {
         const result = await this.rsvService.createReservation(createResv, req.user);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -67,9 +71,11 @@ export class ReservationsController {
     @Get(':id')
     async getReservationById(
         @Param('id') id:string,
+        @Req() req:Request,
         @Res() res:Response,
     ) {
         const result = await this.rsvService.getReservationById(id);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -90,6 +96,7 @@ export class ReservationsController {
         @Res() res:Response,
     ) {
         const result =  await this.rsvService.modifyReservation(id, mfyResv, req.user);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -110,6 +117,7 @@ export class ReservationsController {
         @Res() res:Response,
     ) {
         const result = await this.rsvService.modifyReservationStatus(id, stsObj, req.user);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -126,9 +134,11 @@ export class ReservationsController {
     @Get('participants/:id')
     async getParticipants(
         @Param('id') id: string,
+        @Req() req:Request,
         @Res() res:Response,
     ) {
         const result = await this.rsvService.getParticipants(id);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
 }

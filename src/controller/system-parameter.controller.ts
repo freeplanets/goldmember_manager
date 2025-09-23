@@ -1,18 +1,23 @@
-import { Body, Controller, Get, HttpStatus, Param, Put, Res, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, HttpStatus, Param, Post, Put, Req, Res, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiExcludeEndpoint, ApiOperation, ApiParam, ApiProcessingResponse, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SystemParameterService } from '../service/system-parameter.service';
-import { Response } from 'express';
+import { request, Request, Response } from 'express';
 import { SettingsResponse } from '../dto/settings/settings.response';
 import { ParamTypes } from '../utils/settings/settings.enum';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { TimeslotsResponse } from '../dto/settings/timeslots-response';
 import { TimeslotsDto } from '../dto/settings/timeslots.dto';
 import { TokenGuard } from '../utils/tokens/token-guard';
+import { HolidaysRes } from '../dto/settings/holidays-response';
+import { HolidayReq } from '../dto/settings/holiday-request.dto';
+import { ParameterPutReq } from '../dto/settings/parameter-put-request.dto';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('settings')
 @ApiTags('settings')
 @UseGuards(TokenGuard)
 @ApiBearerAuth()
+//@UsePipes(new ValidationPipe({whitelist: false}))
 export class SystemParameterController {
     constructor(private readonly spService:SystemParameterService){}
 
@@ -34,13 +39,15 @@ export class SystemParameterController {
         description: '成功或失敗',
         type: SettingsResponse
     })
-    @ApiParam({ name: 'id', description: '參數類別', required: false, enum: ParamTypes})
+    @ApiParam({ name: 'id', description: '參數類別', required: false})
     @Get('parameters/:id')
     async getParameters(
-        @Param('id') key:ParamTypes,
+        @Param('id') key:string,
+        @Req() req:Request,
         @Res() res:Response,
     ){
         const result = await this.spService.getParameters(key);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
     
@@ -52,21 +59,16 @@ export class SystemParameterController {
         description: '成功或失敗',
         type: CommonResponseDto,      
     })
-    @ApiParam({ name: 'id', required: true, description: '參數類別', enum: ParamTypes})
-    @ApiBody({ 
-        description: 'value項下值,項目須相符',
-        schema: {
-            type: 'Object',
-            example: {notification_hours: '72'},
-        } 
-    })
+    @ApiParam({ name: 'id', required: true, description: '參數類別'})
     @Put('parameters/:id')
     async modifyParameters(
-        @Param('id') id:ParamTypes,
-        @Body() value: Object,
+        @Param('id') id:string,
+        @Body() value: ParameterPutReq,
+        @Req() req:Request,
         @Res() res:Response,
     ){
         const result = await this.spService.modifyParameters(id, value);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -79,8 +81,12 @@ export class SystemParameterController {
         type: TimeslotsResponse,
     })
     @Get('reservation-limits')
-    async getParamReservation(@Res() res:Response){
+    async getParamReservation(
+        @Req() req:Request,
+        @Res() res:Response
+    ){
         const result = await this.spService.getParamReservation();
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
     }
 
@@ -100,9 +106,30 @@ export class SystemParameterController {
     @Put('reservation-limits')
     async modifyParamReservation(
         @Body() timeslots:TimeslotsDto[],
+        @Req() req:Request,
         @Res() res:Response,
     ) {
         const result = await this.spService.modifyParamReservation(timeslots);
+        AddTraceIdToResponse(result, req);
         return res.status(HttpStatus.OK).json(result);
+    }
+
+    @ApiOperation({
+        summary: '取得假日清單',
+        description: '依年度及月份取得假日清單',
+    })
+    @ApiResponse({
+        description: '成功或失敗',
+        type: HolidaysRes,
+    })
+    @Post('holidays')
+    async holidays(
+        @Body() hdy:HolidayReq,
+        @Req() req:Request,
+        @Res() res:Response,
+    ) {
+        const rlt = await this.spService.getHolidays(hdy.year, hdy.month);
+        AddTraceIdToResponse(rlt, req);
+        return res.status(HttpStatus.OK).json(rlt);
     }
 }

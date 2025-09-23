@@ -5,6 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SystemParameter, SystemParameterSchema } from '../dto/schemas/system-parameter.schema';
 import { JwtModule } from '@nestjs/jwt';
 import { LoginToken, LoginTokenSchema } from '../dto/schemas/login-token.schema';
+import { Holiday, HolidaySchema } from '../dto/schemas/holiday.schema';
 
 
 @Module({
@@ -13,6 +14,7 @@ import { LoginToken, LoginTokenSchema } from '../dto/schemas/login-token.schema'
         MongooseModule.forFeature([
             { name: SystemParameter.name, schema: SystemParameterSchema },
             { name: LoginToken.name, schema: LoginTokenSchema },
+            { name: Holiday.name, schema:HolidaySchema},
         ]),
     ],
     controllers: [SystemParameterController],

@@ -36,7 +36,9 @@ export class User implements IUser {
     @Prop()
     phone: string;
 
-    @Prop()
+    @Prop({
+        default: false,
+    })
     isActive: boolean;
 
     @Prop({

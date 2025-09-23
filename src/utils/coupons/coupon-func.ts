@@ -8,7 +8,6 @@ import { CouponDocument } from '../../dto/schemas/coupon.schema';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
 import { IMember } from '../../dto/interface/member.if';
 import { CouponBatchDocument } from '../../dto/schemas/coupon-batch.schema';
-import { U } from '@faker-js/faker/dist/airline-BUL6NtOJ';
 
 export class CouponFunc {
     private myFilter = new MainFilters();

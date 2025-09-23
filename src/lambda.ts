@@ -10,7 +10,7 @@ import { createServer, proxy, Response } from "aws-serverless-express";
 import { Context, Handler } from "aws-lambda";
 // import { GoogleRecaptchaFilter } from "./utils/google-recaptcha-filter";
 import { SecuritySchemeObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
-import { INestApplication, ValidationPipe, ValidationPipeOptions } from "@nestjs/common";
+import { ValidationPipe, ValidationPipeOptions } from "@nestjs/common";
 import { ValidationException } from "./utils/validate/validation-exception";
 import { GlobalDataTransPipe } from "./utils/pipes/global-date-trans-pipe";
 
@@ -75,6 +75,7 @@ export async function bootstrapServer():Promise<Server> {
     // }
     // app.use(session(sessionOpts));
     const vopt:ValidationPipeOptions = {
+        //whitelist: true,
         exceptionFactory: ValidationException,
     }
     app.useGlobalPipes(new GlobalDataTransPipe(), new ValidationPipe(vopt));

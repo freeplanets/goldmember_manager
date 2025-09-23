@@ -1,11 +1,12 @@
-import { ParamTypes } from "./settings.enum";
-import { IGrading, INofication, IParameter, ITimeslotsValue, IValueScore } from "./settings.if";
+import { AnyObject } from '../../dto/interface/common.if';
+import { ParamTypes } from './settings.enum';
+import { IGrading, INofication, IParameter, ITimeslotsValue, IValueScore } from './settings.if';
 
 export interface SystemParameter {
   id: string;
   key: string;
   value: object;
-  description: string;
+  description?: string;
 }
 
 const descriptons = {
@@ -24,7 +25,7 @@ const descriptons = {
   
 }
 
-export const systemParameters: IParameter<IValueScore | INofication | IGrading | ITimeslotsValue>[] = [
+export const systemParameters: IParameter<IValueScore | INofication | IGrading | ITimeslotsValue| AnyObject>[] = [
   // App 相關設定
   {
     id: ParamTypes.APP_SETTINGS, //'app_settings',

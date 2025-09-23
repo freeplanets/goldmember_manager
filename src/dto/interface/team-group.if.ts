@@ -97,10 +97,12 @@ export interface ITeamActivity {
     location: string;   //地點
     registrationStart: string;  // 報名開始日期
     registrationEnd: string;    //報名結束日期
-    participants: IActivityParticipants[];  //number;   // 參與人數
+    //participants: IActivityParticipants[];  //number;   // 參與人數
+    participants: ITeamMember[];
     maxParticipants: number; //最大參與人數
     status:	TeamActivityStatus; //狀態
-    creator: IModifiedBy; //發起人 
+    creator: IModifiedBy; //發起人
+    updater: IModifiedBy; //修改人 
 }
 
 export interface ITeam {

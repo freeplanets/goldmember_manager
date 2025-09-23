@@ -12,7 +12,8 @@ import { AnyFilesInterceptor } from '@nestjs/platform-express';
 import { AnnouncementFilterDto } from '../dto/announcements/announcement-filter.dto';
 import { AnnouncementsFilterResponseDto } from '../dto/announcements/announcements-filter-response.dto';
 import { AnnouncementModifyDto } from '../dto/announcements/announcement-modify.dto';
-import { AnnouncePublishRequest } from '../dto/announcements/announce-publish-request';
+import { AddTraceIdToResponse } from '../utils/constant';
+import { FileNamePipe } from '../utils/pipes/file-name';
 
 @Controller('announcements')
 @ApiTags('announcements')
@@ -31,9 +32,11 @@ export class AnnouncementsController {
   @Post('membercount')
   async getMembersCount(
     @Body() filters:AnnouncementFilterDto,
+    @Req() req:Request,
     @Res() res:Response,
   ) {
     const afRes = await this.announcementsService.getMemberCountByFilter(filters);
+    AddTraceIdToResponse(afRes, req);
     return res.status(HttpStatus.OK).json(afRes);
   }
 
@@ -52,6 +55,7 @@ export class AnnouncementsController {
     @Res() res: Response,
   ) {
     const annRes = await this.announcementsService.announcementsGet(announceSearch);
+    AddTraceIdToResponse(annRes, req);
     return res.status(HttpStatus.OK).json(annRes);
   }
 
@@ -72,7 +76,7 @@ export class AnnouncementsController {
   @Post('')
   async announcementsPost(
     @Body() announcementCreateDto: AnnouncementCreateDto,
-    @UploadedFiles() files: Array<Express.Multer.File>,
+    @UploadedFiles(FileNamePipe) files: Array<Express.Multer.File>,
     @Req() req: any,
     @Res() res: Response,
   ) {
@@ -82,6 +86,7 @@ export class AnnouncementsController {
       announcementCreateDto,
       files,
     );
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -96,9 +101,11 @@ export class AnnouncementsController {
   @Get('/:id')
   async announcementsIdGet(
     @Param('id') id: string,
+    @Req() req:Request,
     @Res() res: Response,
   ) {
     const annRes = await this.announcementsService.announcementsIdGet(id);
+    AddTraceIdToResponse(annRes, req);
     return res.status(HttpStatus.OK).json(annRes);
   }
 
@@ -116,7 +123,7 @@ export class AnnouncementsController {
   async announcementsIdPut(
     @Param('id') id: string,
     @Body() announceUpdateDto: AnnouncementModifyDto,
-    @UploadedFiles() files: Array<Express.Multer.File>,
+    @UploadedFiles(FileNamePipe) files: Array<Express.Multer.File>,
     @Req() req: any,
     @Res() res: Response,
   ) {
@@ -127,6 +134,7 @@ export class AnnouncementsController {
         announceUpdateDto,
         files,
       );
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -145,6 +153,7 @@ export class AnnouncementsController {
     @Res() res: Response,
   ) {
     const comRes = await this.announcementsService.announcementsIdPublish(id, req.user);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
   
@@ -163,6 +172,7 @@ export class AnnouncementsController {
     @Res() res: Response,
   ) {
     const comRes  = await this.announcementsService.announcementsIdUnpublish(id, req.user);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 

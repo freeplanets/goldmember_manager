@@ -117,3 +117,8 @@ functions:
     timeout: 60
     events:
       - schedule: "rate(30 days)"
+  # DumpDbToS3:
+  #   handler: src/utils/database/dump-to-s3.DumpToS3
+  #   timeout: 300
+  #   events:
+  #     - schedule: "rate(5 minutes)"

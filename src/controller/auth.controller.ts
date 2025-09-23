@@ -16,6 +16,7 @@ import { TokenGuard } from '../utils/tokens/token-guard';
 import { DeviceTokenGuard } from '../utils/tokens/device-token-guard';
 import { DeviceRefreshTokenDto } from '../dto/auth/auth-device-refresh-token-request.dto';
 import { AuthRefreshTokenResponse } from '../dto/auth/auth-refresh-token-response';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -36,12 +37,14 @@ export class AuthController {
   async authLogin(
     @Body() authLoginRequestDto: AuthLoginRequestDto,
     @RealIP() ip: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     console.log("ip:", ip);
     // console.log('forwarded:', forwarded, req.ips, req.ip);
     // const ip = typeof forwarded === 'string' ? forwarded : (forwarded as string[])?.length > 0 ? forwarded[0] : null;
     const rlt = await this.authService.authLogin(authLoginRequestDto, ip);
+    AddTraceIdToResponse(rlt, req);
     return res.status(HttpStatus.OK).json(rlt);
   }
 
@@ -62,6 +65,7 @@ export class AuthController {
     @Res() res:Response,
   ) {
     const ans = await this.authService.verify2Fa(req.user, totpCode);
+    AddTraceIdToResponse(ans, req);
     return res.status(HttpStatus.OK).json(ans);
   }
 
@@ -78,9 +82,11 @@ export class AuthController {
   @Post('/resetpassword')
   async authResetPassword(
     @Body() authResetPasswordRequestDto: AuthResetPasswordRequestDto,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     const ans = await this.authService.authResetPassword(authResetPasswordRequestDto);
+    AddTraceIdToResponse(ans, req);
     return res.status(HttpStatus.OK).json(ans);
   }
 
@@ -98,6 +104,7 @@ export class AuthController {
   //async authRefreshToken(@Body('refreshToken') rtoken:string, @Res() res:Response) {
   async authRefreshToken(@Body() body:RefreshTokenDto, @Req() req:Request, @Res() res:Response) {
     const ans = await this.authService.authRefreshToken(req);
+    AddTraceIdToResponse(ans, req);
     return res.status(HttpStatus.OK).json(ans);
   }
 
@@ -116,6 +123,7 @@ export class AuthController {
   //async authRefreshToken(@Body('refreshToken') rtoken:string, @Res() res:Response) {
   async authDeviceRefreshToken(@Body() body:DeviceRefreshTokenDto, @Req() req:Request, @Res() res:Response) {
     const alr = await this.authService.authDeviceRefreshToken(req);
+    AddTraceIdToResponse(alr, req);
     return res.status(HttpStatus.OK).json(alr);
   }
 
@@ -128,9 +136,13 @@ export class AuthController {
     type: AuthSendVerificationResponseDto,
   })
   @Get('captcha')
-  async getCaptcha(@Res() res:Response) {
+  async getCaptcha(
+    @Req() req:Request,
+    @Res() res:Response
+  ) {
     const verifyRes = await this.authService.getCaptcha();
     //return res.type('svg').status(HttpStatus.OK).send(verifyRes);
+    AddTraceIdToResponse(verifyRes, req);
     return res.status(HttpStatus.OK).json(verifyRes);
   }
 
@@ -145,9 +157,11 @@ export class AuthController {
   @Post('sendsmscode')
   async getVerifiedCode(
     @Body() smsReq:AuthSMSRequestDto,
+    @Req() req:Request,
     @Res() res:Response,
   ){
     const ans  = await this.authService.sendSmsCode(smsReq);
+    AddTraceIdToResponse(ans, req);
     return res.status(HttpStatus.OK).send(ans);
   }
 
@@ -163,6 +177,7 @@ export class AuthController {
   @Post('logout')
   async logout(@Req() req:any,@Res() res:Response) {
     const comRes = await this.authService.logout(req.user);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 }

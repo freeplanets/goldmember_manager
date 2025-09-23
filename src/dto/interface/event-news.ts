@@ -1,7 +1,8 @@
 import { IModifiedBy } from "./modifyed-by.if";
 
-export interface IEventNews {
+export interface   IEventNews {
     id: string;
+    targetId?: string;       
     title: string;
     dateStart: string;
     dateEnd: string;

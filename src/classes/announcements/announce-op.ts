@@ -47,7 +47,14 @@ export class AnnounceOp {
         if (!filters) filters = {};
         filters['organization.id'] = org.id;
         const threeMonthsAgo = this.myDate.AddMonthLessOneDay(-3);
-        filters.publishDate = { $gte: threeMonthsAgo };
+        if (!filters.$or) {
+            filters.$or = [
+                {publishDate: { $gte: threeMonthsAgo }},
+                {authorizer: { $exists: false}},
+            ];
+        } else {
+            filters.publishDate = { $gte: threeMonthsAgo };
+        }
         console.log('filters:', filters);
         return this.list(filters);
     }
@@ -184,6 +191,8 @@ export class AnnounceOp {
             const f = announceUpdateDto.attachments.find((itm) => itm.name === attachment.name);
             if (!f) announceUpdateDto.attachments.push(attachment);
             });
+        } else {
+            announceUpdateDto.attachments = [];
         }
         const me:any = user;
         announceUpdateDto.updater = {

@@ -37,7 +37,8 @@ export class TeamActivity implements ITeamActivity {
         type: [{type: mongoose.Schema.Types.ObjectId, ref: 'TeamMember'}],
         default: [],
     })
-    participants: IActivityParticipants[];   // 參與人數
+    //participants: IActivityParticipants[];   // 參與人數
+    participants: ITeamMember[];
 
     @Prop()
     maxParticipants: number; //最大參與人數
@@ -48,7 +49,12 @@ export class TeamActivity implements ITeamActivity {
     @Prop({
         type: ModifiedByData,
     })
-    creator: IModifiedBy; //發起人 
+    creator: IModifiedBy; //發起人
+
+    @Prop({
+        type: ModifiedByData,
+    })
+    updater: IModifiedBy;
 }
 
 export const TeamActivitySchema = SchemaFactory.createForClass(TeamActivity);

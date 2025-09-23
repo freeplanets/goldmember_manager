@@ -145,10 +145,11 @@ export class UsersService {
     const comRes = new CommonResponseDto();
     try {
       const rlt = await this.userModel.updateOne({id}, {isActive});
+      console.log('rlt:', rlt);
       // if (!rlt) comRes.ErrorCode = ErrCode.ITEM_NOT_FOUND;
     } catch (e) {
       comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
-      comRes.error.extra = e;
+      comRes.error.extra = e.message;
     }
     return comRes;
   }

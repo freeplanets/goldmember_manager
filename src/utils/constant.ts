@@ -1,5 +1,6 @@
-import { IOrganization } from '../dto/interface/common.if';
-import { ORGANIZATION_TYPE } from './enum';
+import { Request } from 'express';
+import { ICommonResponse, IOrganization } from '../dto/interface/common.if';
+import { FAIRWAY_PATH, ORGANIZATION_TYPE } from './enum';
 
 /**
  * @author 
@@ -53,3 +54,31 @@ export const PASSWORD_RETRY_TIME = 1800000; // 3分鐘
 export const THREE_MONTH =  7776000000; // 1000*60*60*24*90 = 90天
 export const REPLACE_YEAR = '{year}';
 export const REPLACE_MONTH = '{month}';
+
+export const COURSE_COMBINE = [
+  [FAIRWAY_PATH.EAST, FAIRWAY_PATH.WEST],
+  [FAIRWAY_PATH.SOUTH, FAIRWAY_PATH.EAST],
+  [FAIRWAY_PATH.WEST, FAIRWAY_PATH.SOUTH]
+];
+
+export function needsBuffer(str: string): boolean {
+  // 檢查是否有明顯亂碼（如不可見字元或常見亂碼範圍）
+  // 這裡以出現不可見控制字元為例
+  return /[\u0000-\u001F\u007F-\u009F]/.test(str);
+}
+
+export function AddTraceIdToResponse(res:ICommonResponse<any>, req:Request) {
+  try {
+    if (!res.error) res.error =  { extra: {} };
+    else if (!res.error.extra) {
+      res.error.extra = {};
+    }
+    res.error.extra.traceId = req['traceId'];
+  } catch (err) {
+    console.log('AddTraceIdToResponse err:', err);
+    res['traceId'] = req['traceId'];
+    console.log('AddTraceIdToResponse res:', res);
+    //res.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+  }
+  //return res;
+}

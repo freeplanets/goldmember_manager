@@ -4,6 +4,7 @@ import { Request, Response } from 'express';
 import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { ReportStatsResponseDto } from '../dto/resprt-stats-response.dto';
 import { TokenGuard } from '../utils/tokens/token-guard';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('reports')
 @ApiTags('reports')
@@ -24,11 +25,12 @@ export class ReportsStatsController {
   async reportsStats(
     @Query('year') year: string,
 
-    // @Req() req: Request,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
-    console.log('typeof year:', typeof(year));
+    //console.log('typeof year:', typeof(year));
     const rsRes = await this.reportsStatsService.reportsStats(year);
+    AddTraceIdToResponse(rsRes, req);
     return res.status(HttpStatus.OK).json(rsRes);
   }
 

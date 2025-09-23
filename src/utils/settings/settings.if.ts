@@ -54,10 +54,10 @@ export interface ITimeslotsValue {
     timeslots: ITimeslots[];
 }
 export interface IParameter<T> {
-  id: ParamTypes;
+  id: string;   //ParamTypes;
   key: string;
   value: T;
   // value: IValueScore | INofication | IGrading | ITimeslotsValue;
-  description: string;
+  description?: string;
 }
 

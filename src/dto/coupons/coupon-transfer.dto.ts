@@ -31,7 +31,7 @@ export class CouponTransferDto {
         required: false,
     })
     @IsOptional()
-    @IsArray()
+    @IsString()
     notes:string;
 
 }

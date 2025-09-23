@@ -81,6 +81,9 @@ export class AuthService {
           userInfo.lastLogin = user.lastLogin;
           userInfo.lastLoginIp = user.lastLoginIp;
           userInfo.lastLoginDevice = user.lastLoginDevice;
+          if (userInfo.lastLoginDevice && userInfo.lastLoginDevice.deviceId) {
+            delete userInfo.lastLoginDevice.deviceId;
+          }
           // console.log("find user:", userInfo);
           // fingerprint re object
           const loginD:Partial<ILoginDevice> = {}
@@ -166,10 +169,9 @@ export class AuthService {
         alRes.ErrorCode = ErrCode.ACCOUNT_OR_PASSWORD_ERROR;
       }
     } catch (e) {
+      console.log('authLogin error:', e);
       alRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
-      alRes.error = {
-        extra: e,
-      }
+      alRes.error.extra = e.message;
       // throw new CommonError(
       //   e.type || ERROR_TYPE.SYSTEM,
       //   e.status || STATUS_CODE.FAIL,

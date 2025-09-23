@@ -4,7 +4,7 @@ import { v1 as uuidv1 } from 'uuid';
 import { IHasId } from '../../dto/interface/common.if';
 import { asyncfunc } from '../common/func.def';
 
-export class BaseOp<T extends IHasId> extends ADbBasicMethods<T> {
+export class BaseOp<T extends IHasId> extends ADbBasicMethods {
     constructor(private readonly model:Model<T>) {
         super();
     }

@@ -47,7 +47,9 @@ export class MainFilters {
     }
     if (type){
       //if (!filters) filters = {};
-      filters.type = type;
+      //if (type !== 'pending') {
+        filters.type = type;
+      //}
     }
     return filters;      
   }

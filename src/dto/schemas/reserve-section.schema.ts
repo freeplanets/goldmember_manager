@@ -39,6 +39,9 @@ export class ReserveSection implements IReserveSection {
 
     @Prop({})
     status: ReserveStatus;
+
+    @Prop()
+    appointment: string;
 }
 
 export const ReserveSectionSchema = SchemaFactory.createForClass(ReserveSection);

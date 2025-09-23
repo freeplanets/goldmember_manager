@@ -30,6 +30,7 @@ export interface IHasFilterItem {
     id?:string;
     type?: string;
     targetGroups: any[];
+    //authorizer?: any;
     extendFilter?: MEMBER_EXTEND_GROUP[];    
 }
 

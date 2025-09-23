@@ -146,4 +146,8 @@ export class DateLocale  {
         console.log(date, year, month, day, d.getHours(), d.getUTCHours(), diff, d.getTime(), ts);
         return ts;
     }
+
+    DateStringWithoutSymbol() {
+        return this.toDateString().replaceAll('/','');
+    }
 }

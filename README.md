@@ -82,7 +82,7 @@ src
 - type
   - feat : 新增功能(add new features)
   - fix : 錯誤修復(bug fix)
-  - docs : 문서의 수정(doc fix)
+  - docs : 編輯文檔(doc fix)
   - refactor : 編輯文檔 (refectoring code)
   - test : 測試相關程式碼新增及修改(add or modify test-related code)
   - chore : 無需修改程式碼即可更改設定 (change settings without code modification)

@@ -1,6 +1,6 @@
 import { Controller, Req, Res, HttpStatus, Get, Query, Param, Put, Body, Post, UseGuards } from '@nestjs/common';
 import { MembersService } from '../service/members.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
 import { MembersResponseDto } from '../dto/members/members-response.dto';
 import { MembersIdResponseDto } from '../dto/members/members-id-response.dto';
@@ -15,6 +15,7 @@ import { CreditRequestDto } from '../dto/teams/credit-request.dto';
 import { CreditRecordRes } from '../dto/teams/credit-record-response';
 import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
 import { InvitationCodeRes } from '../dto/members/invitation-codes-response';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('members')
 @ApiTags('members')
@@ -38,10 +39,12 @@ export class MembersController {
     @Query('search') search: string,
     // @Query('phone') phone: string,
     @Query('type') type: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     // phone ksno
     const mmRes = await this.membersService.members(search, type);
+    AddTraceIdToResponse(mmRes, req);
     return res.status(HttpStatus.OK).json(mmRes);
   }
 
@@ -56,9 +59,11 @@ export class MembersController {
   @Get('/:id')
   async membersId(
     @Param('id') id: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     const mmRes = await this.membersService.membersId(id);
+    AddTraceIdToResponse(mmRes, req);
     return res.status(HttpStatus.OK).json(mmRes);
   }
 
@@ -82,6 +87,7 @@ export class MembersController {
       membersDirectorStatusRequestDto,
       req.user,
     );
+    AddTraceIdToResponse(commonRes, req);
     return res.status(HttpStatus.OK).json(commonRes);
   }
 
@@ -104,6 +110,7 @@ export class MembersController {
       membersConvertToShareholderRequestDto,
       req.user,
     );
+    AddTraceIdToResponse(commonRes, req);
     return res
       .status(HttpStatus.OK)
       .json(commonRes);
@@ -120,11 +127,13 @@ export class MembersController {
   @Post('/transferlog')
   async membersTransferLog(
     @Body() logReq: MemberTransferLogDto,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     const comRes = await this.membersService.getMembersTransferLog(
       logReq
     );
+    AddTraceIdToResponse(comRes, req);
     return res
       .status(HttpStatus.OK)
       .json(comRes);
@@ -145,6 +154,7 @@ export class MembersController {
       @Res() res: Response,
   ){
       const result = await this.membersService.updateCredit(id, creditInfo, req.user);
+      AddTraceIdToResponse(result, req);
       return res.status(HttpStatus.OK).json(result);
   }
 
@@ -161,9 +171,11 @@ export class MembersController {
   async getCreditRecords(
       @Param('id') memberId: string,
       @Query() dates:DateRangeQueryReqDto,
+      @Req() req:Request,
       @Res() res:Response,
   ){
       const rlt = await this.membersService.getCreditRecords(memberId, dates);
+      AddTraceIdToResponse(rlt, req);
       return res.status(HttpStatus.OK).json(rlt);
   }
 
@@ -177,9 +189,11 @@ export class MembersController {
   })
   @Post('invitationcodes')
   async getInvitationCodes(
+    @Req() req:Request,
     @Res() res:Response,
   ){
       const rlt = await this.membersService.getInvitationCodes();
+      AddTraceIdToResponse(rlt, req);
       return res.status(HttpStatus.OK).json(rlt);
   }
 }

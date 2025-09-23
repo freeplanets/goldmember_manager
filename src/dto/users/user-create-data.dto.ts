@@ -10,7 +10,7 @@ export class UserCreateDataDto extends UserBaseDataDto {
         example: 'james',
     })
     @IsString()
-    @Matches(USERNAME_STYPE)
+    @Matches(USERNAME_STYPE, {message: DtoErrMsg.USERNAME_STYLE_ERROR})
     username: string;
 
     @ApiProperty({

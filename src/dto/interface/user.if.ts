@@ -26,6 +26,7 @@ export interface IUser {
 }
 
 export interface IUserAccessLog {
+    traceId:string;
     username: string;
     path: string;
     token: string;

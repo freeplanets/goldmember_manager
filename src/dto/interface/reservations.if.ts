@@ -35,6 +35,7 @@ export interface IReserveSection {
     courses:CourseName[];    // 球道列表 (時間範圍預約時使用)
     type:TimeSectionType;    //時段類型 (單一時段或時間範圍) Enum:[ timeslot, range ]
     status:ReserveStatus;  //預約狀態 Enum:[ pending, booked, confirmed, cancelled ]
+    appointment: string;    //預約者ID
 }
 
 //預約歷史記錄

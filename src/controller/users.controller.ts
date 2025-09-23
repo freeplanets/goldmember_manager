@@ -10,6 +10,7 @@ import { UserStatusDto } from '../dto/users/user-status.dto';
 import { TokenGuard } from '../utils/tokens/token-guard';
 import { UserPutDataDto } from '../dto/users/user-put-data.dto';
 import { UserModifyPassDto } from '../dto/users/user-modify-pass.dto';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('users')
 @ApiTags('users')
@@ -36,6 +37,7 @@ export class UsersController {
   ) {
     // console.log(req.query);
     const userRes = await this.usersService.usersGet(search, req.user);
+    AddTraceIdToResponse(userRes, req);
     return res.status(HttpStatus.OK).json(userRes);
   }
 
@@ -48,6 +50,7 @@ export class UsersController {
     @Res() res: Response,
   ) {
     const comRes =  await this.usersService.usersPost(usersPostRequestDto, req.user);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -62,9 +65,11 @@ export class UsersController {
   @Get('/:id')
   async usersId(
     @Param('id') id: string,
+    @Req() req:Request,
     @Res() res: Response,
   ) {
     const rlt = await this.usersService.usersId(id);
+    AddTraceIdToResponse(rlt, req);
     return res.status(HttpStatus.OK).json(rlt);
   }
 
@@ -84,6 +89,7 @@ export class UsersController {
     @Res() res: Response,
   ) {
     const commonRes  = await this.usersService.usersPutId(id, usersIdPutRequestDto, req.user);
+    AddTraceIdToResponse(commonRes, req);
     return res.status(HttpStatus.OK).json(commonRes);
   }
 
@@ -102,6 +108,7 @@ export class UsersController {
     @Res() res:Response,
   ){
     const commonRes = await this.usersService.modifyPassword(mpass, req.user);
+    AddTraceIdToResponse(commonRes, req);
     return res.status(HttpStatus.OK).json(commonRes);    
   }
 
@@ -122,6 +129,7 @@ export class UsersController {
     @Res() res: Response,
   ) {
     const commonRes = await this.usersService.usersIdStatus(id, userStatus.isActive);
+    AddTraceIdToResponse(commonRes, req);
     return res.status(HttpStatus.OK).json(commonRes);
   }
 
@@ -140,6 +148,7 @@ export class UsersController {
     @Res() res: Response,
   ) {
     const commonRes = await this.usersService.usersIdReset2Fa(id, req);
+    AddTraceIdToResponse(commonRes, req);
     return res.status(HttpStatus.OK).json(commonRes);
   }
 }

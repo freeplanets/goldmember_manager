@@ -5,6 +5,9 @@ export type UserAccessLogDocument = Document & UserAccessLog;
 
 @Schema()
 export class UserAccessLog implements IUserAccessLog {
+    @Prop({index: true, unique: true})
+    traceId: string;
+
     @Prop({index: true})
     username: string;
 

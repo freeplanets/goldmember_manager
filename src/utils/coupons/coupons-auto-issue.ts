@@ -25,7 +25,7 @@ export const couponsAutoIssue = async () => {
         const modelMbr = db.model(Member.name, MemberSchema);
         const modelKS = db.model(KsMember.name, KsMemberSchema);
         const modelCP = db.model(Coupon.name, CouponSchema);
-        const modelLog = db.model(CouponAutoIssuedLog.name, CouponAutoIssuedLogSchema);
+        //const modelLog = db.model(CouponAutoIssuedLog.name, CouponAutoIssuedLogSchema);
         const cpFunc = new CouponFunc();
         const filter:FilterQuery<CouponBatchDocument> = {
             // issueDate: date,

@@ -366,6 +366,7 @@ export class TeamsService {
                 });
             } else {
                 mbr.teamId = teamId;
+                mbr.joinDate = this.myDate.toDateString();
                 console.log("mbr:", mbr);
                 bulkW.push({
                     insertOne: {
@@ -674,26 +675,46 @@ export class TeamsService {
                 .findOne({id: activityId}, 'participants')
                 .populate({ 
                     path:'participants',
+                    select: 'role handicap joinDate memberInfo memberFrom',
                     populate: {
-                        path: 'member',
+                        path: 'memberInfo',
+                        select: 'id no name pic handicap',
                     }
                 }).exec();
             if (act) {
-                const mbrs = act.participants.map((p:IActivityParticipants) => {
-                    const nMbr:Partial<IActMemberInfo> = {
-                        ...(p.member as Partial<IMember>),
-                        registrationDate: p.registrationDate,
-                        status: p.status,
-                        // id: p.member.id,
-                        // name: p.name,
-                        // phone: p.phone,
-                        // membershipType: p.membershipType,
-                        // registrationDate: f.registrationDate,
-                        // status: f.status,
-                    };
-                    return nMbr;
+                // const mbrs = act.participants.map((p:IActivityParticipants) => {
+                //     const nMbr:Partial<IActMemberInfo> = {
+                //         ...(p.member as Partial<IMember>),
+                //         registrationDate: p.registrationDate,
+                //         status: p.status,
+                //         // id: p.member.id,
+                //         // name: p.name,
+                //         // phone: p.phone,
+                //         // membershipType: p.membershipType,
+                //         // registrationDate: f.registrationDate,
+                //         // status: f.status,
+                //     };
+                //     return nMbr;
+                // });
+                const mbrs = act.participants.map((
+                    p:any, //IActivityParticipants
+                ) => {
+                    // console.log('getAct:', p);
+                    // const nMbr:Partial<IActMemberInfo> = {
+                    //     ...(p.member as Partial<IMember>),
+                    //     registrationDate: p.registrationDate,
+                    //     status: p.status,
+                    //     // id: p.member.id,
+                    //     // name: p.name,
+                    //     // phone: p.phone,
+                    //     // membershipType: p.membershipType,
+                    //     // registrationDate: f.registrationDate,
+                    //     // status: f.status,
+                    // };
+                    return p; //nMbr;
                 });
-                comRes.data = mbrs;
+
+                comRes.data = mbrs as any;
             } else {
                 comRes.ErrorCode = ErrCode.TEAM_ACTIVITY_NOT_FOUND;
             }

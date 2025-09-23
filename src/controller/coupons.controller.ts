@@ -1,6 +1,6 @@
 import { Controller, Req, Res, HttpStatus, Get, Param, Post, Body, Put, UseGuards } from '@nestjs/common';
 import { CouponsService } from '../service/coupons.service';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiProperty, ApiBody, ApiParam } from '@nestjs/swagger';
 import { CouponResponseDto } from '../dto/coupons/coupon-response.dto';
 import { CouponBatchesResponseDto } from '../dto/coupons/coupon-batches-response.dto';
@@ -21,6 +21,7 @@ import { Coupon2PaperDto } from '../dto/coupons/coupon-2-paper.dto';
 import { CouponUseReqDto } from '../dto/coupons/coupon-use-request.dto';
 import { CouponTransferDto } from '../dto/coupons/coupon-transfer.dto';
 import { DateRangeQueryReqDto } from '../dto/common/date-range-query-request.dto';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('couponbatches')
 @ApiTags('couponbatches')
@@ -40,9 +41,11 @@ export class CouponsController {
   @Post('coupon')
   async coupons(
     @Body() couponRequestDto: CouponRequestDto,
+    @Req() req:Request,
     @Res() res: Response,
   ) {
     const clRes = await this.couponsService.coupons(couponRequestDto);
+    AddTraceIdToResponse(clRes, req);
     return res.status(HttpStatus.OK).json(clRes);
   }
 
@@ -57,9 +60,11 @@ export class CouponsController {
   @Get('coupon/:id')
   async couponsCode(
     @Param('id') id: string,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
     const crRes = await this.couponsService.couponsCode(id);
+    AddTraceIdToResponse(crRes, req);
     return res.status(HttpStatus.OK).json(crRes);
   }
 
@@ -79,6 +84,7 @@ export class CouponsController {
     @Res() res: Response,
   ) {
     const comRes = await this.couponsService.couponsCodeUse(id, notes, req.user);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -102,6 +108,7 @@ export class CouponsController {
     @Res() res: Response,
   ) {
     const comRes = await this.couponsService.couponsCodeConvertToPaper(coupon2papers, req.user);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -120,6 +127,7 @@ export class CouponsController {
     @Res() res: Response,
   ) {
     const comRes = await this.couponsService.couponsTransfer(coupTransfer, req.user);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -134,9 +142,11 @@ export class CouponsController {
   @Post('coupon/used_list')
   async couponsUsedList(
     @Body() dates:DateRangeQueryReqDto,
+    @Req() req:Request,
     @Res() res: Response,
   ) {
     const comRes = await this.couponsService.couponsUsedList(dates);
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }  
   
@@ -151,9 +161,11 @@ export class CouponsController {
   @Post('list')
   async couponBatches(
     @Body() couponBatchRequestDto: CouponBatchListRequestDto,
+    @Req() req:Request,
     @Res() res: Response,
   ) {
     const cbRes = await this.couponsService.couponBatches(couponBatchRequestDto);
+    AddTraceIdToResponse(cbRes, req);
     return res.status(HttpStatus.OK).json(cbRes);
   }
 
@@ -175,6 +187,7 @@ export class CouponsController {
         couponBatchPostDto,
         req.user,
       );
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -189,9 +202,11 @@ export class CouponsController {
   @Get('/:id')
   async couponBatchedId(
     @Param('id') id: string,
+    @Req() req:Request,
     @Res() res: Response,
   ) {
     const cbRes = await this.couponsService.couponBatchedId(id);
+    AddTraceIdToResponse(cbRes, req);
     return res.status(HttpStatus.OK).json(cbRes);
   }
 
@@ -222,6 +237,7 @@ export class CouponsController {
       comRes.ErrorCode = ErrCode.ERROR_PARAMETER;
       comRes.error.extra = e;
     }
+    AddTraceIdToResponse(comRes, req);
     return res.status(HttpStatus.OK).json(comRes);
   }
 
@@ -241,7 +257,7 @@ export class CouponsController {
     @Res() res: Response,
   ) {
     const comRes = await this.couponsService.couponBatchedIdAuthorize(id, req.user);
-
+    AddTraceIdToResponse(comRes, req);
     return res
       .status(HttpStatus.OK)
       .json(comRes);
@@ -263,6 +279,7 @@ export class CouponsController {
     @Res() res: Response,
   ) {
     const comRes = await this.couponsService.couponBatchedIdCancel(id, req.user);
+    AddTraceIdToResponse(comRes, req);
     return res
       .status(HttpStatus.OK)
       .json(comRes);
@@ -279,9 +296,11 @@ export class CouponsController {
   @Post('autoissuelog')
   async getAutoIssueLog(
     @Body() coupReq:CouponAutoIssueLogReqDto,
+    @Req() req:Request,
     @Res() res:Response,
   ) {
     const cplogRes = await this.couponsService.getCouponLog(coupReq);
+    AddTraceIdToResponse(cplogRes, req);
     res.status(HttpStatus.OK).json(cplogRes);
   }
 
@@ -296,9 +315,11 @@ export class CouponsController {
   @Post('transferlog')
   async getTransferLog(
     @Body() coupReq:CouponTransferLogReqDto,
+    @Req() req:Request,
     @Res() res:Response,
   ) {
     const cplogRes = await this.couponsService.getTransferLog(coupReq);
+    AddTraceIdToResponse(cplogRes, req);
     res.status(HttpStatus.OK).json(cplogRes);
   }
 
@@ -318,6 +339,7 @@ export class CouponsController {
     @Res() res:Response,
   ) {
     const rlt = await this.couponsService.automaticStop(id, req.user);
+    AddTraceIdToResponse(rlt, req);
     return res.status(HttpStatus.OK).json(rlt);
   }
 }

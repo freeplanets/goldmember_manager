@@ -10,6 +10,7 @@ import { IPendingITem } from '../dto/interface/dashboard.if';
 import { COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, PendingItemStatus, PendingItemType, ReserveStatus } from '../utils/enum';
 import { ErrCode } from '../utils/enumError';
 import { DateLocale } from '../classes/common/date-locale';
+import { ORGANIZATION } from '../utils/constant';
 
 @Injectable()
 export class DashboardService {
@@ -44,6 +45,7 @@ export class DashboardService {
                 {authorizer: {$exists: false}}
             ]
         }
+        filter['organization.id'] = ORGANIZATION.id;
         console.log('getAnns filter:', filter.$and)
         const anns = await this.modelAnn.find(filter);
         anns.forEach((ann) => {

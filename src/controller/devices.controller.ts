@@ -1,10 +1,11 @@
-import { Controller, Delete, Get, HttpStatus, Param, Req, Res, UseGuards } from "@nestjs/common";
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { Response } from "express";
-import { TokenGuard } from "../utils/tokens/token-guard";
-import { DevicesResponse } from "../dto/devices/devices-response";
-import { CommonResponseDto } from "../dto/common/common-response.dto";
-import { DevicesService } from "../service/devices.service";
+import { Controller, Delete, Get, HttpStatus, Param, Req, Res, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Response } from 'express';
+import { TokenGuard } from '../utils/tokens/token-guard';
+import { DevicesResponse } from '../dto/devices/devices-response';
+import { CommonResponseDto } from '../dto/common/common-response.dto';
+import { DevicesService } from '../service/devices.service';
+import { AddTraceIdToResponse } from '../utils/constant';
 
 @Controller('devices')
 @ApiTags('devices')
@@ -23,6 +24,7 @@ export class DevicesController {
     @Get()
     async getDevice(@Req() req:any, @Res() res:Response){
         const devRes = await this.devicesService.getDevices(req.user);
+        AddTraceIdToResponse(devRes, req);
         return res.status(HttpStatus.OK).json(devRes);
     }
 

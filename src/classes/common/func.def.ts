@@ -2,6 +2,7 @@ import { AnyObject } from 'mongoose';
 import { CommonResponseDto } from '../../dto/common/common-response.dto';
 import { ICommonResponse, IReturnObj } from '../../dto/interface/common.if';
 import { ErrCode } from '../../utils/enumError';
+import { trace } from 'node:console';
 
 export type asyncfunc = (...arp:any) => Promise<any>;
 export type tryfunc<T> = (f: asyncfunc, ...arp:any[]) => Promise<any>;
@@ -27,10 +28,10 @@ export const FuncWithTryCatchNew: funcReturnObj<any> = async (obj: any, function
     const comRes:ICommonResponse<any> = new CommonResponseDto()
     try {
         const { data, error, extra }  = await obj[functionName](...arp);
-        console.log('data:', data, 'error:', error);
+        // console.log('data:', data, 'error:', error);
         if (error) {
             comRes.ErrorCode = error;
-                        if (extra) {
+            if (extra) {
                 comRes.error.extra = extra;
             }
         } else {
@@ -43,4 +44,12 @@ export const FuncWithTryCatchNew: funcReturnObj<any> = async (obj: any, function
         comRes.error.extra = error.message;
     }
     return comRes;
+}
+
+export interface MustIncludeTraceIdParams {
+    (traceId: string, ...param:any): any;
+}
+
+const func: MustIncludeTraceIdParams = (name:string) => {
+
 }

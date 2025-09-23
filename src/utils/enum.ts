@@ -215,3 +215,14 @@ export enum ORGANIZATION_TYPE {
   COURT = 'court',
   TEAM = 'team',
 }
+
+export enum FAIRWAY_PATH {
+  WEST = 'west', 
+  SOUTH = 'south', 
+  EAST = 'east',
+}
+export enum COURSES_CODE {
+  EW = 0,
+  SE = 1,
+  WS = 2,
+}

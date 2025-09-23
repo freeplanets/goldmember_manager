@@ -154,31 +154,42 @@ export class ReserveOp {
         let isExisted = false;
         let modifyData = false; //有修改時段
         if (mfyResv.data) {
-            modifyData;
+            modifyData = true;
             const datas = mfyResv.data;
             console.log('createReservation', typeof datas, datas);
             isExisted = await this.timeSectionCheck(datas, id);         
         }
+        console.log('isExisted:', isExisted);
         if (!isExisted) {
             const session = await this.connection.startSession();
             session.startTransaction();
             if (modifyData) {
-                const datas = mfyResv.data; 
-                datas.forEach((itm) => {
-                    itm.id = uuidv1(),
-                    itm.reservationId = id,
+                const datas = mfyResv.data;
+                console.log('datas:', datas);
+                datas.forEach((itm:any) => {
+                    if (itm._id) delete itm._id;
+                    itm.id = uuidv1();
+                    itm.reservationId = id;
                     itm.refId = foundRev.teamId ? foundRev.teamId : foundRev.memberId;
                 });
+                console.log('datas after forEach:', datas);
+                const delRS = await this.modelRS.deleteMany({reservationId: id}, {session});
+                console.log('delRes:', delRS);
                 const secDatas = await this.modelRS.insertMany(datas, {session});
+                console.log('secDatas:', secDatas);
                 if (secDatas.length > 0) {
-                    mfyResv.data = secDatas.map((_id) => _id);
+                    mfyResv.data = secDatas.map((itm) => itm._id);
                 }
             }
             const modifyResv:UpdateQuery<ReservationsDocument> = mfyResv;
             const his = this.createHistory(user, ActionOp.MODIFY);
+            console.log('modifyReservation his:', his);
             modifyResv.$push = { history: his };
+            console.log('modifyReservation modifyResv:', modifyResv);
             const upd = await this.modelReserve.updateOne({id}, modifyResv);
             console.log('modifyReservation upd:', upd);
+            await session.commitTransaction();
+            await session.endSession();
             returnObj.data = upd;
         } else {
             returnObj.error = ErrCode.SELECTED_TIME_SECTION_ASSIGNED;
@@ -207,7 +218,7 @@ export class ReserveOp {
             if (updrs.acknowledged) {
                 const act = resv.status === ReserveStatus.CANCELLED ? ActionOp.CANCELED : ActionOp.MODIFY;
                 const his = this.createHistory(user, act);
-                his.description = `${his.description} status: ${found.status} -> ${resv.reason} 原由:${resv.reason}`;
+                his.description = `${his.description} 狀態: ${found.status} -> ${resv.reason} 原由:${resv.reason}`;
                 const upd = await this.modelReserve.updateOne(filter, {
                     status: resv.status,
                     $push: { history: his },

@@ -17,6 +17,8 @@ import { DashboardModule } from './module/dashboard.module';
 import { EventNewsModule } from './module/event-news.module';
 // import { ExecController } from './controller/exec.controller';
 import { ExecModuel } from './module/exec.module';
+import { FieldManagementController } from './controller/field-management.controller';
+import { FieldManagementModule } from './module/field-management.module';
 // import { InsertMembersIfNotExists } from './utils/synthetic-data/create-members';
 // import { GoogleRecaptchaModule } from '@nestlab/google-recaptcha';
 
@@ -47,7 +49,9 @@ if (process.env.IS_OFFLINE) dbase = process.env.LMONGO_DB;
     CouponsModule,  ReportsStatsModule,
     EventNewsModule,
     ReservationsModule,
-    TeamsModule, DashboardModule, SystemParameterModule, ExecModuel ],
+    TeamsModule, DashboardModule,
+    FieldManagementModule, 
+    SystemParameterModule, ExecModuel ],
   controllers: [],
   providers: [],
 })

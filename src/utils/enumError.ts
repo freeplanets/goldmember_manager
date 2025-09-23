@@ -43,6 +43,10 @@ export enum ErrCode {
 	RESERVATION_NOT_FOUND = 'RESERVATION_NOT_FOUND',
 	MUST_BE_A_APPMEMBER = 'MUST_BE_A_APPMEMBER',
 	ANNOUNCEMENT_NOT_FOUND = 'ANNOUNCEMENT_NOT_FOUND',
+	BAD_WORD_DETECTED = 'BAD_WORD_DETECTED',
+	BAD_WORD_DETECTED_IN_FILE = 'BAD_WORD_DETECTED_IN_FILE',
+	BAD_WORD_DETECTED_IN_PIC = 'BAD_WORD_DETECTED_IN_PIC',
+	BAD_IMAGE_DETECTED = 'BAD_IMAGE_DETECTED',
 }
 export enum ErrMsg {
 	MISS_PARAMETER = '參數不足',
@@ -87,6 +91,10 @@ export enum ErrMsg {
 	RESERVATION_NOT_FOUND = '找不到預約記錄,請檢查預約ID.',
 	MUST_BE_A_APPMEMBER = '必須是App會員',
 	ANNOUNCEMENT_NOT_FOUND = '查無公告。',
+	BAD_WORD_DETECTED = '檢查到不雅文字',
+	BAD_WORD_DETECTED_IN_FILE = '你上傳的檔案檢查到不雅文字',
+	BAD_WORD_DETECTED_IN_PIC = '你上傳的圖片中檢查到不雅文字',
+	BAD_IMAGE_DETECTED = '你上傳的圖片可能有不雅內容',
 }
 export const getErrorMessage = (code: ErrCode): string => {
 	const errKey = Object.keys(ErrCode).find((key) => ErrCode[key as keyof typeof ErrCode] === code);
@@ -98,6 +106,7 @@ export enum DtoErrMsg {
 	ID_OR_PHONE_AT_LEAST = 'id或手機號碼,請擇一輸入',
 	PHONE_STYLE_ERROR = '電話號碼格式錯誤',
 	PASSWORD_STYLE_ERROR = '密碼格式錯誤,應包含大小寫字母、數字,長度6-15碼',
+	USERNAME_STYLE_ERROR = '名稱格式錯誤,應包含大小寫字母、數字,長度6-15碼',
 	DATE_STYLE_ERROR = '日期格式(YYYY/MM/DD)錯誤',
 	TIME_STYLE_ERROR = '時間格式(00:00 - 23:59)錯誤',
 	EMAIL_STYLE_ERROR = '電子郵件格式錯誤',

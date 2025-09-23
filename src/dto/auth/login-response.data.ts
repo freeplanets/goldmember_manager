@@ -11,7 +11,7 @@ export class LoginResponseData extends RefreshTokenData implements ILoginRespons
     if (deviceObj) {
       const optD:JwtSignOptions = {
         secret: process.env.DEVICE_KEY,
-        expiresIn: '90d' // 3 months
+        expiresIn: '3y', // 3 years  //'90d' // 3 months
       }
       if (deviceObj) this.deviceRefreshToken = jwt.sign({...deviceObj}, optD);
       console.log("jwt check2");

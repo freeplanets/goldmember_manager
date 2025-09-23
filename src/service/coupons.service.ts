@@ -563,7 +563,7 @@ export class CouponsService {
             const updFilter:FilterQuery<CouponDocument> = {
               batchId: id,
             }
-            let upd:UpdateWriteOpResult;
+            //let upd:UpdateWriteOpResult;
             // if (cb.issueMode === COUPON_BATCH_ISSUANCE_METHOD.AUTOMATIC) {
             //   if (!authReq.issueDate) {
             //       await session.endSession()
@@ -590,16 +590,24 @@ export class CouponsService {
             //     )
             //   } 
             // } else {
-              upd = await this.modelCouponBatch.updateOne({id}, {status: COUPON_BATCH_STATUS.ISSUED, authorizer}, {session});
+            //const upd = await this.modelCouponBatch.updateOne({id}, {status: COUPON_BATCH_STATUS.ISSUED, authorizer}, {session});
+            const upd = await this.modelCouponBatch.findOneAndUpdate(
+              {id}, 
+              {status: COUPON_BATCH_STATUS.ISSUED, authorizer}, 
+              {session, fields: 'couponsPerPerson'}
+            );
             //}
             console.log('couponbatch update:', upd);
             const updCP = await this.modelCoupon.updateMany(
               // {batchId: id, notAppMember: false}, // 只變更 app user
               // {batchId: id}, // 改為全部變更所有人
               updFilter,
-              {status: COUPON_STATUS.NOT_USED}
+              {status: COUPON_STATUS.NOT_USED},
+              {session}
             )
             if (updCP.modifiedCount) {
+              const msgs = await this.msgOp.sendMsgForCouponIssue(id, upd.couponsPerPerson, this.modelCoupon, session);
+              console.log('couponBatchedIdAuthorize after msg:', msgs.insertedCount);
               await this.modifyCouponStatsCB(cb, session);
               const commit = await session.commitTransaction();
               console.log('commit:', commit);
