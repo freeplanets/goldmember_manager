@@ -40,7 +40,16 @@ export interface IMember {
   isNotAppMember?: boolean; // 是否非app會員 only use for search Ks Member
   creditScore: number;    //信用評分
   creditHistory?: ICreditRecord[];
+  NotifyOptions: INotificationOptions;
   _doc?:any;
+}
+
+export interface INotificationOptions {
+  announcements: boolean;
+  bookingReminders: boolean;
+  teamInvites: boolean;
+  systemNotifications: boolean;
+  couponNotifications: boolean;
 }
 
 export interface IMemberActivity {
@@ -51,6 +60,17 @@ export interface IMemberActivity {
   lastLogin:number;
 }
 
+export interface IMemberGrowth {
+    year?:number;
+    month?: number;
+    regularGrowth?: number;
+    shareholderGrowth?: number;
+    familyGrowth?: number;
+    regularActivity?: number;
+    shareholderActivity?: number;
+    familyActivity?: number;
+}
+
 export interface IMemberTransferLog extends IModifiedBy {
   id:string;
   memberId:string;
@@ -58,6 +78,16 @@ export interface IMemberTransferLog extends IModifiedBy {
   oldMembershipType?: MEMBER_LEVEL;
   newMembershipType?: MEMBER_LEVEL;
   isDirector?: boolean;
+}
+
+export interface IPushToken {
+    //id: string;
+    userId: string; 
+    expoPushToken: string; 
+    nativePushToken: string; 
+    platform: string; 
+    deviceId: string;
+    updateAt?: string;
 }
 // 非app股東，查詢優惠券
 

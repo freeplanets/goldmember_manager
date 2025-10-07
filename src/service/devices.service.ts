@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { IMember } from '../dto/interface/member.if';
 import { DevicesResponse } from '../dto/devices/devices-response';
 import { ErrCode } from '../utils/enumError';

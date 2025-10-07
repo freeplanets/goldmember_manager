@@ -1,7 +1,7 @@
 import mongoose, { Model } from 'mongoose';
 import { ICoupon, ICouponBatch } from '../../dto/interface/coupon.if';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
-import { MemberDcoument } from '../../dto/schemas/member.schema';
+import { MemberDocument } from '../../dto/schemas/member.schema';
 import { CouponDocument } from '../../dto/schemas/coupon.schema';
 import { IMember } from '../../dto/interface/member.if';
 import { COUPON_STATUS } from '../../utils/enum';
@@ -15,7 +15,7 @@ export abstract class ACouponCreate {
     constructor(
         protected data:Partial<ICouponBatch>,
         protected readonly ksM:Model<KsMemberDocument>,
-        protected readonly mbrM:Model<MemberDcoument>,
+        protected readonly mbrM:Model<MemberDocument>,
         protected readonly cpM:Model<CouponDocument>,
         protected readonly session:mongoose.mongo.ClientSession,
     ) {}

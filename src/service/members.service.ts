@@ -4,7 +4,7 @@ import { ALL_CHINESE, ALL_DIGITAL, ERROR_MESSAGE, INCLUDE_CHINESE, INCLUDE_ENGLI
 import { MembersDirectorStatusRequestDto } from '../dto/members/members-director-status-request.dto';
 import { MembersConvertToShareholderRequestDto } from '../dto/members/members-convert-to-shareholder-request.dto';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Member, MemberDcoument } from '../dto/schemas/member.schema';
+import { Member, MemberDocument } from '../dto/schemas/member.schema';
 import mongoose, { FilterQuery, Model } from 'mongoose';
 import { MEMBER_DEFAULT_FIELDS, MEMBER_DETAIL_FIELDS } from '../utils/base-fields-for-searh';
 import { IMember } from '../dto/interface/member.if';
@@ -32,18 +32,26 @@ import { CreditRecordRes } from '../dto/teams/credit-record-response';
 import { DateLocale } from '../classes/common/date-locale';
 import { InvitationCode, InvitationCodeDocument } from '../dto/schemas/invitation-code.schema';
 import { InvitationCodeRes } from '../dto/members/invitation-codes-response';
+import { MemberDelete } from '../classes/member/member-delete';
+import { FuncWithTryCatchNew } from '../classes/common/func.def';
+import { Team, TeamDocument } from '../dto/schemas/team.schema';
+import { TeamMember, TeamMemberDocument } from '../dto/schemas/team-member.schema';
+import { Friend, FriendDocument } from '../dto/schemas/friend.schema';
 
 @Injectable()
 export class MembersService {
   private myDate = new DateLocale();
   constructor(
-    @InjectModel(Member.name) private modelMember:Model<MemberDcoument>,
+    @InjectModel(Member.name) private modelMember:Model<MemberDocument>,
     @InjectModel(KsMember.name) private ksMemberModel:Model<KsMemberDocument>,
     @InjectModel(MemberGrowth.name) private modelMG:Model<MemberGrowthDocument>,
     @InjectModel(MemberTransferLog.name) private modelMTL:Model<MemberTransferLogDocument>,
     @InjectModel(Coupon.name) private modelCoupon:Model<CouponDocument>,
     @InjectModel(CreditRecord.name) private readonly modelCreditRecord:Model<CreditRecordDocument>,
     @InjectModel(InvitationCode.name) private readonly modelIC:Model<InvitationCodeDocument>,
+    @InjectModel(Team.name) private readonly modelTeam:Model<TeamDocument>,
+    @InjectModel(TeamMember.name) private readonly modelTM:Model<TeamMemberDocument>,
+    @InjectModel(Friend.name) private readonly modelFrd:Model<FriendDocument>,
     @InjectConnection() private readonly connection:mongoose.Connection,
   ){}
   async members(search: string, type: string = ''): Promise<MembersResponseDto> {
@@ -493,45 +501,50 @@ async getMembersTransferLog(req:MemberTransferLogDto):Promise<MemberTransferLogR
       }
       return comRes;
   }
-    async getCreditRecords(memberId:string, dates:DateRangeQueryReqDto) {
-        const comRes = new CreditRecordRes();
-        try {
-            const filter:FilterQuery<CreditRecordDocument> = {
-                refId: memberId,
-            }
-            if (dates.endDate && dates.startDate ) {
-                filter.$and =  [
-                    { date: { $gte: dates.startDate }},
-                    { date: { $lte: dates.endDate}},
-                ];
-            } else if ( dates.startDate) {
-                filter.date = { $gte: dates.startDate };
-            } else if (dates.endDate) {
-                filter.date = { $lte: dates.endDate };
-            }
-            comRes.data = await this.modelCreditRecord.find(filter);
-        } catch(error) {
-            console.log('getCreditRecords error:', error);
-            comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
-            comRes.error.extra = error.message;
-        }
-        return comRes;
-    }
-    async getInvitationCodes() {
-      const comRes = new InvitationCodeRes();
+  async getCreditRecords(memberId:string, dates:DateRangeQueryReqDto) {
+      const comRes = new CreditRecordRes();
       try {
-        const filter:FilterQuery<InvitationCodeDocument> = {
-          $or: [
-            {isTransferred: false},
-            {isTransferred: { $exists: false}}
-          ],
-        }
-        comRes.data = (await this.modelIC.find(filter, 'no name code isCodeUsed')) as any;
-      } catch (error) {
-        console.log('getInvitationCodes error:', error);
-        comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
-        comRes.error.extra = error.message;
+          const filter:FilterQuery<CreditRecordDocument> = {
+              refId: memberId,
+          }
+          if (dates.endDate && dates.startDate ) {
+              filter.$and =  [
+                  { date: { $gte: dates.startDate }},
+                  { date: { $lte: dates.endDate}},
+              ];
+          } else if ( dates.startDate) {
+              filter.date = { $gte: dates.startDate };
+          } else if (dates.endDate) {
+              filter.date = { $lte: dates.endDate };
+          }
+          comRes.data = await this.modelCreditRecord.find(filter);
+      } catch(error) {
+          console.log('getCreditRecords error:', error);
+          comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+          comRes.error.extra = error.message;
       }
       return comRes;
+  }
+  async getInvitationCodes() {
+    const comRes = new InvitationCodeRes();
+    try {
+      const filter:FilterQuery<InvitationCodeDocument> = {
+        $or: [
+          {isTransferred: false},
+          {isTransferred: { $exists: false}}
+        ],
+      }
+      comRes.data = (await this.modelIC.find(filter, 'no name code isCodeUsed')) as any;
+    } catch (error) {
+      console.log('getInvitationCodes error:', error);
+      comRes.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
+      comRes.error.extra = error.message;
     }
+    return comRes;
+  }
+  async delAccount(id:string) {
+    const session = await this.connection.startSession();
+    const mbrDel = new MemberDelete(this.modelMember, this.ksMemberModel, this.modelMG, this.modelFrd, this.modelTeam, this.modelTM, session);
+    return FuncWithTryCatchNew(mbrDel, 'remove', id);
+  }  
 }

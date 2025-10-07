@@ -1,7 +1,7 @@
 import mongoose, { FilterQuery, Model, mongo } from 'mongoose';
 import { CouponDocument } from '../../dto/schemas/coupon.schema';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
-import { MemberDcoument } from '../../dto/schemas/member.schema';
+import { MemberDocument } from '../../dto/schemas/member.schema';
 import { ACouponCreate, ICouponCreate } from './coupons-class-if';
 import { ICoupon, ICouponBatch } from '../../dto/interface/coupon.if';
 import { MEMBER_GROUP } from '../../utils/enum';
@@ -12,7 +12,7 @@ export class KsMemberCouponsIssue extends ACouponCreate {
     constructor(
         data: Partial<ICouponBatch>,
         ksM:Model<KsMemberDocument>,
-        mbrM:Model<MemberDcoument>,
+        mbrM:Model<MemberDocument>,
         cpM:Model<CouponDocument>,
         session:mongoose.mongo.ClientSession,
     ) {
@@ -79,7 +79,7 @@ export class KsMemberCouponsIssue extends ACouponCreate {
         });
     }
     // private async getMember(birthMonth:number|undefined = undefined) {
-    //     let filter:FilterQuery<MemberDcoument> = {
+    //     let filter:FilterQuery<MemberDocument> = {
     //         membershipType: this.data.issueTarget,
     //     };
     //     if (birthMonth) {

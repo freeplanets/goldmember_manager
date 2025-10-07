@@ -1,7 +1,7 @@
 import mongoose, { ClientSession, FilterQuery, InsertManyOptions, Model } from 'mongoose';
 import { MainFilters } from '../../classes/filters/main-filters';
 import { ICoupon, ICouponBatch } from '../../dto/interface/coupon.if';
-import { MemberDcoument } from '../../dto/schemas/member.schema';
+import { MemberDocument } from '../../dto/schemas/member.schema';
 import { CouponsIssue } from '../../classes/coupons/coupons-issue';
 import { COUPON_STATUS, MEMBER_GROUP } from '../enum';
 import { CouponDocument } from '../../dto/schemas/coupon.schema';
@@ -14,7 +14,7 @@ export class CouponFunc {
     async insertCoupons(
         couponBatchPostDto:Partial<ICouponBatch>,
         modelCB:Model<CouponBatchDocument>, 
-        modelMbr:Model<MemberDcoument>,
+        modelMbr:Model<MemberDocument>,
         modelCP:Model<CouponDocument>,
         modelKS:Model<KsMemberDocument>,
         // modelCS:Model<CouponStatsDocument>,
@@ -57,7 +57,7 @@ export class CouponFunc {
     }    
     async getMember(
         couponBatchPostDto:Partial<ICouponBatch>, 
-        modelMbr:Model<MemberDcoument>, 
+        modelMbr:Model<MemberDocument>, 
         modelKs:Model<KsMemberDocument> 
     ) {
         console.log('do getMember')

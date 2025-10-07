@@ -23,10 +23,12 @@ provider:
     SESSION_SECRET: ${env:SESSION_SECRET}
     SALT_ROUNDS: ${env:SALT_ROUNDS}
     DEVICE_KEY: ${env:DEVICE_KEY}
+    FILE_PROXY: ${env:file_proxy}
   iamRoleStatements:
     - Effect: Allow
       Action:
         - s3:*
+        - SNS:*
         - lambda:InvokeFunction
       Resource: "*"
     #       - "ec2:CreateNetworkInterface"

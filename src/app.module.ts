@@ -37,7 +37,7 @@ if (process.env.IS_OFFLINE) dbase = process.env.LMONGO_DB;
       inject: [ConfigService],
       useFactory: async (config: ConfigService) => ({
         uri: config.get<string>('mongo.uri'),
-        directConnection: true,
+        directConnection: !process.env.IS_OFFLINE,//true,
         dbName: dbase,
         connectTimeoutMS: 5000,
         //timeoutMS: 5000,

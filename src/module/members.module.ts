@@ -11,6 +11,10 @@ import { MemberTransferLog, MemberTransferLogSchema } from '../dto/schemas/membe
 import { Coupon, CouponSchema } from '../dto/schemas/coupon.schema';
 import { CreditRecord, CreditRecordSchema } from '../dto/schemas/credit-record.schema';
 import { InvitationCode, InvitationCodeSchema } from '../dto/schemas/invitation-code.schema';
+import { Team, TeamSchema } from '../dto/schemas/team.schema';
+import { TeamMember, TeamMemberSchema } from '../dto/schemas/team-member.schema';
+import { Friend, FriendSchema } from '../dto/schemas/friend.schema';
+import { PushToken, PushTokenSchema } from '../dto/schemas/push-token.schema';
 
 @Module({
   imports: [
@@ -23,7 +27,11 @@ import { InvitationCode, InvitationCodeSchema } from '../dto/schemas/invitation-
       {name:MemberTransferLog.name, schema:MemberTransferLogSchema},
       {name:Coupon.name, schema: CouponSchema},
       {name:CreditRecord.name, schema: CreditRecordSchema},
-      {name:InvitationCode.name, schema: InvitationCodeSchema}
+      {name:InvitationCode.name, schema: InvitationCodeSchema},
+      {name:Team.name, schema:TeamSchema},
+      {name:TeamMember.name, schema:TeamMemberSchema},
+      {name:Friend.name, schema:FriendSchema},
+      {name:PushToken.name, schema:PushTokenSchema},
     ])
   ],
   controllers: [MembersController],

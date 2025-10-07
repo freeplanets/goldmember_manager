@@ -21,7 +21,7 @@ export class TokenGuard implements CanActivate {
     async verifyToken(context: ExecutionContext) {
         const request = context.switchToHttp().getRequest();
         const token = this.extractTokenFormHeader(request);
-        // console.log('check1');
+        // console.log('check1 token:', token);
         if (!token) {
             console.log('check2');
             //throw new UnauthorizedException();
@@ -52,6 +52,7 @@ export class TokenGuard implements CanActivate {
             )
             // console.log('payload:', payload);
             request['user'] = payload;
+            request['token'] = token;
         } catch (e) {
             if (e instanceof TokenExpiredError ) {
             // throw new UnauthorizedException();

@@ -11,7 +11,7 @@ import { GetTeamsResponse } from '../dto/teams/get-teams-response';
 import { TeamDetailResponse } from '../dto/teams/team-detail-response';
 import { Upload2S3 } from '../utils/upload-2-s3';
 import { COLLECTION_REF, TeamMemberPosition, TeamMemberStatus } from '../utils/enum';
-import { Member, MemberDcoument } from '../dto/schemas/member.schema';
+import { Member, MemberDocument } from '../dto/schemas/member.schema';
 import { IUser } from '../dto/interface/user.if';
 import { CreditRecord, CreditRecordDocument } from '../dto/schemas/credit-record.schema';
 import { TeamActivity, TeamActivityDocument } from '../dto/schemas/team-activity.schema';
@@ -42,7 +42,7 @@ export class TeamsService {
     constructor(
         @InjectModel(Team.name) private readonly modelTeam:Model<TeamDocument>,
         @InjectModel(TeamMember.name) private readonly modelTeamMember:Model<TeamMemberDocument>,
-        @InjectModel(Member.name) private readonly modelMember:Model<MemberDcoument>,
+        @InjectModel(Member.name) private readonly modelMember:Model<MemberDocument>,
         @InjectModel(KsMember.name) private readonly modelKs:Model<KsMemberDocument>,
         @InjectModel(CreditRecord.name) private readonly modelCreditRecord:Model<CreditRecordDocument>,
         @InjectModel(TeamActivity.name) private readonly modelTeamActivity:Model<TeamActivityDocument>,

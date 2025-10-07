@@ -7,7 +7,7 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { IAnnouncement } from '../dto/interface/announcement.if';
 //import { v1 as uuidv1 } from 'uuid';
 //import { ErrCode } from '../utils/enumError';
-import { Member, MemberDcoument } from '../dto/schemas/member.schema';
+import { Member, MemberDocument } from '../dto/schemas/member.schema';
 import { IUser } from '../dto/interface/user.if';
 //import { IModifiedBy } from '../dto/interface/modifyed-by.if';
 import { AnnouncementFilterDto } from '../dto/announcements/announcement-filter.dto';
@@ -38,7 +38,7 @@ export class AnnouncementsService {
   constructor(
     @InjectModel(Announcement.name) private readonly modelAnnouncement:Model<AnnouncementDocument>,
     // @InjectModel(Announcement2Member.name) private readonly modelAnn2Member:Model<Announcement2MemberDocument>,
-    @InjectModel(Member.name) private readonly modelMember:Model<MemberDcoument>,
+    @InjectModel(Member.name) private readonly modelMember:Model<MemberDocument>,
     @InjectModel(KsMember.name) private readonly modelKs:Model<KsMemberDocument>,
     @InjectConnection() private readonly connection: mongoose.Connection,
   ){

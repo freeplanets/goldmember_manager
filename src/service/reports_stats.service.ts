@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { COUPON_STATUS, MEMBER_LEVEL } from '../utils/enum';
 import { InjectModel } from '@nestjs/mongoose';
-import { Member, MemberDcoument } from '../dto/schemas/member.schema';
+import { Member, MemberDocument } from '../dto/schemas/member.schema';
 import { Model } from 'mongoose';
 import { MemberGrowth, MemberGrowthDocument } from '../dto/schemas/member-growth.schema';
 import { Coupon, CouponDocument } from '../dto/schemas/coupon.schema';
@@ -18,7 +18,7 @@ import { DateLocale } from '../classes/common/date-locale';
 export class ReportsStatsService {
   private myDate = new DateLocale();
   constructor(
-    @InjectModel(Member.name) private readonly modelMember:Model<MemberDcoument>,
+    @InjectModel(Member.name) private readonly modelMember:Model<MemberDocument>,
     @InjectModel(Coupon.name) private readonly modelCoupon:Model<CouponDocument>,
     @InjectModel(MemberYearly.name) private readonly modelMY:Model<MemberYearlyDocument>,
     @InjectModel(MemberMonthly.name) private readonly modelMM:Model<MemberMonthlyDocument>,

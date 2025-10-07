@@ -1,7 +1,7 @@
-import { FilterQuery, Model } from 'mongoose';
+import { FilterQuery, Model, UpdateQuery } from 'mongoose';
 import { AnnouncementFilterDto } from '../../dto/announcements/announcement-filter.dto';
 import { MainFilters } from '../filters/main-filters';
-import { MemberDcoument } from '../../dto/schemas/member.schema';
+import { MemberDocument } from '../../dto/schemas/member.schema';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
 import { IOrganization, IReturnObj } from '../../dto/interface/common.if';
 import { AnnouncementSearch } from '../../dto/announcements/announcements-search.dto';
@@ -22,7 +22,7 @@ export class AnnounceOp {
     private myFilter = new MainFilters();
     private myDate = new DateLocale();
     constructor(
-        private readonly modelMember:Model<MemberDcoument>,
+        private readonly modelMember:Model<MemberDocument>,
         private readonly modelKs:Model<KsMemberDocument>,
         private readonly modelAnnouncement:Model<AnnouncementDocument>,
     ) {}
@@ -210,7 +210,9 @@ export class AnnounceOp {
         if (org && org.id) {
             filter['organization.id'] = org.id;
         }
-        const rlt = await this.modelAnnouncement.updateOne(filter, announceUpdateDto);
+        const updater:UpdateQuery<AnnouncementDocument> = announceUpdateDto;
+        updater.$unset = { authorizer: 1};
+        const rlt = await this.modelAnnouncement.updateOne(filter, updater);    //announceUpdateDto);
         console.log('announcementsPost', rlt);
         if (rlt) {
             console.log('announcementsPost pass true check');       

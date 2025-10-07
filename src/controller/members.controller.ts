@@ -1,4 +1,4 @@
-import { Controller, Req, Res, HttpStatus, Get, Query, Param, Put, Body, Post, UseGuards } from '@nestjs/common';
+import { Controller, Req, Res, HttpStatus, Get, Query, Param, Put, Body, Post, UseGuards, Delete } from '@nestjs/common';
 import { MembersService } from '../service/members.service';
 import { Request, Response } from 'express';
 import { ApiResponse, ApiOperation, ApiTags, ApiBearerAuth, ApiParam, ApiQuery, ApiBody } from '@nestjs/swagger';
@@ -196,4 +196,23 @@ export class MembersController {
       AddTraceIdToResponse(rlt, req);
       return res.status(HttpStatus.OK).json(rlt);
   }
+
+  @ApiOperation({
+    summary: '會員剛除帳號',
+    description: '會員刪除帳號',
+  })
+  @ApiResponse({
+    description: '成功或失敗',
+    type: CommonResponseDto,
+  })
+  @ApiParam({name: 'id', description: '會員ID', required: true})
+  @Delete('account/:id')
+  async delAccount(
+    @Param('id') id:string,
+    @Req() req:Request,
+    @Res() res:Response
+  ){
+    const rlt = await this.membersService.delAccount(id);
+    return res.status(HttpStatus.OK).json(rlt);
+  }    
 }

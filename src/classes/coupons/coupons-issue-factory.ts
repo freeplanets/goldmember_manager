@@ -1,7 +1,7 @@
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
 import { ICouponBatch } from '../../dto/interface/coupon.if';
 import mongoose, { Model } from 'mongoose';
-import { MemberDcoument } from '../../dto/schemas/member.schema';
+import { MemberDocument } from '../../dto/schemas/member.schema';
 import { CouponDocument } from '../../dto/schemas/coupon.schema';
 import { COUPON_BATCH_ISSUANCE_METHOD, MEMBER_GROUP } from '../../utils/enum';
 import { ACouponCreate } from './coupons-class-if';
@@ -13,7 +13,7 @@ export class CouponsIssueFactory {
     constructor(
         private readonly data: Partial<ICouponBatch>,
         private readonly ksM:Model<KsMemberDocument>,
-        private readonly mbrM:Model<MemberDcoument>,
+        private readonly mbrM:Model<MemberDocument>,
         private readonly cpM:Model<CouponDocument>,
         private readonly session:mongoose.mongo.ClientSession,
     ) {

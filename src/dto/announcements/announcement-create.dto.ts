@@ -82,9 +82,10 @@ export class AnnouncementCreateDto extends FilesUploadDto implements Partial<IAn
     @ApiProperty({
         description: '發送對象',
         required: false,
-        // enum: MEMBER_GROUP,
-        // isArray: true,
-        example: [ MEMBER_GROUP.GENERAL_MEMBER,{id: 'cba4f060-19d8-11f0-9afd-717ef138f560'}, MEMBER_GROUP.ALL]
+        enum: MEMBER_GROUP,
+        type: String || Object,
+        isArray: true,
+        //example: [ MEMBER_GROUP.GENERAL_MEMBER,{id: 'cba4f060-19d8-11f0-9afd-717ef138f560'}, MEMBER_GROUP.ALL]
     })
     targetGroups?: any[];
     //targetGroups: [MEMBER_GROUP];

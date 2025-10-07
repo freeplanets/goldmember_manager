@@ -8,6 +8,7 @@ const lang = {
         CouponTransforToAppUser: '{from} 於 {datetime} 發送 {number} 張優惠券給你, 請使用App查看',
         CouponTransferToForSelf: '於 {datetime} 發送 {number} 張優惠券給 {to}, 請使用App查看',
         CouponIssueToAppUser: `林口高爾夫球場通知，已發送了{count}張優惠券給你，請查看。`,
+        MemberDeleteAccount: '會員刪除帳號',
     },
 };
 export default lang;

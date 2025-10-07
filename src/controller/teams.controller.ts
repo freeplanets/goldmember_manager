@@ -133,7 +133,6 @@ export class TeamsController {
     @Post('logo/:id')
     async uploadTeamLogo(
         @Param('id') teamId: string,
-        @Body(FileNamePipe) fileUploadDto: FileUploadDto,
         @UploadedFile(FileNamePipe) file: Express.Multer.File,
         @Req() req:Request,
         @Res() res: Response

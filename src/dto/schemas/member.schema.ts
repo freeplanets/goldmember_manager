@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { IMember } from "../interface/member.if";
+import { IMember, INotificationOptions } from "../interface/member.if";
 import { ModifiedByData } from "../data/modified-by.data";
 import mongoose, { Document } from "mongoose";
 import { GENDER, MEMBER_LEVEL } from "../../utils/enum";
@@ -7,8 +7,9 @@ import { IModifiedBy } from "../interface/modifyed-by.if";
 import { ILoginDevice } from "../interface/devices.if";
 import { LoginDevice } from "../devices/login-device";
 import { ICreditRecord } from "../interface/team-group.if";
+import { NotificationOptionsSchema } from "./notification-options.schema";
 
-export type MemberDcoument = Document & Member;
+export type MemberDocument = Document & Member;
 
 @Schema()
 export class Member implements IMember {
@@ -143,6 +144,10 @@ export class Member implements IMember {
     })
     creditHistory?: ICreditRecord[];
 
+    @Prop({
+        type: NotificationOptionsSchema,
+    })
+    NotifyOptions: INotificationOptions;
 
 }
 

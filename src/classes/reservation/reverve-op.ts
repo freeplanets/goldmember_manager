@@ -9,7 +9,6 @@ import { DateLocale } from '../common/date-locale';
 import { IReturnObj } from '../../dto/interface/common.if';
 import { ErrCode } from '../../utils/enumError';
 import { IUser } from '../../dto/interface/user.if';
-//import { ReservationsQueryRequestDto } from '../../dto/bookings/reservations-query-request.dto';
 import { DateRangeQueryReqDto } from '../../dto/common/date-range-query-request.dto';
 import { ReservationsQueryRequestDto } from '../../dto/reservations/reservations-query-request.dto';
 import { ReservationStatusRequestDto } from '../../dto/reservations/reservation-status.request.dto';
@@ -46,7 +45,8 @@ export class ReserveOp {
             ];
         }
         if (user) {
-            matches.refId = user.id;
+            //matches.refId = user.id;
+            matches.appointment = user.id;
         }
         console.log('matches', matches);
         const lst = await this.modelRS.find(matches, 'reservationId');
@@ -113,6 +113,7 @@ export class ReserveOp {
                 data.reservationId = createResv.id;
                 data.refId = createResv.teamId ? createResv.teamId : createResv.memberId;
                 data.status = ReserveStatus.PENDING;
+                data.appointment = data.refId; //user.id;
             })
             const secDatas = await this.modelRS.insertMany(datas, {session});
             if (secDatas.length > 0) {

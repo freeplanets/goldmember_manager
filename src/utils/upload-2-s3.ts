@@ -12,7 +12,8 @@ export interface Upload2S3Response {
 
 
 export class Upload2S3 {
-    private AWS_S3_BUCKET = 'images.uuss.net/linkougolf';
+    private AWS_S3_BUCKET = 'images.uuss.net';
+    private prefix = '/linkougolf';
     private s3:AWS.S3;
     private filename:string;
     private newfilename:string;
@@ -61,7 +62,7 @@ export class Upload2S3 {
         this.filesize = file.size;
         return await this.s3_upload(
             file.buffer,
-            this.AWS_S3_BUCKET,
+            `${this.AWS_S3_BUCKET}${this.prefix}`,
             file.originalname,
             file.mimetype
         );
@@ -83,5 +84,28 @@ export class Upload2S3 {
             console.log("S3 Upload Error:", err);
             return false;
         }
-    }    
+    }
+    async delFile(fileUrl:string) {
+        const key = this.getKey(fileUrl);
+        if (!key) return false;
+        console.log('delFile key:', key);
+        const params:AWS.S3.Types.DeleteObjectRequest = {
+            Bucket: this.AWS_S3_BUCKET+this.prefix,
+            Key: key,
+        }
+        try {
+            const ans = await this.s3.deleteObject(params).promise();
+            console.log('S3 delete file ans:', ans);
+            return true;
+        } catch (error) {
+            console.log('S3 delete file error:', error);
+            return false;
+        }
+    }
+    private getKey(url:string) {
+        const pos = url.indexOf('linkougolf/');
+        if (pos === -1) return '';
+        //return url.slice(pos, url.length);
+        return url.slice(pos+11, url.length);
+    }
 }

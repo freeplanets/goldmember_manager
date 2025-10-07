@@ -14,6 +14,7 @@ import { AnnouncementsFilterResponseDto } from '../dto/announcements/announcemen
 import { AnnouncementModifyDto } from '../dto/announcements/announcement-modify.dto';
 import { AddTraceIdToResponse } from '../utils/constant';
 import { FileNamePipe } from '../utils/pipes/file-name';
+import { BadWordsPipe } from '../utils/pipes/bad-words';
 
 @Controller('announcements')
 @ApiTags('announcements')
@@ -75,12 +76,12 @@ export class AnnouncementsController {
   @UseInterceptors(AnyFilesInterceptor())
   @Post('')
   async announcementsPost(
-    @Body() announcementCreateDto: AnnouncementCreateDto,
+    @Body(BadWordsPipe) announcementCreateDto: AnnouncementCreateDto,
     @UploadedFiles(FileNamePipe) files: Array<Express.Multer.File>,
     @Req() req: any,
     @Res() res: Response,
   ) {
-    console.log(req.headers);
+    //console.log(req.headers);
     const comRes = await this.announcementsService.announcementsPost(
       req.user,
       announcementCreateDto,
@@ -122,12 +123,12 @@ export class AnnouncementsController {
   @Put('/:id')
   async announcementsIdPut(
     @Param('id') id: string,
-    @Body() announceUpdateDto: AnnouncementModifyDto,
+    @Body(BadWordsPipe) announceUpdateDto: AnnouncementModifyDto,
     @UploadedFiles(FileNamePipe) files: Array<Express.Multer.File>,
     @Req() req: any,
     @Res() res: Response,
   ) {
-    console.log(req.headers);
+    //console.log(req.headers);
     const comRes = await this.announcementsService.announcementsIdPut(
         req.user,
         id,

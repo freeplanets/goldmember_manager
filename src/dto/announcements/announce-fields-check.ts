@@ -1,8 +1,8 @@
 import { IAnnouncement } from '../interface/announcement.if';
-import { DATE_STYLE } from '../../utils/constant';
 import { DtoErrMsg } from '../../utils/enumError';
 import { isArray } from 'class-validator';
 import { IReturnObj } from '../interface/common.if';
+
 //import { DateLocale } from '../../classes/common/date-locale';
 
 export class AnnounceFieldsCheck {
@@ -95,6 +95,8 @@ export class AnnounceFieldsCheck {
                             value: annDta[key], 
                         }
                     }
+                } else if (typeof this._annDta[key] === 'string') {
+                    
                 } else {
                     this._annDta[key] = annDta[key];
                 }

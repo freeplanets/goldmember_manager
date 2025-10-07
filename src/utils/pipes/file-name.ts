@@ -1,8 +1,10 @@
 import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
 import { isArray, isObject } from 'class-validator';
+import { FilesInspection } from '../../classes/announcements/files-inspection';
+import { CommonResponseDto } from '../../dto/common/common-response.dto';
+import { BadWordsException } from '../validate/bad-words-exception';
 //import { getBadFilesOp } from '../../classes/announcements/context-check/bad-file-op';
-import * as BadWords from 'bad-words-chinese';
-import { BadWordsImageException } from '../validate/bad-words-image-exception';
+
 
 export function isChinese(str: string): boolean {
   // 檢查是否包含中文
@@ -44,15 +46,20 @@ export class FileNamePipe implements PipeTransform {
                 tmp.push(file);
             }
         }
-        // if (tmp.length > 0) {
-        //     const badFilesOp = getBadFilesOp(new BadWords());
-        //     for (let i=0, n=tmp.length;i<n;i++) {
-        //         await badFilesOp.check(tmp[i]);
-        //         if (badFilesOp.Error) {
-        //             throw BadWordsImageException(badFilesOp.Error);
-        //         }
-        //     }
-        // }
+        if (tmp.length > 0) {
+            const fInsp = new FilesInspection();
+            const chk:CommonResponseDto = await fInsp.verify(tmp);
+            if (chk.errorcode) {
+                throw BadWordsException(chk.errorcode);
+            }
+            // const badFilesOp = getBadFilesOp(new BadWords());
+            // for (let i=0, n=tmp.length;i<n;i++) {
+            //     await badFilesOp.check(tmp[i]);
+            //     if (badFilesOp.Error) {
+            //         throw BadWordsImageException(badFilesOp.Error);
+            //     }
+            // }
+        }
         return value;
     }
 }

@@ -3,7 +3,7 @@ import { CouponBatch, CouponBatchDocument, CouponBatchSchema } from '../../dto/s
 import { getMongoDB } from '../database/mongodb'
 import { COUPON_BATCH_FREQUNCY, COUPON_BATCH_ISSUANCE_METHOD, COUPON_BATCH_STATUS, COUPON_STATUS } from '../enum';
 import { CouponFunc } from './coupon-func';
-import { Member, MemberDcoument, MemberSchema } from '../../dto/schemas/member.schema';
+import { Member, MemberDocument, MemberSchema } from '../../dto/schemas/member.schema';
 import { KsMember, KsMemberDocument, KsMemberSchema } from '../../dto/schemas/ksmember.schema';
 import { ICouponBatch } from '../../dto/interface/coupon.if';
 import { CouponAutoIssuedLog, CouponAutoIssuedLogSchema } from '../../dto/schemas/coupon-auto-issued-log.schema';
@@ -66,7 +66,7 @@ export const couponsAutoIssue = async () => {
                 const ans = await cpFunc.insertCoupons(
                     newCB,
                     modelCB as Model<CouponBatchDocument>, 
-                    modelMbr as Model<MemberDcoument>, 
+                    modelMbr as Model<MemberDocument>, 
                     modelCP as Model<CouponDocument>, 
                     modelKS as Model<KsMemberDocument>,
                     COUPON_STATUS.NOT_ISSUED,

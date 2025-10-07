@@ -14,7 +14,7 @@ import { DtoErrMsg, ErrCode } from '../utils/enumError';
 import { CouponResponseDto } from '../dto/coupons/coupon-response.dto';
 import { CommonResponseDto } from '../dto/common/common-response.dto';
 import { CouponBatchesResponseDto } from '../dto/coupons/coupon-batches-response.dto';
-import { Member, MemberDcoument } from '../dto/schemas/member.schema';
+import { Member, MemberDocument } from '../dto/schemas/member.schema';
 import { COUPON_BATCH_DETAIL_FIELDS } from '../utils/base-fields-for-searh';
 import { CouponBatchesIdResponseDto } from '../dto/coupons/coupon-batches-id-response.dto';
 import { MainFilters } from '../classes/filters/main-filters';
@@ -49,7 +49,7 @@ export class CouponsService {
   constructor(
     @InjectModel(CouponBatch.name) private readonly modelCouponBatch:Model<CouponBatchDocument>,
     @InjectModel(Coupon.name) private readonly modelCoupon:Model<CouponDocument>,
-    @InjectModel(Member.name) private readonly modelMember:Model<MemberDcoument>,
+    @InjectModel(Member.name) private readonly modelMember:Model<MemberDocument>,
     @InjectModel(CouponStats.name) private readonly modelCS:Model<CouponStatsDocument>,
     @InjectModel(KsMember.name) private readonly modelKS:Model<KsMemberDocument>,
     @InjectModel(CouponAutoIssuedLog.name) private readonly modelCAIL:Model<CouponAutoIssuedLogDocument>,
@@ -857,7 +857,7 @@ export class CouponsService {
     }
   }
   private async getMemberById(id:string, fromid:string):Promise<Partial<IMember>| false> {
-    const filter:FilterQuery<MemberDcoument> = {};
+    const filter:FilterQuery<MemberDocument> = {};
     let isPhoneSearch = false;
     if (PHONE_STYLE.test(id)) {
       filter.phone = id;

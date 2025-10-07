@@ -1,7 +1,7 @@
 import mongoose, { Model } from 'mongoose';
 import { MemberGrowthDocument } from '../../dto/schemas/member-growth.schema';
 import { MemberTransferLogDocument } from '../../dto/schemas/member-transfer-log.schema';
-import { MemberDcoument } from '../../dto/schemas/member.schema';
+import { MemberDocument } from '../../dto/schemas/member.schema';
 import { KsMemberDocument } from '../../dto/schemas/ksmember.schema';
 import { COUPON_STATUS, MEMBER_LEVEL } from '../../utils/enum';
 import { MembersConvertToShareholderRequestDto } from '../../dto/members/members-convert-to-shareholder-request.dto';
@@ -21,7 +21,7 @@ export class MemberShareholderSwitch {
     private mTypes = [MEMBER_LEVEL.SHARE_HOLDER, MEMBER_LEVEL.DEPENDENTS, MEMBER_LEVEL.GENERAL_MEMBER];
     private myDate = new DateLocale();
     constructor(
-        private readonly modelMember: Model<MemberDcoument>,
+        private readonly modelMember: Model<MemberDocument>,
         private readonly modelKsMember: Model<KsMemberDocument>,
         private readonly modelMTL: Model<MemberTransferLogDocument>,
         private readonly modelMG: Model<MemberGrowthDocument>,
