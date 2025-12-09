@@ -8,8 +8,8 @@
     "prebuild": "rimraf dist",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
-    "start:local": "NODE_ENV=local nest start --watch",
+    "start": "IS_OFFLINE=true nest start --env-file .env",
+    "start:local": "NODE_ENV=local nest start --watch --env-file .env",
     "start:dev": "NODE_ENV=devel nest start --watch",
     "start:devel": "NODE_ENV=devel node dist/main",
     "start:stage": "NODE_ENV=stage node dist/main",
@@ -27,7 +27,6 @@
     "deploy:function": "serverless deploy function -f main"
   },
   "dependencies": {
-    "@faker-js/faker": "^9.7.0",
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^10.0.0",

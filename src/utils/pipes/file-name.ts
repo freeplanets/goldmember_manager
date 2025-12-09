@@ -1,5 +1,5 @@
 import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
-import { isArray, isObject } from 'class-validator';
+import { isArray } from 'class-validator';
 import { FilesInspection } from '../../classes/announcements/files-inspection';
 import { CommonResponseDto } from '../../dto/common/common-response.dto';
 import { BadWordsException } from '../validate/bad-words-exception';

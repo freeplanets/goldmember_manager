@@ -17,8 +17,8 @@ import { DashboardModule } from './module/dashboard.module';
 import { EventNewsModule } from './module/event-news.module';
 // import { ExecController } from './controller/exec.controller';
 import { ExecModuel } from './module/exec.module';
-import { FieldManagementController } from './controller/field-management.controller';
 import { FieldManagementModule } from './module/field-management.module';
+import { FertilizerModule } from './module/fertilizer.module';
 // import { InsertMembersIfNotExists } from './utils/synthetic-data/create-members';
 // import { GoogleRecaptchaModule } from '@nestlab/google-recaptcha';
 
@@ -38,6 +38,7 @@ if (process.env.IS_OFFLINE) dbase = process.env.LMONGO_DB;
       useFactory: async (config: ConfigService) => ({
         uri: config.get<string>('mongo.uri'),
         directConnection: !process.env.IS_OFFLINE,//true,
+        //directConnection: true,
         dbName: dbase,
         connectTimeoutMS: 5000,
         //timeoutMS: 5000,
@@ -50,7 +51,8 @@ if (process.env.IS_OFFLINE) dbase = process.env.LMONGO_DB;
     EventNewsModule,
     ReservationsModule,
     TeamsModule, DashboardModule,
-    FieldManagementModule, 
+    FieldManagementModule,
+    FertilizerModule, 
     SystemParameterModule, ExecModuel ],
   controllers: [],
   providers: [],

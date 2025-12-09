@@ -20,73 +20,19 @@ npm install && npm run format
 
 ### Swagger Doc
 
-- http://localhost:3000/api-docs/
+- http://localhost:3000/docs-yaml/
 
 <br/>
 
-### local build & running
+### local running
 
 ```sh
-npm run start:local
+yarn run serve:offline
 ```
 
 ### deploy
 
 ```sh
-npm run build & npm run start
+yarn deploy
 ```
 
-### unit test
-
-```sh
-npm run test
-```
-
-<br/>
-
-## src skeleton
-
-```sh
-src
-├── /config
-│   └── .env.local
-├── /controller
-│   └── ...
-├── /dto
-│   └── ...
-├── /module
-│   └── ...
-├── /service
-│   └── ...
-├── /utils
-│   └── all-exception.filter.ts
-│   └── common-exception.filter.ts
-│   └── common-exception.ts
-│   └── constant.ts
-│   └── swagger.ts
-├── app.module.ts
-├── main.ts
-```
-
-- src/config : 設定專案環境變數(Set Project Environment Variables)
-- src/controller : 客戶端請求/回應處理(Client Request/Response Processing)
-- src/dto : 客戶端請求/回應 DTO(Tata Transfer Object) (Client Request/Response DTO(Tata Transfer Object))
-- src/module : 服務模組 (Service Module)
-- src/service: 業務邏輯 (Business Logic)
-- src/utils : 常用函數 (Common Features)
-- src/app.module.ts : Root 模組 (Root Module)
-- src/main.ts : 專案執行 (Running a project)
-
-## git commit style
-
-- type
-  - feat : 新增功能(add new features)
-  - fix : 錯誤修復(bug fix)
-  - docs : 編輯文檔(doc fix)
-  - refactor : 編輯文檔 (refectoring code)
-  - test : 測試相關程式碼新增及修改(add or modify test-related code)
-  - chore : 無需修改程式碼即可更改設定 (change settings without code modification)
-
-```s
-如何新增 - feat: 增加了登入功能 (How to create - feat: add login function )
-```

@@ -1,18 +1,19 @@
 
-import { NestFactory } from "@nestjs/core";
-import { ExpressAdapter } from "@nestjs/platform-express";
-import { Server } from "http";
-import { AppModule } from "./app.module";
-import { CorsOptions } from "@nestjs/common/interfaces/external/cors-options.interface";
-import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from "@nestjs/swagger";
-import { eventContext } from "aws-serverless-express/middleware";
-import { createServer, proxy, Response } from "aws-serverless-express";
-import { Context, Handler } from "aws-lambda";
-// import { GoogleRecaptchaFilter } from "./utils/google-recaptcha-filter";
-import { SecuritySchemeObject } from "@nestjs/swagger/dist/interfaces/open-api-spec.interface";
-import { ValidationPipe, ValidationPipeOptions } from "@nestjs/common";
-import { ValidationException } from "./utils/validate/validation-exception";
-import { GlobalDataTransPipe } from "./utils/pipes/global-date-trans-pipe";
+import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import { Server } from 'http';
+import { AppModule } from './app.module';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from '@nestjs/swagger';
+import { eventContext } from 'aws-serverless-express/middleware';
+import { createServer, proxy, Response } from 'aws-serverless-express';
+import { Context, Handler } from 'aws-lambda';
+// import { GoogleRecaptchaFilter } from './utils/google-recaptcha-filter';
+import { SecuritySchemeObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { ValidationPipe, ValidationPipeOptions } from '@nestjs/common';
+import { ValidationException } from './utils/validate/validation-exception';
+import { GlobalDataTransPipe } from './utils/pipes/global-date-trans-pipe';
+import { v1 as uuidv1 } from 'uuid';
 
 const authOption:SecuritySchemeObject = {
     description: 'JWT token authorization',
@@ -39,7 +40,7 @@ const swaggerCustomOptions: SwaggerCustomOptions = {
 export async function bootstrapServer():Promise<Server> {
     const expressApp = require('express')();
     const adapter = new ExpressAdapter(expressApp);
-    //console.log("check0");
+    // console.log('check app 0');
     const app = await NestFactory.create(AppModule, adapter);
     const crosOp: CorsOptions = {
         origin: '*',
@@ -83,6 +84,7 @@ export async function bootstrapServer():Promise<Server> {
     await app.init();
     const cachedServer = createServer(expressApp);
     // return { cachedServer, app };
+    console.log(`bootstrapServer init done...`);
     return cachedServer;
 }
 
@@ -91,7 +93,7 @@ export const handler: Handler = async (event: any, context: Context): Promise<Re
         // const appServer = await bootstrapServer();
         // cachedServer = appServer.cachedServer;
         cachedServer = await bootstrapServer();
-    }
+    } 
     // console.log('headers:', event.headers);
     // console.log('body:', event.body);
     // console.log('query:', event.query);
@@ -102,3 +104,4 @@ export const handler: Handler = async (event: any, context: Context): Promise<Re
     //event.pathParameters =  { proxy: path };
     return proxy(cachedServer, event, context, 'PROMISE').promise;
 }
+

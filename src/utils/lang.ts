@@ -1,5 +1,10 @@
 const lang = {
     zhTW: {
+        common: {
+            add: '新增',
+            modify: '修改',
+            cancel: '作癈',
+        },
         CouponExpired: '過期作廢',
         MemberTransferToShareHolder: '轉換為股東',
         CouponToPaper: '轉換為紙本，票號：',

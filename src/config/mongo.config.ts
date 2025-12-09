@@ -20,6 +20,6 @@ export default registerAs('mongo', () => {
         //uri = `mongodb://${username}:${encodePassword}@${resource}:${port}/?retryWrites=true&w=majority&replicaSet=${rpSet}`;
         uri = `mongodb+srv://${username}:${encodePassword}@${resource}/?retryWrites=true&w=majority&appName=${appname}`;
     }
-    console.log(uri)
+    console.log('registerAs:', uri)
     return {username, password, resource, uri};
 });

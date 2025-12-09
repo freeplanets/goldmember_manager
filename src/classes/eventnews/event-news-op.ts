@@ -42,5 +42,7 @@ export class BaseOp<T extends IHasId> extends ADbBasicMethods {
         return this.model.findOne({id});
     }
 
-
+    delete: asyncfunc = async () => {
+        return;
+    };
 }

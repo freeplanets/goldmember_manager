@@ -47,6 +47,11 @@ export enum ErrCode {
 	BAD_WORD_DETECTED_IN_FILE = 'BAD_WORD_DETECTED_IN_FILE',
 	BAD_WORD_DETECTED_IN_PIC = 'BAD_WORD_DETECTED_IN_PIC',
 	BAD_IMAGE_DETECTED = 'BAD_IMAGE_DETECTED',
+	CATEGORY_EXISTS = 'CATEGORY_EXISTS',
+	SAME_NAME = 'SAME_NAME',
+	CATEGORY_IN_USED = 'CATEGORY_IN_USED',
+	INVENTORY_IS_EXISTS = 'INVENTORY_IS_EXISTS', 
+	INVENTORY_IN_USED = 'INVENTORY_IN_USED',
 }
 export enum ErrMsg {
 	MISS_PARAMETER = '參數不足',
@@ -95,6 +100,11 @@ export enum ErrMsg {
 	BAD_WORD_DETECTED_IN_FILE = '你上傳的檔案檢查到不雅文字',
 	BAD_WORD_DETECTED_IN_PIC = '你上傳的圖片中檢查到不雅文字',
 	BAD_IMAGE_DETECTED = '你上傳的圖片可能有不雅內容',
+	CATEGORY_EXISTS = '物品類別已存在',
+	SAME_NAME = '你輸入了相同的名稱',
+	CATEGORY_IN_USED = '物品類別已在使用中',
+	INVENTORY_IS_EXISTS = '物品項目已存在', 
+	INVENTORY_IN_USED = '物品項目已在使用中',
 }
 export const getErrorMessage = (code: ErrCode): string => {
 	const errKey = Object.keys(ErrCode).find((key) => ErrCode[key as keyof typeof ErrCode] === code);

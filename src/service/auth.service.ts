@@ -8,12 +8,12 @@ import { User, UserDocument } from '../dto/schemas/user.schema';
 import { Model } from 'mongoose';
 import { IUser } from '../dto/interface/user.if';
 import { LoginResponseData } from '../dto/auth/login-response.data';
-import GoogleAuth, { IGAValidate, IParamForGoogleAuth } from '../utils/GoogleAuth';
+//import GoogleAuth, { IGAValidate, IParamForGoogleAuth } from '../utils/GoogleAuth';
 import { JwtService } from '@nestjs/jwt';
 import { USER_DEFAULT_FIELDS } from '../utils/base-fields-for-searh';
 import { OtpCode } from '../utils/otp-code';
 import { AuthSMSRequestDto } from '../dto/auth/auth-sms-request.dto';
-import * as svgCaptcha from "svg-captcha";
+import * as svgCaptcha from 'svg-captcha';
 import { sendSMSCode, verifyPhoneCode } from '../utils/sms';
 import { ErrCode } from '../utils/enumError';
 import { AuthLoginResponseDto } from '../dto/auth/auth-login-response.dto';
@@ -29,7 +29,7 @@ import { AuthRefreshTokenResponse } from '../dto/auth/auth-refresh-token-respons
 import { RefreshTokenData } from '../dto/auth/refresh-token-data';
 import { MemberActivity, MemberActivityDocument } from '../dto/schemas/member-activity.schema';
 
-const GA = new GoogleAuth();
+//const GA = new GoogleAuth();
 
 @Injectable()
 export class AuthService {
@@ -449,33 +449,33 @@ export class AuthService {
     }
     return undefined;
   }
-  async twoFaSetup(user:Partial<IUser>, session:any) {
-    let appName = process.env.SYS_NAME;
-    if (process.env.IS_OFFLINE) appName = `${appName}_local`;
-    const gaParam: IParamForGoogleAuth = {
-      AppName: appName,
-      AppInfo: user.username,
-      SecretCode: GA.SecretCode,
-    };
-    console.log('gaParam:', gaParam);
-    const ans = await GA.getIMG(gaParam);
-    if (ans) {
-      session.SecretCode = gaParam.SecretCode;
-      // user will be update at frist using Ga code
-      // const updateUser:Partial<IUser> = {
-      //   has2Fa: true,
-      //   SecretCode: gaParam.SecretCode,
-      // }
-      // const rlt = await this.modelUser.findByIdAndUpdate(user._id, updateUser);
-      // console.log(':', rlt);
-      return ans;
-    } else {
-      return undefined;
-    }
-  }
-  gaValidate(gav:IGAValidate) {
-    return GA.Validate(gav);
-  }
+  // async twoFaSetup(user:Partial<IUser>, session:any) {
+  //   let appName = process.env.SYS_NAME;
+  //   if (process.env.IS_OFFLINE) appName = `${appName}_local`;
+  //   const gaParam: IParamForGoogleAuth = {
+  //     AppName: appName,
+  //     AppInfo: user.username,
+  //     SecretCode: GA.SecretCode,
+  //   };
+  //   console.log('gaParam:', gaParam);
+  //   const ans = await GA.getIMG(gaParam);
+  //   if (ans) {
+  //     session.SecretCode = gaParam.SecretCode;
+  //     // user will be update at frist using Ga code
+  //     // const updateUser:Partial<IUser> = {
+  //     //   has2Fa: true,
+  //     //   SecretCode: gaParam.SecretCode,
+  //     // }
+  //     // const rlt = await this.modelUser.findByIdAndUpdate(user._id, updateUser);
+  //     // console.log(':', rlt);
+  //     return ans;
+  //   } else {
+  //     return undefined;
+  //   }
+  // }
+  // gaValidate(gav:IGAValidate) {
+  //   return GA.Validate(gav);
+  // }
   async logout(user:Partial<IUser>){
     const comRes = new CommonResponseDto();
     try {

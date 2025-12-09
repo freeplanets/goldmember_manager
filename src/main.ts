@@ -1,47 +1,62 @@
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { ValidationPipe, Logger, ValidationPipeOptions } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './utils/all-exception.filter';
 import { CommonExceptionFilter } from './utils/common-exception.filer';
 import { setupSwagger } from './utils/swagger';
+import { SecuritySchemeObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { DocumentBuilder, SwaggerCustomOptions, SwaggerModule } from '@nestjs/swagger';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
+import { eventContext } from 'aws-serverless-express/middleware';
+import { ValidationException } from './utils/validate/validation-exception';
+import { GlobalDataTransPipe } from './utils/pipes/global-date-trans-pipe';
+
+const authOption:SecuritySchemeObject = {
+    description: 'JWT token authorization',
+    //type: 'apiKey',
+    type: 'http',
+    // in: 'header',
+    scheme: 'bearer',
+    bearerFormat: 'JWT',
+    'x-tokenName': 'WWW-AUTH',
+}
+
+//即使刷新網頁，Token 值仍保持不變
+const swaggerCustomOptions: SwaggerCustomOptions = {
+    yamlDocumentUrl: 'docs-yaml',
+    swaggerOptions: {
+        persistAuthorization: true,
+    },
+};
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  const httpAdapter = app.get(HttpAdapterHost);
-
-  //連接異常過濾器
-  app.useGlobalFilters(
-    new AllExceptionsFilter(httpAdapter, new Logger('AllExceptions')),
-    new CommonExceptionFilter(httpAdapter, new Logger('CommonException')),
-  );
-
-  //Global Middleware Setup -> 啟用 Cors 屬性
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    optionsSuccessStatus: 200,
-  });
-
-  app.useGlobalPipes(
-    new ValidationPipe({
-      /**
-       * whitelist: 任何不在 DTO 中的屬性都會被無條件過濾掉。
-       * forbidNonWhitelisted: 전달하는 요청 값 중에 정의 되지 않은 값이 있으면 Error를 발생합니다.
-       * transform: 如果傳遞的任何請求值未定義，則會引發錯誤。
-       *            如果要自動將物件轉換為 DTO，請將 transform 值設為 true。
-       * disableErrorMessages: 設定發生錯誤時是否顯示錯誤訊息（true：不顯示，false：顯示）
-       *                       在部署環境中，建議將其設為 true。
-       */
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
-      disableErrorMessages: false,
-    }),
-  );
-
+  const expressApp = require('express')();
+  const adapter = new ExpressAdapter(expressApp);
+  const app = await NestFactory.create(AppModule, adapter);
+  const crosOp: CorsOptions = {
+      origin: '*',
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: false,
+  }
+  app.enableCors(crosOp);
+  const options = new DocumentBuilder()
+    .setTitle('GoldMember')
+    .setDescription('Manager Api')
+    .setVersion('0.01')
+    //.addServer('/dev')
+    .addBearerAuth(authOption)
+    .build();
+  
+  const document = SwaggerModule.createDocument(app, options);
+  SwaggerModule.setup('api', app, document, swaggerCustomOptions);
+  app.use(eventContext());
+  const vopt:ValidationPipeOptions = {
+    exceptionFactory: ValidationException,
+  };
+  app.useGlobalPipes(new GlobalDataTransPipe(), new ValidationPipe(vopt));
   //Swagger 連結偏好
-  setupSwagger(app);
+  //setupSwagger(app);
 
   await app.listen(3000);
 }

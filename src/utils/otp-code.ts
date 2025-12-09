@@ -1,5 +1,5 @@
-import { authenticator, totp } from "otplib";
-import * as qrcode from "qrcode";
+import { authenticator, totp } from 'otplib';
+import * as qrcode from 'qrcode';
 
 declare type SecretKey = string;
 
@@ -44,6 +44,8 @@ export class OtpCode {
         return isVerify;
     }
     get SecretCode(): string {
+        const bytes:number = parseInt(process.env.SECRET_BYTES);
+        return authenticator.generateSecret(bytes);
         const str: string[] = [];
         while (str.length < 17) {
           const s = String.fromCharCode(this.Random);
@@ -51,7 +53,8 @@ export class OtpCode {
             str.push(s);
           }
         }
-        return str.join("");
+        //return str.join('');
+        return authenticator.generate(str.join(''));
     }
     get Random() {
         // 48-57 => 0-9

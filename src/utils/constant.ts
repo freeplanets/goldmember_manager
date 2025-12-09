@@ -1,6 +1,8 @@
 import { Request } from 'express';
 import { ICommonResponse, IOrganization } from '../dto/interface/common.if';
 import { FAIRWAY_PATH, ORGANIZATION_TYPE } from './enum';
+import { IStockInOutMark } from '../dto/interface/fertilizer.if';
+import { DateLocale } from '../classes/common/date-locale';
 
 /**
  * @author 
@@ -81,4 +83,34 @@ export function AddTraceIdToResponse(res:ICommonResponse<any>, req:Request) {
     //res.ErrorCode = ErrCode.UNEXPECTED_ERROR_ARISE;
   }
   //return res;
+}
+
+export const IN_OUT_CAL_MARK:IStockInOutMark = {
+  PURCHASE: {
+    Title: '購買', 
+    CalMark: 1,
+  },
+  PICK_UP: {
+    Title: '領用',
+    CalMark: -1,
+  },
+  RETURN: {
+    Title: '退回', 
+    CalMark: -1,
+  }
+}
+
+export function getCallerName() {
+  try {
+    throw new Error();
+  } catch (e) {
+    // The stack trace format can vary slightly between environments.
+    // This regex attempts to extract the function name from the relevant line.
+    const stackLines = e.stack.split('\n');
+    // The caller is typically found on the third line of the stack trace
+    // (index 2, as the first line is the error message and the second is getCallerName itself).
+    const callerLine = stackLines[2]; 
+    const match = callerLine.match(/(?:at\s+)?(.*?)(?:\s+\(|@)/);
+    return match ? match[1].trim() : 'Unknown';
+  }
 }

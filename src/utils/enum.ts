@@ -226,3 +226,7 @@ export enum COURSES_CODE {
   SE = 1,
   WS = 2,
 }
+export enum DB_METHOD {
+  ADD = 'add',
+  MODITY = 'modify',
+}

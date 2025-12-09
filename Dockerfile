@@ -1,5 +1,5 @@
 # Base image
-FROM node:16
+FROM node:18
 
 # Create app directory
 WORKDIR /app
@@ -11,8 +11,8 @@ COPY . .
 COPY package*.json ./
 
 # Installing the project dependencies
-RUN npm install
-RUN npm run build
+RUN yarn install
+RUN yarn run build
 
 # Port mapped to the docker daemon:
 EXPOSE 3000

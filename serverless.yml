@@ -24,6 +24,7 @@ provider:
     SALT_ROUNDS: ${env:SALT_ROUNDS}
     DEVICE_KEY: ${env:DEVICE_KEY}
     FILE_PROXY: ${env:file_proxy}
+    SECRET_BYTES: ${env:SECRET_BYTES}
   iamRoleStatements:
     - Effect: Allow
       Action:
