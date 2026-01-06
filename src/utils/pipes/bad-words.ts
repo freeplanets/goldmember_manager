@@ -6,21 +6,38 @@ import { ErrCode } from '../enumError';
 const badwords = new BadWords();
 
 const hasBadWords = (data:any) => {
+    //console.log('hasBadWords:', data)
     let isBad = false;
     if (typeof(data) === 'string') {
+        //console.log('badwords check1:', data);
         isBad = badwords.isProfane(data);
         if (isBad) return true;
     } else if (isArray(data)) {
-        data.every((dta) => {
+        //console.log('badwords check2');
+        for (let i=0, n=data.length; i < n; i+=1) {
+            let dta = data[i];
+        // }   
+        // data.every((dta) => {
             isBad = hasBadWords(dta);
-            if (isBad) return false;
-        })
+            //console.log('badwords:', dta, isBad);
+            if (isBad) break; //return true;
+        //})
+        }
         if (isBad) return true;
     } else if (isObject(data)) {
-        Object.keys(data).every((key) => {
+        //console.log('badwords check3')
+        const keys = Object.keys(data);
+        for(let i=0,n=keys.length; i < n; i+=1) {
+            let key = keys[i];
+
+        // }
+        // Object.keys(data).every((key) => {
+            //console.log(key, ':', data[key]);
             isBad = hasBadWords(data[key]);
-            if (isBad) return false;
-        });
+            //console.log('badwords:', data[key], isBad);
+            if (isBad)  break; //return true;
+        //});
+        }
         if (isBad) return true;
     }
     return false;
@@ -28,8 +45,9 @@ const hasBadWords = (data:any) => {
 
 export class BadWordsPipe implements PipeTransform {
     transform(value: any, metadata: ArgumentMetadata) {
-        console.log('badwordspipe:', value);
+        //console.log('badwordspipe:', value);
         const hasBadWord = hasBadWords(value);
+        //console.log('End badwords check');
         if (hasBadWord) {
             throw BadWordsException(ErrCode.BAD_WORD_DETECTED); 
         }
