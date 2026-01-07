@@ -30,7 +30,7 @@ export class RequestLoggingMiddleware implements NestMiddleware {
       )}, query: ${JSON.stringify(query)}`,
       req['traceId'],
     );
-    this.saveAccessLog(req);
+    // this.saveAccessLog(req);
     next();
   }
   jwtValidate = (token:string) => {
